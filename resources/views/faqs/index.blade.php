@@ -32,7 +32,7 @@
                 <div class="text-center text-slate-500 py-10">Tidak ada FAQ yang tersedia.</div>
             @else
                 <div class="space-y-3" id="faqList">
-                    @foreach($faqs as$faq)
+                    @foreach($faqs as $faq)
                     <div class="faq-item border border-slate-200 rounded-lg transition-colors overflow-hidden bg-white">
                         <button onclick="toggleFaq({{ $faq->id }})" class="w-full flex items-center justify-between p-4 text-left focus:outline-none hover:bg-slate-50">
                             <div>
