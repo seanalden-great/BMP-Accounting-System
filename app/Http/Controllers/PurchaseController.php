@@ -296,7 +296,7 @@ class PurchaseController extends Controller
             // Cari Akun Persediaan (13%) dan Akun Hutang Usaha (30% / 3%)
             $inventoryAccount = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first();
             
-            $payableAccount = Account::where('code', 'LIKE', '30%')->where('is_header', false)->first();
+            $payableAccount = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first();
             if (!$payableAccount) {
                 $payableAccount = Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
             }
@@ -359,7 +359,7 @@ class PurchaseController extends Controller
             ]);
 
             // Cari Akun Hutang Usaha (30% / 3%) untuk didebit (dilunasi)
-            $payableAccount = Account::where('code', 'LIKE', '30%')->where('is_header', false)->first();
+            $payableAccount = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first();
             if (!$payableAccount) {
                 $payableAccount = Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
             }

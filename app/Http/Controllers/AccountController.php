@@ -48,12 +48,31 @@ class AccountController extends Controller
                 }
             }
 
+            // if ($acc->normal_balance == 'D') {
+            //     $sisa = $debit - $kredit;
+            // } elseif ($acc->normal_balance == 'K') {
+            //     $sisa = $kredit - $debit;
+            // } else {
+            //     $sisa = $debit - $kredit; // Netral
+            // }
+
             if ($acc->normal_balance == 'D') {
                 $sisa = $debit - $kredit;
             } elseif ($acc->normal_balance == 'K') {
                 $sisa = $kredit - $debit;
             } else {
-                $sisa = $debit - $kredit; // Netral
+                // Jika Pos '-' (Akun Header/Induk), ikuti saldo normal kelompok kode depannya:
+                // Kelompok 3 (Kewajiban), 4 (Modal), 5 (Pendapatan), dan 21 (Akum. Penyusutan) bersaldo normal Kredit
+                if (
+                    str_starts_with($acc->code, '3') || 
+                    str_starts_with($acc->code, '4') || 
+                    str_starts_with($acc->code, '5') || 
+                    str_starts_with($acc->code, '21')
+                ) {
+                    $sisa = $kredit - $debit;
+                } else {
+                    $sisa = $debit - $kredit;
+                }
             }
 
             $item = [
