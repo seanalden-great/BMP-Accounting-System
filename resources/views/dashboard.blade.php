@@ -53,12 +53,13 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Area Grafik Arus Kas -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
             <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-800">
                 <i data-feather="activity" class="w-5 h-5 text-blue-600"></i> Arus Kas (6 Bulan Terakhir)
             </h3>
-            <div class="h-72 w-full flex items-center justify-center bg-slate-50 border border-dashed border-slate-300 rounded-lg">
-                <p class="text-slate-400 font-medium">[ Area Grafik Chart.js ]</p>
+            <!-- Canvas untuk menampung Chart.js -->
+            <div class="relative w-full h-72 flex-1">
+                <canvas id="cashFlowChart"></canvas>
             </div>
         </div>
 
@@ -109,4 +110,68 @@
         </div>
     </div>
 </div>
+
+<!-- Skrip Inisialisasi Chart.js -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('cashFlowChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'],
+                datasets: [
+                    {
+                        label: 'Pemasukan',
+                        data: [40000000, 30000000, 20000000, 27800000, 18900000, 23900000, 34900000],
+                        backgroundColor: '#22c55e', // Warna Hijau
+                        borderRadius: 4,
+                        maxBarSize: 35
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: [24000000, 13980000, 48000000, 39080000, 48000000, 38000000, 43000000],
+                        backgroundColor: '#ef4444', // Warna Merah
+                        borderRadius: 4,
+                        maxBarSize: 35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            font: { family: 'sans-serif', size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.raw || 0;
+                                return context.dataset.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        grid: { color: '#f1f5f9' },
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + (value / 1000000) + 'M';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 @endsection

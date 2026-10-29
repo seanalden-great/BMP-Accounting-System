@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
