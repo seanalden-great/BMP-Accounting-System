@@ -137,7 +137,7 @@
             form.action = `/products/${product.id}`; 
             
             document.getElementById('inpSku').value = product.sku;
-            document.getElementById('inpSku').readOnly = true; // SKU biasanya tidak boleh diedit
+            // document.getElementById('inpSku').readOnly = true; // SKU biasanya tidak boleh diedit
             document.getElementById('inpName').value = product.name;
             document.getElementById('inpCategory').value = product.category;
             document.getElementById('inpUnit').value = product.unit;
