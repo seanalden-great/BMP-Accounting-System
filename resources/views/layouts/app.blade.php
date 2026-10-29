@@ -89,7 +89,7 @@
             </div>
 
             <a href="{{ route('expenses.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                <i data-feather="receipt" class="w-4 h-4"></i> <span class="text-sm">Biaya</span>
+                <i data-feather="file-text" class="w-4 h-4"></i> <span class="text-sm">Biaya</span>
             </a>
             <a href="{{ route('products.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
                 <i data-feather="package" class="w-4 h-4"></i> <span class="text-sm">Produk</span>
