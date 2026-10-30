@@ -6,7 +6,7 @@
     <div class="flex justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                <i data-feather="truck" class="text-emerald-600 w-7 h-7"></i> Pengiriman Pembelian
+                <i data-feather="truck" class="text-emerald-600 w-7 h-7"></i> Penerimaan Pembelian
             </h1>
         </div>
         <button onclick="document.getElementById('delModal').classList.remove('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">

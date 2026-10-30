@@ -62,9 +62,22 @@
                 @csrf
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <div class="lg:col-span-2">
+                        {{-- <div class="lg:col-span-2">
                             <label class="block text-sm font-semibold text-slate-700 mb-1">Pilih Pelanggan</label>
                             <select name="contact_id" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="" disabled selected>-- Pilih Customer --</option>
+                                @foreach($customers as $c) <option value="{{ $c->id }}">{{ $c->name }}</option> @endforeach
+                            </select>
+                        </div> --}}
+                        <div class="lg:col-span-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-sm font-semibold text-slate-700">Pilih Pelanggan</label>
+                                <!-- Tombol Panggil Modal Kontak -->
+                                <button type="button" onclick="openContactModal()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
+                                    <i data-feather="plus" class="w-3 h-3"></i> Tambah Baru
+                                </button>
+                            </div>
+                            <select name="contact_id" id="contactDropdown" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                                 <option value="" disabled selected>-- Pilih Customer --</option>
                                 @foreach($customers as $c) <option value="{{ $c->id }}">{{ $c->name }}</option> @endforeach
                             </select>
@@ -111,6 +124,32 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+<!-- Modal Mini: Tambah Kontak Cepat -->
+<div id="quickContactModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
+            <h3 class="font-bold text-slate-800">Tambah Customer Baru</h3>
+            <button onclick="closeContactModal()" class="text-slate-400 hover:text-slate-700"><i data-feather="x" class="w-4 h-4"></i></button>
+        </div>
+        <form id="quickContactForm" onsubmit="submitQuickContact(event)" class="p-5 space-y-4">
+            <input type="hidden" name="type" value="Customer"> <!-- Fix Tipe Customer -->
+            
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Customer</label>
+                <input type="text" name="name" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">No. Telepon / WA (Opsional)</label>
+                <input type="text" name="phone" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeContactModal()" class="px-4 py-2 text-slate-600 font-bold text-sm bg-slate-100 rounded-lg hover:bg-slate-200">Batal</button>
+                <button type="submit" id="btnSaveContact" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-sm">Simpan</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -173,5 +212,59 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() { addRow(); });
+
+    // FUNGSI UNTUK MODAL KONTAK CEPAT (AJAX)
+    function openContactModal() {
+        document.getElementById('quickContactModal').classList.remove('hidden');
+    }
+    
+    function closeContactModal() {
+        document.getElementById('quickContactModal').classList.add('hidden');
+        document.getElementById('quickContactForm').reset();
+    }
+
+    async function submitQuickContact(e) {
+        e.preventDefault();
+        
+        const form = document.getElementById('quickContactForm');
+        const btn = document.getElementById('btnSaveContact');
+        const formData = new FormData(form);
+        
+        btn.disabled = true;
+        btn.innerText = 'Menyimpan...';
+
+        try {
+            const response = await fetch("{{ route('contacts.store') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json"
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                const newOption = document.createElement("option");
+                newOption.value = result.contact.id;
+                newOption.text = result.contact.name;
+                
+                const dropdown = document.getElementById('contactDropdown');
+                dropdown.add(newOption);
+                dropdown.value = result.contact.id;
+
+                closeContactModal();
+                alert('Customer berhasil ditambahkan!');
+            } else {
+                alert(result.message || 'Gagal menambahkan kontak.');
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan jaringan.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Simpan';
+        }
+    }
 </script>
 @endsection
