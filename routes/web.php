@@ -22,11 +22,12 @@ use App\Http\Controllers\ExpenseController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
 
 
 /*
@@ -35,6 +36,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Halaman Utama / Dashboard
     Route::get('/', function () {
@@ -79,6 +81,4 @@ Route::middleware('auth')->group(function () {
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
-
-
 });
