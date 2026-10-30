@@ -128,7 +128,7 @@
 </div>
 
 <!-- Modal Mini: Tambah Kontak Cepat -->
-<div id="quickContactModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+{{-- <div id="quickContactModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
         <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
             <h3 class="font-bold text-slate-800">Tambah Customer Baru</h3>
@@ -148,6 +148,42 @@
             <div class="flex justify-end gap-2 mt-4">
                 <button type="button" onclick="closeContactModal()" class="px-4 py-2 text-slate-600 font-bold text-sm bg-slate-100 rounded-lg hover:bg-slate-200">Batal</button>
                 <button type="submit" id="btnSaveContact" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-sm">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div> --}}
+
+<div id="quickContactModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+        <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
+            <h3 class="text-lg font-bold text-slate-800">Tambah Customer Baru</h3>
+            <button onclick="closeContactModal()" class="text-slate-400 hover:text-slate-700 transition-colors"><i data-feather="x" class="w-5 h-5"></i></button>
+        </div>
+        <form id="quickContactForm" onsubmit="submitQuickContact(event)" class="p-5 space-y-4">
+            <input type="hidden" name="type" value="Customer"> <!-- Otomatis Customer -->
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Customer</label>
+                    <input type="text" name="name" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">No. Telepon / WA (Opsional)</label>
+                    <input type="text" name="phone" placeholder="08..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Email (Opsional)</label>
+                    <input type="email" name="email" placeholder="email@contoh.com" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
+                    <textarea name="address" rows="3" placeholder="Alamat jalan, kota, provinsi..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" onclick="closeContactModal()" class="px-4 py-2 text-slate-600 font-bold text-sm bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">Batal</button>
+                <button type="submit" id="btnSaveContact" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors">Simpan Kontak</button>
             </div>
         </form>
     </div>
