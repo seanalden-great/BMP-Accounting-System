@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    // === TAMBAHAN WAJIB: Mematikan update otomatis kolom updated_at ===
-    public $timestamps = false;
+    /**
+     * Kolom created_at dan updated_at kini dikelola otomatis oleh Laravel.
+     */
+    public $timestamps = true;
 
     /**
      * The attributes that are mass assignable.
@@ -19,12 +23,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'username', // Go memakai username, bukan email
+        'name',
+        'username',
+        'email',
         'password',
         'full_name',
         'role',
         'permissions',
-        'created_at'
     ];
 
     /**
@@ -45,7 +50,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            // email_verified_at dihapus karena tabel GORM tidak memilikinya
+            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

@@ -135,7 +135,7 @@
             </a>
         </nav>
 
-        <!-- Profil & Logout -->
+        {{-- <!-- Profil & Logout -->
         <div class="border-t border-slate-800 p-4 shrink-0 flex items-center justify-between bg-slate-900">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
@@ -150,6 +150,31 @@
             </div>
             <!-- Form Logout -->
             <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" title="Keluar" class="text-red-400 hover:text-red-500 hover:bg-red-400/10 p-2 rounded-lg transition-colors">
+                    <i data-feather="log-out" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div> --}}
+
+        <!-- Profil & Logout -->
+        @php
+            $displayName = Auth::user()->full_name ?: (Auth::user()->name ?: (Auth::user()->username ?? 'Admin'));
+        @endphp
+        <div class="border-t border-slate-800 p-4 shrink-0 flex items-center justify-between bg-slate-900">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 uppercase">
+                    {{ substr($displayName, 0, 1) }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-white truncate">{{ $displayName }}</p>
+                    <p class="text-[10px] text-slate-400 font-medium truncate px-1.5 py-0.5 bg-slate-800 rounded mt-0.5 inline-block">
+                        Role: {{ Auth::user()->role ?? 'Staff' }}
+                    </p>
+                </div>
+            </div>
+            <!-- Form Logout -->
+            <form action="{{ route('logout') }}" method="POST" class="shrink-0">
                 @csrf
                 <button type="submit" title="Keluar" class="text-red-400 hover:text-red-500 hover:bg-red-400/10 p-2 rounded-lg transition-colors">
                     <i data-feather="log-out" class="w-4 h-4"></i>
