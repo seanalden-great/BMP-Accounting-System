@@ -15,6 +15,7 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\WarehouseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,4 +82,10 @@ Route::middleware('auth')->group(function () {
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
+
+// Rute Manajemen Gudang
+    Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
+    Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');
+    Route::put('/warehouses/{id}', [WarehouseController::class, 'update'])->name('warehouses.update');
+    Route::delete('/warehouses/{id}', [WarehouseController::class, 'destroy'])->name('warehouses.destroy');
 });

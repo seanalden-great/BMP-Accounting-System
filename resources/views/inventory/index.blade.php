@@ -6,26 +6,27 @@
     <div class="flex justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                <i data-feather="archive" class="text-teal-600 w-7 h-7"></i> Inventori & Stock Opname
+                <i data-feather="archive" class="text-teal-600 w-7 h-7"></i> Stok & Penyesuaian
             </h1>
-            <p class="text-slate-500 mt-1">Sesuaikan jumlah stok fisik dan otomatis catat selisih persediaan</p>
+            <p class="text-slate-500 mt-1">Sesuaikan jumlah stok fisik per Gudang dan otomatis catat selisih persediaan</p>
         </div>
         <button onclick="document.getElementById('invModal').classList.remove('hidden')" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
-            <i data-feather="plus" class="w-4 h-4"></i> Penyesuaian Stok
+            <i data-feather="plus" class="w-4 h-4"></i> Stock Opname
         </button>
     </div>
 
     <!-- Tabel Riwayat Penyesuaian Stok -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[900px]">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead class="bg-white border-b border-slate-200">
                     <tr>
-                        <th class="p-4 text-sm font-semibold text-slate-600">Tanggal</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 w-28">Tanggal</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600">Gudang</th>
                         <th class="p-4 text-sm font-semibold text-slate-600">Produk</th>
-                        <th class="p-4 text-sm font-semibold text-slate-600 text-center">Tipe Penyesuaian</th>
-                        <th class="p-4 text-sm font-semibold text-slate-600 text-center">Selisih Qty</th>
-                        <th class="p-4 text-sm font-semibold text-slate-600 text-right">Nilai Barang</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 text-center">Tipe Mutasi</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 text-center w-28">Selisih Qty</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 text-right w-36">Nilai Barang</th>
                         <th class="p-4 text-sm font-semibold text-slate-600">Alasan</th>
                     </tr>
                 </thead>
@@ -33,15 +34,17 @@
                     @forelse($adjustments as $adj)
                     <tr class="border-b border-slate-50 hover:bg-slate-50">
                         <td class="p-4 text-sm">{{ \Carbon\Carbon::parse($adj->date)->format('d/m/Y') }}</td>
+                        <!-- Menampilkan nama gudang dari relasi -->
+                        <td class="p-4 text-sm font-bold text-indigo-700">{{ $adj->warehouse->name ?? '-' }}</td>
                         <td class="p-4 text-sm font-bold text-slate-700">[{{ $adj->product_sku }}] {{ $adj->product->name }}</td>
                         <td class="p-4 text-center">
                             @if($adj->type === 'Penambahan')
                                 <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
-                                    <i data-feather="arrow-up-right" class="w-3 h-3"></i> Penambahan
+                                    <i data-feather="arrow-up-right" class="w-3 h-3"></i> Tambah
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">
-                                    <i data-feather="arrow-down-right" class="w-3 h-3"></i> Pengurangan
+                                    <i data-feather="arrow-down-right" class="w-3 h-3"></i> Kurang
                                 </span>
                             @endif
                         </td>
@@ -50,18 +53,18 @@
                         <td class="p-4 text-sm text-slate-500 italic">{{ $adj->reason }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="p-8 text-center text-slate-500">Belum ada riwayat penyesuaian stok.</td></tr>
+                    <tr><td colspan="7" class="p-8 text-center text-slate-500">Belum ada riwayat penyesuaian stok.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal Form Penyesuaian Stok -->
+    <!-- Modal Form Penyesuaian Stok (Stock Opname) -->
     <div id="invModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
             <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
-                <h3 class="text-xl font-bold text-slate-800">Form Penyesuaian Stok (Stock Opname)</h3>
+                <h3 class="text-xl font-bold text-slate-800">Form Penyesuaian Stok Gudang</h3>
                 <button onclick="document.getElementById('invModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">
                     <i data-feather="x" class="w-5 h-5"></i>
                 </button>
@@ -74,15 +77,27 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label>
                         <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
                     </div>
+                    <!-- Dropdown Pilihan Gudang -->
                     <div>
-                        <label class="block text-sm font-bold text-teal-900 mb-1">Pilih Produk</label>
-                        <select name="product_sku" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
-                            <option value="" disabled selected>-- Pilih Produk --</option>
-                            @foreach($products as $p)
-                                <option value="{{ $p->sku }}">[{{ $p->sku }}] {{ $p->name }} (Stok: {{ $p->stock }} {{ $p->unit }})</option>
+                        <label class="block text-sm font-bold text-indigo-900 mb-1">Lokasi Gudang</label>
+                        <select name="warehouse_id" required class="w-full border border-indigo-200 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="" disabled selected>-- Pilih Gudang --</option>
+                            @foreach($warehouses as $wh)
+                                <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
                             @endforeach
                         </select>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-teal-900 mb-1">Pilih Produk</label>
+                    <select name="product_sku" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="" disabled selected>-- Pilih Produk --</option>
+                        @foreach($products as $p)
+                            <!-- Menghilangkan info stok lama, karena sekarang stok dihitung per gudang -->
+                            <option value="{{ $p->sku }}">[{{ $p->sku }}] {{ $p->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 bg-teal-50 p-4 rounded-lg border border-teal-100">
