@@ -203,11 +203,231 @@
 //     }
 // }
 
+// namespace App\Http\Controllers;
+
+// use App\Models\Sale;
+// use App\Models\SaleItem;
+// use App\Models\Product;
+// use App\Models\Account;
+// use App\Models\Journal;
+// use App\Models\JournalEntry;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\DB;
+// use Carbon\Carbon;
+
+// class SaleController extends Controller
+// {
+//     public function index(Request $request)
+//     {
+//         $query = Sale::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
+
+//         if ($request->has('status') && $request->status != '') {
+//             $query->where('status', $request->status);
+//         }
+
+//         $sales = $query->get();
+//         return view('sales.index', compact('sales'));
+//     }
+
+//     public function store(Request $request)
+//     {
+//         $validated = $request->validate([
+//             'date'         => 'required|date',
+//             'due_date'     => 'nullable|date',
+//             'reference_no' => 'nullable|string|max:50',
+//             'contact_id'   => 'required|exists:contacts,id',
+//             'notes'        => 'nullable|string',
+//             'items'        => 'required|array|min:1',
+//             'items.*.product_sku' => 'required|exists:products,sku',
+//             'items.*.quantity'    => 'required|integer|min:1',
+//             'items.*.price'       => 'required|numeric|min:0',
+//         ]);
+
+//         DB::beginTransaction();
+
+//         try {
+//             $sale = Sale::create([
+//                 'date'         => $validated['date'],
+//                 'due_date'     => $validated['due_date'] ?? $validated['date'],
+//                 'reference_no' => $validated['reference_no'],
+//                 'contact_id'   => $validated['contact_id'],
+//                 'status'       => 'Pesanan',
+//                 'notes'        => $validated['notes'] ?? '',
+//                 'total'        => 0,
+//             ]);
+
+//             $grandTotal = 0;
+
+//             foreach ($validated['items'] as $item) {
+//                 $subTotal = $item['quantity'] * $item['price'];
+//                 $grandTotal += $subTotal;
+
+//                 SaleItem::create([
+//                     'sale_id'     => $sale->id,
+//                     'product_sku' => $item['product_sku'],
+//                     'quantity'    => $item['quantity'],
+//                     'price'       => $item['price'],
+//                     'sub_total'   => $subTotal,
+//                 ]);
+//             }
+
+//             $sale->update(['total' => $grandTotal]);
+
+//             DB::commit();
+//             return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan penjualan');
+//         }
+//     }
+
+//     // TAHAP 2: KIRIM BARANG -> STOK BERKURANG, MUNCUL PIUTANG USAHA, PENDAPATAN & HPP
+//     public function deliver($id)
+//     {
+//         DB::beginTransaction();
+
+//         try {
+//             $sale = Sale::with('items')->findOrFail($id);
+
+//             if ($sale->status != 'Pesanan') {
+//                 return redirect()->back()->with('error', 'Status pesanan tidak valid untuk dikirim');
+//             }
+
+//             $sale->update(['status' => 'Pengiriman']);
+
+//             $totalHPP = 0;
+
+//             foreach ($sale->items as $item) {
+//                 $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
+
+//                 if ($product->stock < $item->quantity) {
+//                     DB::rollBack();
+//                     return redirect()->back()->with('error', 'Stok tidak mencukupi untuk produk: ' . $product->name);
+//                 }
+
+//                 $totalHPP += ($item->quantity * $product->hpp);
+//                 $product->decrement('stock', $item->quantity);
+//             }
+
+//             // Cari Akun Piutang Usaha (12%), Pendapatan (50%), HPP (60%), dan Persediaan (13%)
+//             $arAcc = Account::where('code', 'LIKE', '12%')->where('is_header', false)->first();
+
+//             $revAcc = Account::where('code', 'LIKE', '50%')->where('is_header', false)->first();
+//             if (!$revAcc) $revAcc = Account::where('code', 'LIKE', '4%')->where('is_header', false)->first();
+
+//             $cogsAcc = Account::where('code', 'LIKE', '60%')->where('is_header', false)->first();
+//             if (!$cogsAcc) $cogsAcc = Account::where('code', 'LIKE', '5%')->where('is_header', false)->first();
+
+//             $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first();
+//             if (!$invAcc) $invAcc = Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+
+//             if (!$arAcc || !$revAcc || !$cogsAcc || !$invAcc) {
+//                 DB::rollBack();
+//                 return redirect()->back()->with('error', 'Konfigurasi Akun (Piutang 12%, Persediaan 13%, Pendapatan 50%, HPP 60%) belum lengkap di CoA!');
+//             }
+
+//             $journalCode = "DLV-S-" . Carbon::now()->format('Ymd') . "-" . $sale->id;
+
+//             // 1. Jurnal Pengakuan Piutang & Pendapatan (Debit: Piutang Usaha, Kredit: Pendapatan)
+//             $j1 = Journal::create([
+//                 'date'         => Carbon::now(),
+//                 'description'  => "Pengiriman Penjualan SO #" . $sale->id . " (Ref: " . $sale->reference_no . ") - Muncul Piutang",
+//                 'reference_no' => $journalCode,
+//             ]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $arAcc->code, 'debit' => $sale->total, 'credit' => 0]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $revAcc->code, 'debit' => 0, 'credit' => $sale->total]);
+
+//             // 2. Jurnal HPP & Pengurangan Nilai Persediaan (Debit: HPP, Kredit: Persediaan)
+//             if ($totalHPP > 0) {
+//                 $j2 = Journal::create([
+//                     'date'         => Carbon::now(),
+//                     'description'  => "HPP Pengiriman SO #" . $sale->id . " (" . $journalCode . ")",
+//                     'reference_no' => $journalCode,
+//                 ]);
+//                 JournalEntry::create(['journal_id' => $j2->id, 'account_code' => $cogsAcc->code, 'debit' => $totalHPP, 'credit' => 0]);
+//                 JournalEntry::create(['journal_id' => $j2->id, 'account_code' => $invAcc->code, 'debit' => 0, 'credit' => $totalHPP]);
+//             }
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Barang dikirim! Stok dikurangi & Jurnal Piutang Usaha otomatis tercatat di CoA.');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal memproses pengiriman barang');
+//         }
+//     }
+
+//     // TAHAP 3: PELUNASAN INVOICE -> KAS/BANK BERTAMBAH & PIUTANG USAHA BERKURANG (LUNAS)
+//     public function invoice(Request $request, $id)
+//     {
+//         $validated = $request->validate([
+//             'payment_account' => 'required|exists:accounts,code',
+//         ]);
+
+//         DB::beginTransaction();
+
+//         try {
+//             $sale = Sale::with('items')->findOrFail($id);
+
+//             if ($sale->status != 'Pengiriman') {
+//                 return redirect()->back()->with('error', 'Hanya dokumen berstatus Pengiriman yang dapat dilunasi');
+//             }
+
+//             $sale->update([
+//                 'status'               => 'Tagihan',
+//                 'payment_account_code' => $validated['payment_account']
+//             ]);
+
+//             // Cari Akun Bank Penerima & Akun Piutang Usaha (12%)
+//             $bankAcc = Account::where('code', $validated['payment_account'])->where('is_header', false)->first();
+//             $arAcc   = Account::where('code', 'LIKE', '12%')->where('is_header', false)->first();
+
+//             if (!$bankAcc || !$arAcc) {
+//                 DB::rollBack();
+//                 return redirect()->back()->with('error', 'Akun Kas/Bank atau Akun Piutang Usaha (12%) tidak ditemukan di CoA');
+//             }
+
+//             $journalCode = "INV-S-" . Carbon::now()->format('Ymd') . "-" . $sale->id;
+            
+//             $j1 = Journal::create([
+//                 'date'         => Carbon::now(),
+//                 'description'  => "Pelunasan Piutang SO #" . $sale->id . " (Ref: " . $sale->reference_no . ") - " . $journalCode,
+//                 'reference_no' => $journalCode,
+//             ]);
+
+//             // Debit: Kas/Bank (Uang Masuk) | Kredit: Piutang Usaha (Piutang Lunas/Berkurang)
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $bankAcc->code, 'debit' => $sale->total, 'credit' => 0]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $arAcc->code, 'debit' => 0, 'credit' => $sale->total]);
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Invoice lunas! Dana masuk ke Bank dan saldo Piutang Usaha telah ditutup.');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal memproses Invoice');
+//         }
+//     }
+
+//     public function showDeliveries()
+//     {
+//         $deliveries = Sale::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'desc')->get();
+//         $pendingOrders = Sale::with(['contact', 'items.product'])->where('status', 'Pesanan')->get();
+//         return view('sales.delivery', compact('deliveries', 'pendingOrders'));
+//     }
+
+//     public function showInvoices()
+//     {
+//         $invoices = Sale::with(['contact', 'paymentAccount'])->where('status', 'Tagihan')->orderBy('date', 'desc')->get();
+//         $readyDeliveries = Sale::with(['contact', 'items.product'])->where('status', 'Pengiriman')->get();
+//         $banks = Account::where(function($query) { $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%'); })->where('is_header', false)->get();
+//         return view('sales.invoice', compact('invoices', 'readyDeliveries', 'banks'));
+//     }
+// }
+
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\Account;
 use App\Models\Journal;
 use App\Models\JournalEntry;
@@ -281,7 +501,7 @@ class SaleController extends Controller
         }
     }
 
-    // TAHAP 2: KIRIM BARANG -> STOK BERKURANG, MUNCUL PIUTANG USAHA, PENDAPATAN & HPP
+    // TAHAP 2: KIRIM BARANG -> STOK BERKURANG (OTOMATIS FIFO DARI GUDANG TERTUA), MUNCUL PIUTANG, PENDAPATAN & HPP
     public function deliver($id)
     {
         DB::beginTransaction();
@@ -293,20 +513,48 @@ class SaleController extends Controller
                 return redirect()->back()->with('error', 'Status pesanan tidak valid untuk dikirim');
             }
 
-            $sale->update(['status' => 'Pengiriman']);
-
             $totalHPP = 0;
+            $deliveryLog = []; // Log untuk mencatat barang diambil dari gudang mana saja
 
             foreach ($sale->items as $item) {
                 $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
+                $neededQty = $item->quantity;
 
-                if ($product->stock < $item->quantity) {
+                // LOGIKA AUTO-FIFO: Ambil stok per gudang, diurutkan dari id terkecil (pertama kali masuk)
+                $availableStocks = ProductStock::with('warehouse')
+                    ->where('product_sku', $item->product_sku)
+                    ->where('quantity', '>', 0)
+                    ->orderBy('id', 'asc')
+                    ->lockForUpdate()
+                    ->get();
+                
+                $totalAvailable = $availableStocks->sum('quantity');
+
+                if ($totalAvailable < $neededQty) {
                     DB::rollBack();
-                    return redirect()->back()->with('error', 'Stok tidak mencukupi untuk produk: ' . $product->name);
+                    return redirect()->back()->with('error', 'Stok gabungan seluruh gudang tidak mencukupi untuk produk: ' . $product->name);
                 }
 
-                $totalHPP += ($item->quantity * $product->hpp);
-                $product->decrement('stock', $item->quantity);
+                $totalHPP += ($neededQty * $product->hpp);
+                $takenNotes = [];
+
+                // Lakukan pengurangan stok secara sekuensial (FIFO)
+                foreach ($availableStocks as $stock) {
+                    if ($neededQty <= 0) break;
+
+                    $take = min($stock->quantity, $neededQty);
+                    
+                    // Kurangi stok di tabel product_stocks (Gudang Spesifik)
+                    $stock->quantity -= $take;
+                    $stock->save();
+
+                    $neededQty -= $take;
+                    
+                    $warehouseName = $stock->warehouse ? $stock->warehouse->name : 'Gudang Unknown';
+                    $takenNotes[] = "{$take} unit dari {$warehouseName}";
+                }
+                
+                $deliveryLog[] = "{$product->name} (" . implode(', ', $takenNotes) . ")";
             }
 
             // Cari Akun Piutang Usaha (12%), Pendapatan (50%), HPP (60%), dan Persediaan (13%)
@@ -325,6 +573,13 @@ class SaleController extends Controller
                 DB::rollBack();
                 return redirect()->back()->with('error', 'Konfigurasi Akun (Piutang 12%, Persediaan 13%, Pendapatan 50%, HPP 60%) belum lengkap di CoA!');
             }
+
+            // Update status dan tempelkan log FIFO ke dalam kolom 'notes' agar staf bisa membacanya
+            $newNotes = trim($sale->notes . "\n[AUTO-FIFO] " . implode(' | ', $deliveryLog));
+            $sale->update([
+                'status' => 'Pengiriman',
+                'notes'  => $newNotes
+            ]);
 
             $journalCode = "DLV-S-" . Carbon::now()->format('Ymd') . "-" . $sale->id;
 
@@ -349,14 +604,13 @@ class SaleController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Barang dikirim! Stok dikurangi & Jurnal Piutang Usaha otomatis tercatat di CoA.');
+            return redirect()->back()->with('success', 'Barang dikirim secara FIFO! Stok gudang dikurangi & Jurnal Piutang Usaha otomatis tercatat.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal memproses pengiriman barang');
+            return redirect()->back()->with('error', 'Gagal memproses pengiriman barang: ' . $e->getMessage());
         }
     }
 
-    // TAHAP 3: PELUNASAN INVOICE -> KAS/BANK BERTAMBAH & PIUTANG USAHA BERKURANG (LUNAS)
     public function invoice(Request $request, $id)
     {
         $validated = $request->validate([
@@ -377,7 +631,6 @@ class SaleController extends Controller
                 'payment_account_code' => $validated['payment_account']
             ]);
 
-            // Cari Akun Bank Penerima & Akun Piutang Usaha (12%)
             $bankAcc = Account::where('code', $validated['payment_account'])->where('is_header', false)->first();
             $arAcc   = Account::where('code', 'LIKE', '12%')->where('is_header', false)->first();
 
@@ -394,7 +647,6 @@ class SaleController extends Controller
                 'reference_no' => $journalCode,
             ]);
 
-            // Debit: Kas/Bank (Uang Masuk) | Kredit: Piutang Usaha (Piutang Lunas/Berkurang)
             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $bankAcc->code, 'debit' => $sale->total, 'credit' => 0]);
             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $arAcc->code, 'debit' => 0, 'credit' => $sale->total]);
 
