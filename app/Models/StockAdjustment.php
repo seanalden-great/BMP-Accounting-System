@@ -10,15 +10,22 @@ class StockAdjustment extends Model
 
     protected $fillable = [
         'date',
+        'warehouse_id', // Tambahan baru untuk menyimpan ID Gudang
         'product_sku',
-        'type', // 'Penambahan' atau 'Pengurangan'
+        'type',
         'quantity',
         'reason',
-        'total_value'
+        'total_value',
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_sku', 'sku');
+    }
+
+    // Relasi baru ke model Warehouse
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 }
