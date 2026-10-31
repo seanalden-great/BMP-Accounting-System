@@ -268,6 +268,24 @@ class AccountController extends Controller
         return view('accounts.index', compact('response', 'grandTotalDebit', 'grandTotalKredit'));
     }
 
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'code'           => 'required|string|unique:accounts,code',
+    //         'name'           => 'required|string',
+    //         'is_header'      => 'boolean',
+    //         'normal_balance' => 'required|in:D,K,-',
+    //         'level'          => 'required|integer',
+    //     ]);
+
+    //     try {
+    //         Account::create($validated);
+    //         return redirect()->route('accounts.index')->with('success', 'Akun berhasil ditambahkan');
+    //     } catch (\Exception $e) {
+    //         return redirect()->back()->with('error', 'Gagal menyimpan akun baru');
+    //     }
+    // }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -279,9 +297,26 @@ class AccountController extends Controller
         ]);
 
         try {
-            Account::create($validated);
+            $account = Account::create($validated);
+            
+            // Jika request datang dari AJAX (Fetch API), kembalikan JSON
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Akun berhasil ditambahkan.',
+                    'account' => $account
+                ]);
+            }
+
             return redirect()->route('accounts.index')->with('success', 'Akun berhasil ditambahkan');
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menyimpan akun: ' . $e->getMessage()
+                ], 500);
+            }
+
             return redirect()->back()->with('error', 'Gagal menyimpan akun baru');
         }
     }
