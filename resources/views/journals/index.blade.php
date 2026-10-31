@@ -1,5 +1,5 @@
 <!-- resources/views/journals/index.blade.php -->
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
 <div class="space-y-6 pb-10">
@@ -177,6 +177,226 @@
         let targetCredit = debit > 0 ? debit : 0;
 
         const bankCode = "{{ $accountCode }}";
+
+        const hiddenDiv = document.getElementById('hiddenEntries');
+        hiddenDiv.innerHTML = `
+            <!-- Entry 1: Bank -->
+            <input type="hidden" name="entries[0][account_code]" value="${bankCode}">
+            <input type="hidden" name="entries[0][debit]" value="${bankDebit}">
+            <input type="hidden" name="entries[0][credit]" value="${bankCredit}">
+            
+            <!-- Entry 2: Akun Lawan -->
+            <input type="hidden" name="entries[1][account_code]" value="${targetAcc}">
+            <input type="hidden" name="entries[1][debit]" value="${targetDebit}">
+            <input type="hidden" name="entries[1][credit]" value="${targetCredit}">
+        `;
+
+        document.getElementById('journalForm').submit();
+    }
+</script>
+@endsection --}}
+
+<!-- resources/views/journals/index.blade.php -->
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6 pb-10">
+    <h1 class="text-3xl font-bold mb-6 text-slate-800 flex items-center gap-3">
+        <i data-feather="dollar-sign" class="w-7 h-7 text-green-600"></i> Mutasi Rekening Bank
+    </h1>
+
+    <div class="space-y-6">
+        <!-- Header Dropdown Pemilihan Bank & Tombol Refresh -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <form action="{{ route('journals.index') }}" method="GET" class="flex items-center gap-3 w-full sm:w-auto" id="bankForm">
+                <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i data-feather="briefcase" class="w-5 h-5"></i></div>
+                <label class="font-semibold text-slate-700 whitespace-nowrap">Pilih Buku Bank:</label>
+                <select 
+                    name="account_code" 
+                    onchange="document.getElementById('bankForm').submit()"
+                    class="w-full sm:w-64 border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium"
+                >
+                    <option value="" disabled {{ !$accountCode ? 'selected' : '' }}>-- Pilih Rekening --</option>
+                    @foreach($banks as $bank)
+                        <option value="{{ $bank->code }}" {{ $accountCode == $bank->code ? 'selected' : '' }}>
+                            {{ $bank->name }} ({{ $bank->code }})
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+            
+            <!-- Tombol Refresh Halaman -->
+            <button onclick="window.location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2">
+                <i data-feather="refresh-cw" class="w-4 h-4"></i> Segarkan Data
+            </button>
+        </div>
+
+        @if($accountCode)
+            @php 
+                $selectedBank = $banks->firstWhere('code', $accountCode);
+            @endphp
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-300 overflow-x-auto">
+                <div class="mb-4 border-b border-slate-200 pb-4">
+                    <h2 class="text-xl font-bold font-sans uppercase text-slate-800">{{ $selectedBank->name }}</h2>
+                    <p class="text-sm font-semibold mt-1 text-slate-600">Saldo Mutasi Bank - Akun: {{ $selectedBank->code }}</p>
+                </div>
+
+                <!-- Tabel Riwayat Mutasi -->
+                <table class="w-full text-sm border-collapse border border-slate-400 min-w-[900px] mb-8">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="border border-slate-400 p-2 text-center w-12">No.</th>
+                            <th class="border border-slate-400 p-2 text-center w-32">Tanggal</th>
+                            <th class="border border-slate-400 p-2 text-center">Uraian / Keterangan</th>
+                            <th class="border border-slate-400 p-2 text-center w-24">No. AKUN</th>
+                            <th class="border border-slate-400 p-2 text-center w-32">DEBET</th>
+                            <th class="border border-slate-400 p-2 text-center w-32">KREDIT</th>
+                            <th class="border border-slate-400 p-2 text-center w-36">SISA SALDO</th>
+                            <th class="border-y border-slate-400 p-2 w-4 bg-white"></th>
+                            <th class="border border-slate-400 p-2 text-center w-48">KETERANGAN / LAWAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php 
+                            $runningBalance = 0; 
+                            $rowNumber = 1;
+                            // Balik urutan jurnal dari terlama ke terbaru agar running balance benar (atas ke bawah)
+                            $sortedJournals = $journals->sortBy('date')->values();
+                        @endphp
+
+                        @forelse($sortedJournals as $journal)
+                            @foreach($journal->entries as $entry)
+                                @php 
+                                    $isBankRow = ($entry->account_code == $accountCode);
+                                    if ($isBankRow) {
+                                        $runningBalance += ($entry->debit - $entry->credit);
+                                    }
+                                @endphp
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="border border-slate-400 p-2 text-center">{{ $rowNumber++ }}</td>
+                                    <td class="border border-slate-400 p-2 text-center">{{ \Carbon\Carbon::parse($journal->date)->format('d-M-Y') }}</td>
+                                    <td class="border border-slate-400 p-2">{{ $journal->description }} {{ $journal->reference_no ? '- '.$journal->reference_no : '' }}</td>
+                                    <td class="border border-slate-400 p-2 text-center font-semibold">{{ $entry->account_code }}</td>
+                                    <td class="border border-slate-400 p-2 text-right font-medium">
+                                        {{ $entry->debit > 0 ? 'Rp ' . number_format($entry->debit, 0, ',', '.') : '' }}
+                                    </td>
+                                    <td class="border border-slate-400 p-2 text-right font-medium">
+                                        {{ $entry->credit > 0 ? 'Rp ' . number_format($entry->credit, 0, ',', '.') : '' }}
+                                    </td>
+                                    <td class="border border-slate-400 p-2 text-right {{ $isBankRow ? 'font-bold text-blue-600' : '' }}">
+                                        @if($isBankRow)
+                                            @if($runningBalance < 0)
+                                                <span class="text-red-600">(Rp {{ number_format(abs($runningBalance), 0, ',', '.') }})</span>
+                                            @else
+                                                Rp {{ number_format($runningBalance, 0, ',', '.') }}
+                                            @endif
+                                        @endif
+                                    </td>
+                                    <td class="border-y border-slate-400 p-2 bg-white"></td>
+                                    
+                                    <!-- Mengganti tombol aksi dengan nama akun referensi (Keterangan) -->
+                                    <td class="border border-slate-400 p-2 text-slate-600 font-medium text-center text-xs">
+                                        {{ $entry->account->name ?? 'Tanpa Keterangan' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @empty
+                            <tr><td colspan="9" class="border border-slate-400 p-4 text-center text-slate-500 font-medium">Belum ada riwayat transaksi pada rekening ini.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+
+                <!-- Form Mutasi Manual Terpisah (Di luar tabel) -->
+                <div class="mt-8 bg-blue-50/40 p-5 rounded-lg border border-blue-100">
+                    <h3 class="font-bold text-blue-800 mb-4 flex items-center gap-2"><i data-feather="edit-3" class="w-4 h-4"></i> Catat Jurnal Mutasi Manual</h3>
+                    
+                    <form action="{{ route('journals.store') }}" method="POST" id="journalForm">
+                        @csrf
+                        <input type="hidden" name="reference_no" value="">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
+                                <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div class="lg:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Uraian / Keterangan</label>
+                                <input type="text" name="description" required placeholder="Ketik uraian mutasi..." class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">No. Akun Lawan</label>
+                                <input type="text" id="targetAccount" required placeholder="Misal: 509" class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-center">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 rounded border border-slate-200">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Nominal DEBET (Uang Masuk ke Bank)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 text-xs">Rp</span>
+                                    <input type="number" id="inpDebit" min="0" placeholder="0" class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded text-right text-sm font-medium outline-none focus:ring-1 focus:ring-blue-500" onchange="document.getElementById('inpCredit').value = ''">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Nominal KREDIT (Uang Keluar dari Bank)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 text-xs">Rp</span>
+                                    <input type="number" id="inpCredit" min="0" placeholder="0" class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded text-right text-sm font-medium outline-none focus:ring-1 focus:ring-blue-500" onchange="document.getElementById('inpDebit').value = ''">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden inputs untuk Controller Double Entry -->
+                        <div id="hiddenEntries"></div>
+                        
+                        <div class="flex justify-end mt-4">
+                            <button type="button" onclick="submitJournal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-bold shadow transition-colors flex items-center gap-2">
+                                <i data-feather="save" class="w-4 h-4"></i> Simpan Mutasi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @else
+            <div class="bg-white p-10 rounded-xl shadow-sm border border-slate-300 text-center">
+                <i data-feather="book-open" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                <h3 class="text-lg font-bold text-slate-700">Pilih Rekening Bank</h3>
+                <p class="text-slate-500">Silakan pilih rekening pada dropdown di atas untuk melihat riwayat mutasinya.</p>
+            </div>
+        @endif
+    </div>
+</div>
+
+<script>
+    function submitJournal() {
+        const date = document.querySelector('input[name="date"]').value;
+        const desc = document.querySelector('input[name="description"]').value;
+        const targetAcc = document.getElementById('targetAccount').value;
+        const debit = parseFloat(document.getElementById('inpDebit').value) || 0;
+        const credit = parseFloat(document.getElementById('inpCredit').value) || 0;
+
+        if (!date || !desc || !targetAcc || (debit === 0 && credit === 0)) {
+            alert("Harap lengkapi Tanggal, Uraian, No. Akun lawan, dan nominal (Debit atau Kredit)!");
+            return;
+        }
+
+        if (debit > 0 && credit > 0) {
+            alert("Isi salah satu nominal saja: Debit ATAU Kredit.");
+            return;
+        }
+
+        // Logic Double-Entry: 
+        // Jika form Debit diisi -> Rekening Bank Debit (Bertambah), Akun Lawan Kredit
+        // Jika form Kredit diisi -> Rekening Bank Kredit (Berkurang), Akun Lawan Debit
+        
+        let bankDebit = debit > 0 ? debit : 0;
+        let bankCredit = credit > 0 ? credit : 0;
+        
+        let targetDebit = credit > 0 ? credit : 0;
+        let targetCredit = debit > 0 ? debit : 0;
+
+        const bankCode = "{{ $accountCode ?? '' }}";
 
         const hiddenDiv = document.getElementById('hiddenEntries');
         hiddenDiv.innerHTML = `
