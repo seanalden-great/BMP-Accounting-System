@@ -674,6 +674,283 @@
 //     }
 // }
 
+// namespace App\Http\Controllers;
+
+// use App\Models\Sale;
+// use App\Models\SaleItem;
+// use App\Models\Product;
+// use App\Models\ProductStock;
+// use App\Models\Account;
+// use App\Models\Journal;
+// use App\Models\JournalEntry;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\DB;
+// use Carbon\Carbon;
+
+// class SaleController extends Controller
+// {
+//     // Fungsi Bantuan (Helper) untuk Auto-Generate Nomor Invoice (GKP) & Surat Jalan (SJ)
+//     private function generateDocNumber($type, $dateString)
+//     {
+//         $date = Carbon::parse($dateString);
+//         $month = $date->month;
+//         $year = $date->year;
+        
+//         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+//         $romanMonth = $romanMonths[$month];
+        
+//         // Akhiran dokumen (Contoh: /SJ/BMP/XI/2026 atau /GKP/BMP/XI/2026)
+//         $suffix = "/{$type}/BMP/{$romanMonth}/{$year}";
+        
+//         // Karena Surat Jalan & Invoice masuk ke tabel Jurnal, kita cari urutan terakhir di sana
+//         $latestDoc = Journal::whereYear('date', $year)
+//             ->whereMonth('date', $month)
+//             ->where('reference_no', 'LIKE', '%'.$suffix)
+//             ->orderBy('id', 'desc')
+//             ->first();
+            
+//         $nextSeq = 1;
+//         if ($latestDoc && $latestDoc->reference_no) {
+//             $parts = explode('/', $latestDoc->reference_no);
+//             if (isset($parts[0]) && is_numeric($parts[0])) {
+//                 $nextSeq = intval($parts[0]) + 1;
+//             }
+//         }
+        
+//         return str_pad($nextSeq, 3, '0', STR_PAD_LEFT) . $suffix;
+//     }
+
+//     public function index(Request $request)
+//     {
+//         $query = Sale::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
+
+//         if ($request->has('status') && $request->status != '') {
+//             $query->where('status', $request->status);
+//         }
+
+//         $sales = $query->get();
+//         return view('sales.index', compact('sales'));
+//     }
+
+//     public function store(Request $request)
+//     {
+//         $validated = $request->validate([
+//             'date'         => 'required|date',
+//             'due_date'     => 'nullable|date',
+//             'reference_no' => 'nullable|string|max:50',
+//             'contact_id'   => 'required|exists:contacts,id',
+//             'notes'        => 'nullable|string',
+//             'items'        => 'required|array|min:1',
+//             'items.*.product_sku' => 'required|exists:products,sku',
+//             'items.*.quantity'    => 'required|integer|min:1',
+//             'items.*.price'       => 'required|numeric|min:0',
+//         ]);
+
+//         DB::beginTransaction();
+
+//         try {
+//             $sale = Sale::create([
+//                 'date'         => $validated['date'],
+//                 'due_date'     => $validated['due_date'] ?? $validated['date'],
+//                 'reference_no' => $validated['reference_no'],
+//                 'contact_id'   => $validated['contact_id'],
+//                 'status'       => 'Pesanan',
+//                 'notes'        => $validated['notes'] ?? '',
+//                 'total'        => 0,
+//             ]);
+
+//             $grandTotal = 0;
+
+//             foreach ($validated['items'] as $item) {
+//                 $subTotal = $item['quantity'] * $item['price'];
+//                 $grandTotal += $subTotal;
+
+//                 SaleItem::create([
+//                     'sale_id'     => $sale->id,
+//                     'product_sku' => $item['product_sku'],
+//                     'quantity'    => $item['quantity'],
+//                     'price'       => $item['price'],
+//                     'sub_total'   => $subTotal,
+//                 ]);
+//             }
+
+//             $sale->update(['total' => $grandTotal]);
+
+//             DB::commit();
+//             return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan penjualan');
+//         }
+//     }
+
+//     // TAHAP 2: KIRIM BARANG (PENERBITAN SURAT JALAN / SJ)
+//     public function deliver($id)
+//     {
+//         DB::beginTransaction();
+
+//         try {
+//             $sale = Sale::with('items')->findOrFail($id);
+
+//             if ($sale->status != 'Pesanan') {
+//                 return redirect()->back()->with('error', 'Status pesanan tidak valid untuk dikirim');
+//             }
+
+//             $totalHPP = 0;
+//             $deliveryLog = []; 
+
+//             foreach ($sale->items as $item) {
+//                 $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
+//                 $neededQty = $item->quantity;
+
+//                 $availableStocks = ProductStock::with('warehouse')
+//                     ->where('product_sku', $item->product_sku)
+//                     ->where('quantity', '>', 0)
+//                     ->orderBy('id', 'asc')
+//                     ->lockForUpdate()
+//                     ->get();
+                
+//                 $totalAvailable = $availableStocks->sum('quantity');
+
+//                 if ($totalAvailable < $neededQty) {
+//                     DB::rollBack();
+//                     return redirect()->back()->with('error', 'Stok gabungan seluruh gudang tidak mencukupi untuk produk: ' . $product->name);
+//                 }
+
+//                 $totalHPP += ($neededQty * $product->hpp);
+//                 $takenNotes = [];
+
+//                 foreach ($availableStocks as $stock) {
+//                     if ($neededQty <= 0) break;
+
+//                     $take = min($stock->quantity, $neededQty);
+                    
+//                     $stock->quantity -= $take;
+//                     $stock->save();
+
+//                     $neededQty -= $take;
+                    
+//                     $warehouseName = $stock->warehouse ? $stock->warehouse->name : 'Gudang Unknown';
+//                     $takenNotes[] = "{$take} unit dari {$warehouseName}";
+//                 }
+                
+//                 $deliveryLog[] = "{$product->name} (" . implode(', ', $takenNotes) . ")";
+//             }
+
+//             $arAcc = Account::where('code', 'LIKE', '12%')->where('is_header', false)->first();
+//             $revAcc = Account::where('code', 'LIKE', '50%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '4%')->where('is_header', false)->first();
+//             $cogsAcc = Account::where('code', 'LIKE', '60%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '5%')->where('is_header', false)->first();
+//             $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+
+//             if (!$arAcc || !$revAcc || !$cogsAcc || !$invAcc) {
+//                 DB::rollBack();
+//                 return redirect()->back()->with('error', 'Konfigurasi Akun (Piutang 12%, Persediaan 13%, Pendapatan 50%, HPP 60%) belum lengkap di CoA!');
+//             }
+
+//             // AUTO-GENERATE KODE SURAT JALAN (SJ)
+//             $now = Carbon::now();
+//             $journalCode = $this->generateDocNumber('SJ', $now);
+
+//             // Tempelkan Surat Jalan ke Catatan agar tampil di tabel UI
+//             $newNotes = trim($sale->notes . "\n[No. SJ: {$journalCode}] [AUTO-FIFO] " . implode(' | ', $deliveryLog));
+//             $sale->update([
+//                 'status' => 'Pengiriman',
+//                 'notes'  => $newNotes
+//             ]);
+
+//             $j1 = Journal::create([
+//                 'date'         => $now,
+//                 'description'  => "Pengiriman Penjualan SO #" . $sale->id . " - Surat Jalan: " . $journalCode,
+//                 'reference_no' => $journalCode,
+//             ]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $arAcc->code, 'debit' => $sale->total, 'credit' => 0]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $revAcc->code, 'debit' => 0, 'credit' => $sale->total]);
+
+//             if ($totalHPP > 0) {
+//                 $j2 = Journal::create([
+//                     'date'         => $now,
+//                     'description'  => "HPP Pengiriman SO #" . $sale->id . " (Surat Jalan: " . $journalCode . ")",
+//                     'reference_no' => $journalCode,
+//                 ]);
+//                 JournalEntry::create(['journal_id' => $j2->id, 'account_code' => $cogsAcc->code, 'debit' => $totalHPP, 'credit' => 0]);
+//                 JournalEntry::create(['journal_id' => $j2->id, 'account_code' => $invAcc->code, 'debit' => 0, 'credit' => $totalHPP]);
+//             }
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Barang berhasil dikirim dengan Surat Jalan Nomor: ' . $journalCode);
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal memproses pengiriman barang: ' . $e->getMessage());
+//         }
+//     }
+
+//     // TAHAP 3: PELUNASAN (PENERBITAN INVOICE / GKP)
+//     public function invoice(Request $request, $id)
+//     {
+//         $validated = $request->validate([
+//             'payment_account' => 'required|exists:accounts,code',
+//         ]);
+
+//         DB::beginTransaction();
+
+//         try {
+//             $sale = Sale::with('items')->findOrFail($id);
+
+//             if ($sale->status != 'Pengiriman') {
+//                 return redirect()->back()->with('error', 'Hanya dokumen berstatus Pengiriman yang dapat dilunasi');
+//             }
+
+//             $bankAcc = Account::where('code', $validated['payment_account'])->where('is_header', false)->first();
+//             $arAcc   = Account::where('code', 'LIKE', '12%')->where('is_header', false)->first();
+
+//             if (!$bankAcc || !$arAcc) {
+//                 DB::rollBack();
+//                 return redirect()->back()->with('error', 'Akun Kas/Bank atau Akun Piutang Usaha (12%) tidak ditemukan di CoA');
+//             }
+
+//             // AUTO-GENERATE KODE INVOICE (GKP)
+//             $now = Carbon::now();
+//             $journalCode = $this->generateDocNumber('GKP', $now);
+            
+//             $sale->update([
+//                 'status'               => 'Tagihan',
+//                 'payment_account_code' => $validated['payment_account'],
+//                 'notes'                => trim($sale->notes . "\n[Lunas] Diterbitkan Invoice Nomor: " . $journalCode)
+//             ]);
+
+//             $j1 = Journal::create([
+//                 'date'         => $now,
+//                 'description'  => "Pelunasan Piutang SO #" . $sale->id . " - Invoice: " . $journalCode,
+//                 'reference_no' => $journalCode,
+//             ]);
+
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $bankAcc->code, 'debit' => $sale->total, 'credit' => 0]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $arAcc->code, 'debit' => 0, 'credit' => $sale->total]);
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Pembayaran berhasil! Invoice bernomor ' . $journalCode . ' telah diterbitkan.');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal memproses Invoice');
+//         }
+//     }
+
+//     public function showDeliveries()
+//     {
+//         $deliveries = Sale::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'desc')->get();
+//         $pendingOrders = Sale::with(['contact', 'items.product'])->where('status', 'Pesanan')->get();
+//         return view('sales.delivery', compact('deliveries', 'pendingOrders'));
+//     }
+
+//     public function showInvoices()
+//     {
+//         $invoices = Sale::with(['contact', 'paymentAccount'])->where('status', 'Tagihan')->orderBy('date', 'desc')->get();
+//         $readyDeliveries = Sale::with(['contact', 'items.product'])->where('status', 'Pengiriman')->get();
+//         $banks = Account::where(function($query) { $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%'); })->where('is_header', false)->get();
+//         return view('sales.invoice', compact('invoices', 'readyDeliveries', 'banks'));
+//     }
+// }
+
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
@@ -689,7 +966,7 @@ use Carbon\Carbon;
 
 class SaleController extends Controller
 {
-    // Fungsi Bantuan (Helper) untuk Auto-Generate Nomor Invoice (GKP) & Surat Jalan (SJ)
+    // Fungsi Bantuan (Helper) untuk Auto-Generate Nomor SO, Invoice (GKP) & Surat Jalan (SJ)
     private function generateDocNumber($type, $dateString)
     {
         $date = Carbon::parse($dateString);
@@ -699,15 +976,24 @@ class SaleController extends Controller
         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
         $romanMonth = $romanMonths[$month];
         
-        // Akhiran dokumen (Contoh: /SJ/BMP/XI/2026 atau /GKP/BMP/XI/2026)
+        // Akhiran dokumen (Contoh: /SO/BMP/XI/2026, /SJ/BMP/XI/2026 atau /GKP/BMP/XI/2026)
         $suffix = "/{$type}/BMP/{$romanMonth}/{$year}";
         
-        // Karena Surat Jalan & Invoice masuk ke tabel Jurnal, kita cari urutan terakhir di sana
-        $latestDoc = Journal::whereYear('date', $year)
-            ->whereMonth('date', $month)
-            ->where('reference_no', 'LIKE', '%'.$suffix)
-            ->orderBy('id', 'desc')
-            ->first();
+        if ($type === 'SO') {
+            // Pencarian untuk dokumen SO (Pesanan Penjualan)
+            $latestDoc = Sale::whereYear('date', $year)
+                ->whereMonth('date', $month)
+                ->where('reference_no', 'LIKE', '%'.$suffix)
+                ->orderBy('id', 'desc')
+                ->first();
+        } else {
+            // Pencarian untuk Surat Jalan (SJ) & Invoice (GKP) yang dicatat di tabel Jurnal
+            $latestDoc = Journal::whereYear('date', $year)
+                ->whereMonth('date', $month)
+                ->where('reference_no', 'LIKE', '%'.$suffix)
+                ->orderBy('id', 'desc')
+                ->first();
+        }
             
         $nextSeq = 1;
         if ($latestDoc && $latestDoc->reference_no) {
@@ -749,10 +1035,13 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
+            // Jika user membiarkan kosong, auto-generate kode SO
+            $refNo = $validated['reference_no'] ?: $this->generateDocNumber('SO', $validated['date']);
+
             $sale = Sale::create([
                 'date'         => $validated['date'],
                 'due_date'     => $validated['due_date'] ?? $validated['date'],
-                'reference_no' => $validated['reference_no'],
+                'reference_no' => $refNo,
                 'contact_id'   => $validated['contact_id'],
                 'status'       => 'Pesanan',
                 'notes'        => $validated['notes'] ?? '',
@@ -777,7 +1066,7 @@ class SaleController extends Controller
             $sale->update(['total' => $grandTotal]);
 
             DB::commit();
-            return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat');
+            return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat dengan nomor: ' . $refNo);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan penjualan');
@@ -851,7 +1140,6 @@ class SaleController extends Controller
             $now = Carbon::now();
             $journalCode = $this->generateDocNumber('SJ', $now);
 
-            // Tempelkan Surat Jalan ke Catatan agar tampil di tabel UI
             $newNotes = trim($sale->notes . "\n[No. SJ: {$journalCode}] [AUTO-FIFO] " . implode(' | ', $deliveryLog));
             $sale->update([
                 'status' => 'Pengiriman',
