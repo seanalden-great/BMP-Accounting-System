@@ -1006,6 +1006,73 @@ class SaleController extends Controller
         return str_pad($nextSeq, 3, '0', STR_PAD_LEFT) . $suffix;
     }
 
+    // public function index(Request $request)
+    // {
+    //     $query = Sale::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
+
+    //     if ($request->has('status') && $request->status != '') {
+    //         $query->where('status', $request->status);
+    //     }
+
+    //     $sales = $query->get();
+    //     return view('sales.index', compact('sales'));
+    // }
+
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'date'         => 'required|date',
+    //         'due_date'     => 'nullable|date',
+    //         'reference_no' => 'nullable|string|max:50',
+    //         'contact_id'   => 'required|exists:contacts,id',
+    //         'notes'        => 'nullable|string',
+    //         'items'        => 'required|array|min:1',
+    //         'items.*.product_sku' => 'required|exists:products,sku',
+    //         'items.*.quantity'    => 'required|integer|min:1',
+    //         'items.*.price'       => 'required|numeric|min:0',
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // Jika user membiarkan kosong, auto-generate kode SO
+    //         $refNo = $validated['reference_no'] ?: $this->generateDocNumber('SO', $validated['date']);
+
+    //         $sale = Sale::create([
+    //             'date'         => $validated['date'],
+    //             'due_date'     => $validated['due_date'] ?? $validated['date'],
+    //             'reference_no' => $refNo,
+    //             'contact_id'   => $validated['contact_id'],
+    //             'status'       => 'Pesanan',
+    //             'notes'        => $validated['notes'] ?? '',
+    //             'total'        => 0,
+    //         ]);
+
+    //         $grandTotal = 0;
+
+    //         foreach ($validated['items'] as $item) {
+    //             $subTotal = $item['quantity'] * $item['price'];
+    //             $grandTotal += $subTotal;
+
+    //             SaleItem::create([
+    //                 'sale_id'     => $sale->id,
+    //                 'product_sku' => $item['product_sku'],
+    //                 'quantity'    => $item['quantity'],
+    //                 'price'       => $item['price'],
+    //                 'sub_total'   => $subTotal,
+    //             ]);
+    //         }
+
+    //         $sale->update(['total' => $grandTotal]);
+
+    //         DB::commit();
+    //         return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat dengan nomor: ' . $refNo);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan penjualan');
+    //     }
+    // }
+
     public function index(Request $request)
     {
         $query = Sale::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
@@ -1015,7 +1082,11 @@ class SaleController extends Controller
         }
 
         $sales = $query->get();
-        return view('sales.index', compact('sales'));
+        
+        // Kalkulasi nomor SO selanjutnya untuk preview di form Modal
+        $nextDocNumber = $this->generateDocNumber('SO', Carbon::now()->toDateString());
+        
+        return view('sales.index', compact('sales', 'nextDocNumber'));
     }
 
     public function store(Request $request)
@@ -1023,7 +1094,7 @@ class SaleController extends Controller
         $validated = $request->validate([
             'date'         => 'required|date',
             'due_date'     => 'nullable|date',
-            'reference_no' => 'nullable|string|max:50',
+            // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
             'contact_id'   => 'required|exists:contacts,id',
             'notes'        => 'nullable|string',
             'items'        => 'required|array|min:1',
@@ -1035,8 +1106,9 @@ class SaleController extends Controller
         DB::beginTransaction();
 
         try {
-            // Jika user membiarkan kosong, auto-generate kode SO
-            $refNo = $validated['reference_no'] ?: $this->generateDocNumber('SO', $validated['date']);
+            // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
+            // Kalkulasi ini dihitung akurat berdasarkan inputan 'Tanggal SO'
+            $refNo = $this->generateDocNumber('SO', $validated['date']);
 
             $sale = Sale::create([
                 'date'         => $validated['date'],

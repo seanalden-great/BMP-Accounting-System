@@ -354,7 +354,8 @@ $products = \App\Models\Product::all();
                             </td>
 
                             <td class="p-4 text-sm font-bold text-slate-800 text-right">Rp
-                                {{ number_format($so->total, 0, ',', '.') }}</td>
+                                {{ number_format($so->total, 0, ',', '.') }}
+                            </td>
                             <td class="p-4 text-center">
                                 <span
                                     class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">{{ $so->status }}</span>
@@ -414,12 +415,19 @@ $products = \App\Models\Product::all();
                                 <input type="text" name="reference_no" placeholder="PO-CUST-001"
                                     class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                             </div> --}}
-                            <div>
+                            {{-- <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">No. Referensi (SO)</label>
                                 <!-- Ubah placeholder agar user tahu ini bisa auto-generate -->
                                 <input type="text" name="reference_no" placeholder="Otomatis (Cth: 001/SO/BMP/...)"
                                     class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                                 <p class="text-[10px] text-slate-500 mt-1">Biarkan kosong untuk Auto-Generate.</p>
+                            </div> --}}
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">No. Referensi (SO)</label>
+                                <!-- Kolom dibuat Disabled/Readonly dan menampilkan angka SO selanjutnya secara Live -->
+                                <input type="text" value="{{ $nextDocNumber }}" disabled
+                                    class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none bg-slate-100 text-slate-500 font-bold cursor-not-allowed text-center">
+                                <p class="text-[10px] text-slate-500 mt-1 font-medium">Diisi otomatis oleh sistem.</p>
                             </div>
                         </div>
 
@@ -518,22 +526,22 @@ $products = \App\Models\Product::all();
             productsData.forEach(p => { selectOptions += `<option value="${p.sku}" data-price="${p.sell_price}">[${p.sku}] ${p.name}</option>`; });
 
             tr.innerHTML = `
-                <td class="p-1 border">
-                    <select name="items[${rowIdx}][product_sku]" onchange="updatePrice(this, ${rowIdx})" required class="w-full p-1.5 text-sm outline-none bg-transparent">
-                        ${selectOptions}
-                    </select>
-                </td>
-                <td class="p-1 border">
-                    <input type="number" name="items[${rowIdx}][quantity]" id="qty_${rowIdx}" min="1" value="1" required onkeyup="calcSub(${rowIdx})" onchange="calcSub(${rowIdx})" class="w-full p-1.5 text-sm text-center outline-none bg-transparent">
-                </td>
-                <td class="p-1 border">
-                    <input type="number" name="items[${rowIdx}][price]" id="price_${rowIdx}" min="0" required onkeyup="calcSub(${rowIdx})" onchange="calcSub(${rowIdx})" class="w-full p-1.5 text-sm text-right outline-none bg-transparent">
-                </td>
-                <td class="p-2 border text-right text-sm font-semibold bg-slate-50 subtotal-text" id="subtext_${rowIdx}">Rp 0</td>
-                <td class="p-1 border text-center">
-                    <button type="button" onclick="this.closest('tr').remove(); calcGrand();" class="text-red-500 hover:text-red-700">X</button>
-                </td>
-            `;
+                    <td class="p-1 border">
+                        <select name="items[${rowIdx}][product_sku]" onchange="updatePrice(this, ${rowIdx})" required class="w-full p-1.5 text-sm outline-none bg-transparent">
+                            ${selectOptions}
+                        </select>
+                    </td>
+                    <td class="p-1 border">
+                        <input type="number" name="items[${rowIdx}][quantity]" id="qty_${rowIdx}" min="1" value="1" required onkeyup="calcSub(${rowIdx})" onchange="calcSub(${rowIdx})" class="w-full p-1.5 text-sm text-center outline-none bg-transparent">
+                    </td>
+                    <td class="p-1 border">
+                        <input type="number" name="items[${rowIdx}][price]" id="price_${rowIdx}" min="0" required onkeyup="calcSub(${rowIdx})" onchange="calcSub(${rowIdx})" class="w-full p-1.5 text-sm text-right outline-none bg-transparent">
+                    </td>
+                    <td class="p-2 border text-right text-sm font-semibold bg-slate-50 subtotal-text" id="subtext_${rowIdx}">Rp 0</td>
+                    <td class="p-1 border text-center">
+                        <button type="button" onclick="this.closest('tr').remove(); calcGrand();" class="text-red-500 hover:text-red-700">X</button>
+                    </td>
+                `;
             tbody.appendChild(tr);
             rowIdx++;
         }

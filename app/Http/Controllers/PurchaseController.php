@@ -728,6 +728,73 @@ class PurchaseController extends Controller
         return "{$seqStr}{$suffix}";
     }
 
+    // public function index(Request $request)
+    // {
+    //     $query = Purchase::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
+
+    //     if ($request->has('status') && $request->status != '') {
+    //         $query->where('status', $request->status);
+    //     }
+
+    //     $purchases = $query->get();
+    //     return view('purchases.index', compact('purchases'));
+    // }
+
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'date'         => 'required|date',
+    //         'due_date'     => 'nullable|date',
+    //         'reference_no' => 'nullable|string|max:50',
+    //         'contact_id'   => 'required|exists:contacts,id',
+    //         'notes'        => 'nullable|string',
+    //         'items'        => 'required|array|min:1',
+    //         'items.*.product_sku' => 'required|exists:products,sku',
+    //         'items.*.quantity'    => 'required|integer|min:1',
+    //         'items.*.price'       => 'required|numeric|min:0',
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // Jika referensi kosong, generate kode PO otomatis
+    //         $refNo = $validated['reference_no'] ?: $this->generateDocNumber('PO', $validated['date']);
+
+    //         $purchase = Purchase::create([
+    //             'date'         => $validated['date'],
+    //             'due_date'     => $validated['due_date'] ?? $validated['date'],
+    //             'reference_no' => $refNo,
+    //             'contact_id'   => $validated['contact_id'],
+    //             'status'       => 'Pesanan',
+    //             'notes'        => $validated['notes'] ?? '',
+    //             'total'        => 0,
+    //         ]);
+
+    //         $grandTotal = 0;
+
+    //         foreach ($validated['items'] as $item) {
+    //             $subTotal = $item['quantity'] * $item['price'];
+    //             $grandTotal += $subTotal;
+
+    //             PurchaseItem::create([
+    //                 'purchase_id' => $purchase->id,
+    //                 'product_sku' => $item['product_sku'],
+    //                 'quantity'    => $item['quantity'],
+    //                 'price'       => $item['price'],
+    //                 'sub_total'   => $subTotal,
+    //             ]);
+    //         }
+
+    //         $purchase->update(['total' => $grandTotal]);
+
+    //         DB::commit();
+    //         return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+    //     }
+    // }
+
     public function index(Request $request)
     {
         $query = Purchase::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
@@ -737,7 +804,11 @@ class PurchaseController extends Controller
         }
 
         $purchases = $query->get();
-        return view('purchases.index', compact('purchases'));
+        
+        // Kalkulasi nomor PO selanjutnya untuk preview di form Modal
+        $nextDocNumber = $this->generateDocNumber('PO', Carbon::now()->toDateString());
+        
+        return view('purchases.index', compact('purchases', 'nextDocNumber'));
     }
 
     public function store(Request $request)
@@ -745,7 +816,7 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'date'         => 'required|date',
             'due_date'     => 'nullable|date',
-            'reference_no' => 'nullable|string|max:50',
+            // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
             'contact_id'   => 'required|exists:contacts,id',
             'notes'        => 'nullable|string',
             'items'        => 'required|array|min:1',
@@ -757,8 +828,8 @@ class PurchaseController extends Controller
         DB::beginTransaction();
 
         try {
-            // Jika referensi kosong, generate kode PO otomatis
-            $refNo = $validated['reference_no'] ?: $this->generateDocNumber('PO', $validated['date']);
+            // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
+            $refNo = $this->generateDocNumber('PO', $validated['date']);
 
             $purchase = Purchase::create([
                 'date'         => $validated['date'],
