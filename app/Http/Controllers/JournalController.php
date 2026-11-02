@@ -21,9 +21,9 @@ class JournalController extends Controller
         })->where('is_header', false)->get();
 
         $journals = collect(); // Koleksi kosong
-        
+
         $accountCode = $request->query('account_code');
-        
+
         if ($accountCode) {
             // Cari ID Jurnal yang memiliki mutasi di akun yang dipilih
             $journalIDs = JournalEntry::where('account_code', $accountCode)

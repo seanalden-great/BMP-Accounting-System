@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\Purchase;
-use App\Models\Expense;
+use App\Models\Expense; // <-- INILAH BARIS YANG TERLEWAT SEBELUMNYA
 use App\Models\Account;
 use App\Models\JournalEntry;
 use Carbon\Carbon;
@@ -29,11 +29,11 @@ class DashboardController extends Controller
             ->whereMonth('date', $currentMonth)
             ->whereYear('date', $currentYear)
             ->sum('total');
-            
+
         $biayaBulanIni = Expense::whereMonth('date', $currentMonth)
             ->whereYear('date', $currentYear)
             ->sum('amount');
-            
+
         $pengeluaranBulanIni = $pembelianBulanIni + $biayaBulanIni;
 
         // 3. LABA BERSIH
@@ -45,7 +45,7 @@ class DashboardController extends Controller
         })->where('is_header', false)->get();
 
         $bankCodes = $bankAccounts->pluck('code')->toArray();
-        
+
         $totalKasBank = JournalEntry::whereIn('account_code', $bankCodes)
             ->selectRaw('SUM(debit) - SUM(credit) as balance')
             ->value('balance') ?? 0;
@@ -56,7 +56,7 @@ class DashboardController extends Controller
             $bal = JournalEntry::where('account_code', $bank->code)
                 ->selectRaw('SUM(debit) - SUM(credit) as balance')
                 ->value('balance') ?? 0;
-            
+
             if ($bal != 0) {
                 $rekeningDetails[] = [
                     'name' => $bank->name,
@@ -87,14 +87,14 @@ class DashboardController extends Controller
 
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
-            $chartLabels[] = $date->translatedFormat('M Y'); // Misal: Okt 2026
+            $chartLabels[] = $date->translatedFormat('M Y');
 
             // Uang Masuk = Total Debit pada akun Kas/Bank di bulan tersebut
             $inflow = JournalEntry::whereIn('account_code', $bankCodes)
                 ->whereHas('journal', function($q) use ($date) {
                     $q->whereMonth('date', $date->month)->whereYear('date', $date->year);
                 })->sum('debit');
-                
+
             // Uang Keluar = Total Kredit pada akun Kas/Bank di bulan tersebut
             $outflow = JournalEntry::whereIn('account_code', $bankCodes)
                 ->whereHas('journal', function($q) use ($date) {
