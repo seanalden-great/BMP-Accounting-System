@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\JournalController;
@@ -94,4 +95,6 @@ Route::middleware('auth')->group(function () {
     // Rute Pengaturan Profil
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
