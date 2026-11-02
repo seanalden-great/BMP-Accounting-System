@@ -49,4 +49,4 @@ class ProfileController extends Controller
 
         return redirect()->back()->with('success', 'Data profil dan keamanan berhasil diperbarui!');
     }
-}w
+}
