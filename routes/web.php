@@ -82,6 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
+    Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');
 
 // Rute Manajemen Gudang
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
