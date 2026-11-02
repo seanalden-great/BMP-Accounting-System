@@ -15,6 +15,7 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WarehouseController;
 
 /*
@@ -84,9 +85,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
     Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');
 
-// Rute Manajemen Gudang
+    // Rute Manajemen Gudang
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
     Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');
     Route::put('/warehouses/{id}', [WarehouseController::class, 'update'])->name('warehouses.update');
     Route::delete('/warehouses/{id}', [WarehouseController::class, 'destroy'])->name('warehouses.destroy');
+
+    // Rute Pengaturan Profil
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
