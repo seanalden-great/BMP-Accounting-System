@@ -43,7 +43,7 @@
 
     <!-- Bagian Tengah: Grafik & Rekening -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         <!-- Area Grafik Arus Kas -->
         <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
             <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-800">
@@ -107,7 +107,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const ctx = document.getElementById('cashFlowChart').getContext('2d');
-        
+
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -173,6 +173,20 @@
 
 @section('content')
 <div class="space-y-6 pb-10">
+    
+    <!-- ALERT JATUH TEMPO H-7 -->
+    @if($totalAlerts > 0)
+    <div class="bg-red-50 border border-red-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div class="p-3 bg-red-100 rounded-full text-red-600 shrink-0">
+            <i data-feather="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-bold text-red-800 text-lg">Perhatian! Terdapat {{ $totalAlerts }} Tagihan Mendekati Jatuh Tempo</h4>
+            <p class="text-sm text-red-700 mt-1 font-medium">Batas waktu pelunasan kurang dari 7 hari. Segera periksa daftar selengkapnya melalui <b>Ikon Lonceng Notifikasi</b> di sudut kanan atas layar Anda.</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Header Dashboard -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -211,7 +225,7 @@
 
     <!-- Bagian Tengah: Grafik & Rekening -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         <!-- Area Grafik Arus Kas -->
         <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
             <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-800">
@@ -224,7 +238,7 @@
 
         <!-- Hutang Piutang & Bank -->
         <div class="space-y-6">
-            
+
             <!-- RINCIAN PIUTANG PELANGGAN -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col max-h-72">
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/50">
@@ -288,7 +302,7 @@
                     @endforelse
                 </div>
             </div>
-            
+
         </div>
     </div>
 </div>
@@ -297,7 +311,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const ctx = document.getElementById('cashFlowChart').getContext('2d');
-        
+
         // Data dari Controller
         const labels = @json($chartLabels);
         const dataInflows = @json($chartInflows);
