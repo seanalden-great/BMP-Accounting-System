@@ -731,7 +731,7 @@
             @endphp
 
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-300 overflow-x-auto">
-                <div class="mb-4 border-b border-slate-200 pb-4 flex justify-between items-center">
+                {{-- <div class="mb-4 border-b border-slate-200 pb-4 flex justify-between items-center">
                     <div>
                         <h2 class="text-xl font-bold font-sans uppercase text-slate-800">{{ $selectedBank->name }}</h2>
                         <p class="text-sm font-semibold mt-1 text-slate-600">Buku Besar Akun: {{ $selectedBank->code }}</p>
@@ -739,6 +739,35 @@
                     <button onclick="window.location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg font-bold shadow-sm transition-colors" title="Segarkan Data Halaman">
                         <i data-feather="refresh-cw" class="w-5 h-5"></i>
                     </button>
+                </div> --}}
+
+                <div class="mb-4 border-b border-slate-200 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold font-sans uppercase text-slate-800">{{ $selectedBank->name }}</h2>
+                        <p class="text-sm font-semibold mt-1 text-slate-600">Buku Besar Akun: {{ $selectedBank->code }}</p>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <!-- Dropdown Laporan Internal & Pajak -->
+                        <div class="relative group">
+                            <button class="bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2">
+                                <i data-feather="printer" class="w-4 h-4"></i> Ekspor Laporan Mutasi
+                            </button>
+                            <div class="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                                <div class="px-3 py-2 bg-slate-50 border-b font-bold text-xs text-slate-400 uppercase">Lap. Internal (Asli)</div>
+                                <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'internal', 'format' => 'csv']) }}" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Unduh Excel (CSV)</a>
+                                <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'internal', 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700 border-b">Cetak PDF / Layar</a>
+
+                                <div class="px-3 py-2 bg-purple-50 border-b font-bold text-xs text-purple-500 uppercase">Lap. Pajak (Tax)</div>
+                                <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'pajak', 'format' => 'csv']) }}" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Unduh Excel (CSV)</a>
+                                <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'pajak', 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Cetak PDF / Layar</a>
+                            </div>
+                        </div>
+
+                        <button onclick="window.location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2.5 rounded-lg font-bold shadow-sm transition-colors" title="Segarkan Data Halaman">
+                            <i data-feather="refresh-cw" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tabel Riwayat Mutasi -->
@@ -761,7 +790,7 @@
                             // Inisialisasi running balance dimulai dari SALDO AWAL (bukan 0)
                             $runningBalance = $saldoAwal ?? 0;
                             $rowNumber = 1;
-                            // Balik urutan jurnal dari terlama ke terbaru agar running balance benar (atas ke bawah)
+                            // Balik urut                an jurnal dari terlama ke terbaru agar running balance benar (atas ke bawah)
                             $sortedJournals = $journals->sortBy('date')->values();
                         @endphp
 

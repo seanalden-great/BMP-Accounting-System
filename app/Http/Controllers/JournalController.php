@@ -223,4 +223,97 @@ class JournalController extends Controller
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan transaksi jurnal.');
         }
     }
+
+    // --- FITUR EKSPOR EXCEL & PDF ---
+    public function export(Request $request)
+    {
+        $accountCode = $request->query('account_code');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $type = $request->query('type', 'internal'); // 'internal' atau 'pajak'
+        $format = $request->query('format', 'csv'); // 'csv' atau 'pdf'
+
+        if (!$accountCode) {
+            return redirect()->back()->with('error', 'Pilih rekening bank terlebih dahulu.');
+        }
+
+        $bank = Account::where('code', $accountCode)->first();
+        $saldoAwal = 0;
+        $journalIDs = JournalEntry::where('account_code', $accountCode)->pluck('journal_id')->unique();
+        $journals = collect();
+
+        if ($journalIDs->isNotEmpty()) {
+            $query = Journal::with(['entries.account'])->whereIn('id', $journalIDs);
+            if ($startDate) {
+                $query->whereDate('date', '>=', $startDate);
+                $saldoAwal = JournalEntry::where('account_code', $accountCode)
+                    ->whereHas('journal', function($q) use ($startDate) { $q->whereDate('date', '<', $startDate); })
+                    ->selectRaw('SUM(debit) - SUM(credit) as balance')
+                    ->value('balance') ?? 0;
+            }
+            if ($endDate) {
+                $query->whereDate('date', '<=', $endDate);
+            }
+            $journals = $query->orderBy('date', 'asc')->orderBy('id', 'asc')->get();
+        }
+
+        // Judul laporan dibedakan sesuai tipe yang di-klik
+        $reportName = $type === 'pajak' ? 'LAPORAN MUTASI BANK (PAJAK)' : 'LAPORAN MUTASI BANK (INTERNAL)';
+
+        // FORMAT 1: CSV / EXCEL
+        if ($format === 'csv') {
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=Mutasi_{$type}_{$bank->name}.csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($journals, $bank, $saldoAwal, $reportName, $startDate, $endDate) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
+                fputcsv($file, [$reportName]);
+                fputcsv($file, ['Rekening:', $bank->name . ' (' . $bank->code . ')']);
+                fputcsv($file, ['Periode:', ($startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : 'Awal') . ' s/d ' . ($endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : 'Akhir')]);
+                fputcsv($file, []);
+                fputcsv($file, ['No', 'Tanggal', 'Uraian', 'Akun Lawan', 'Keterangan', 'Debet', 'Kredit', 'Saldo']);
+
+                $runningBalance = $saldoAwal;
+                $row = 1;
+
+                if ($startDate) {
+                    fputcsv($file, ['-', $startDate, 'SALDO AWAL', '', '', '', '', $runningBalance]);
+                }
+
+                foreach ($journals as $journal) {
+                    foreach ($journal->entries as $entry) {
+                        if ($entry->account_code == $bank->code) {
+                            $runningBalance += ($entry->debit - $entry->credit);
+
+                            $lawan = $journal->entries->where('account_code', '!=', $bank->code)->first();
+                            $lawanName = $lawan ? $lawan->account->name : 'Multiple';
+                            $lawanCode = $lawan ? $lawan->account_code : '';
+
+                            fputcsv($file, [
+                                $row++,
+                                $journal->date,
+                                $journal->description . ($journal->reference_no ? ' - '.$journal->reference_no : ''),
+                                $lawanCode,
+                                $lawanName,
+                                $entry->debit,
+                                $entry->credit,
+                                $runningBalance
+                            ]);
+                        }
+                    }
+                }
+                fclose($file);
+            };
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // FORMAT 2: CETAK DOKUMEN HTML / PDF
+        return view('journals.export_print', compact('journals', 'bank', 'saldoAwal', 'reportName', 'startDate', 'endDate'));
+    }
 }

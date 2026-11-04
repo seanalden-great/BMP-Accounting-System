@@ -182,6 +182,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
     Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');
 
+    Route::get('/journals/export', [JournalController::class, 'export'])->name('journals.export');
+
     // Rute Manajemen Gudang
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
     Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');
