@@ -525,10 +525,74 @@ class ExpenseController extends Controller
         return "{$seqStr}/KBD-BMP/{$romanMonth}/{$year}";
     }
 
+    // public function exportKbd(Request $request)
+    // {
+    //     $ids = explode(',', $request->query('ids'));
+    //     $format = $request->query('format');
+
+    //     $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
+
+    //     if ($expenses->isEmpty()) {
+    //         return redirect()->back()->with('error', 'Pilih minimal 1 pengeluaran untuk dicetak.');
+    //     }
+
+    //     $kbdNo = $expenses->first()->kbd_no;
+    //     if (!$kbdNo) {
+    //         $kbdNo = $this->generateKbdNumber();
+    //         Expense::whereIn('id', $ids)->update(['kbd_no' => $kbdNo]);
+    //         $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
+    //     }
+
+    //     $total = $expenses->sum('amount');
+    //     $creatorName = Auth::user()->full_name ?? (Auth::user()->name ?? 'Nita');
+    //     Carbon::setLocale('id');
+    //     $dateStr = Carbon::now()->translatedFormat('d F Y');
+
+    //     if ($format === 'csv') {
+    //         $headers = [
+    //             "Content-type"        => "text/csv",
+    //             "Content-Disposition" => "attachment; filename=KBD_{$kbdNo}.csv",
+    //             "Pragma"              => "no-cache",
+    //             "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+    //             "Expires"             => "0"
+    //         ];
+
+    //         $callback = function() use ($expenses, $kbdNo, $total, $dateStr, $creatorName) {
+    //             $file = fopen('php://output', 'w');
+    //             fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
+    //             fputcsv($file, ['ANGGARAN DANA']);
+    //             fputcsv($file, ['No. ' . $kbdNo]);
+    //             fputcsv($file, []);
+    //             fputcsv($file, ['Keperluan :']);
+
+    //             $i = 1;
+    //             foreach ($expenses as $exp) {
+    //                 fputcsv($file, [$i++, $exp->description, 'Rp', $exp->amount]);
+    //             }
+
+    //             fputcsv($file, []);
+    //             fputcsv($file, ['', 'TOTAL', 'Rp', $total]);
+    //             fputcsv($file, []);
+
+    //             fputcsv($file, ['Surabaya, ' . $dateStr]);
+    //             fputcsv($file, ['Dibuat Oleh', 'Mengetahui', 'Menyetujui']);
+    //             fputcsv($file, []);
+    //             fputcsv($file, []);
+    //             fputcsv($file, [$creatorName, 'Melisa', 'HARIJANTO']);
+    //             fclose($file);
+    //         };
+
+    //         return response()->stream($callback, 200, $headers);
+    //     }
+
+    //     return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName'));
+    // }
+
     public function exportKbd(Request $request)
     {
         $ids = explode(',', $request->query('ids'));
-        $format = $request->query('format');
+        $format = $request->query('format'); // 'print' atau 'csv'
+        $type = $request->query('type', 'internal'); // 'internal' atau 'pajak'
 
         $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
 
@@ -536,6 +600,7 @@ class ExpenseController extends Controller
             return redirect()->back()->with('error', 'Pilih minimal 1 pengeluaran untuk dicetak.');
         }
 
+        // Cek apakah item yang dipilih sudah pernah di-print KBD sebelumnya (punya nomor).
         $kbdNo = $expenses->first()->kbd_no;
         if (!$kbdNo) {
             $kbdNo = $this->generateKbdNumber();
@@ -544,27 +609,34 @@ class ExpenseController extends Controller
         }
 
         $total = $expenses->sum('amount');
+
         $creatorName = Auth::user()->full_name ?? (Auth::user()->name ?? 'Nita');
         Carbon::setLocale('id');
         $dateStr = Carbon::now()->translatedFormat('d F Y');
 
+        // Tentukan Judul Berdasarkan Tipe
+        $reportTitle = $type === 'pajak' ? 'ANGGARAN DANA (PAJAK)' : 'ANGGARAN DANA (INTERNAL)';
+
+        // FORMAT 1: Ekspor ke CSV / Excel / Spreadsheet
         if ($format === 'csv') {
             $headers = [
                 "Content-type"        => "text/csv",
-                "Content-Disposition" => "attachment; filename=KBD_{$kbdNo}.csv",
+                "Content-Disposition" => "attachment; filename=KBD_{$type}_{$kbdNo}.csv",
                 "Pragma"              => "no-cache",
                 "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
                 "Expires"             => "0"
             ];
 
-            $callback = function() use ($expenses, $kbdNo, $total, $dateStr, $creatorName) {
+            $callback = function() use ($expenses, $kbdNo, $total, $dateStr, $creatorName, $reportTitle) {
                 $file = fopen('php://output', 'w');
+                // Tulis Header
                 fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
-                fputcsv($file, ['ANGGARAN DANA']);
+                fputcsv($file, [$reportTitle]);
                 fputcsv($file, ['No. ' . $kbdNo]);
                 fputcsv($file, []);
                 fputcsv($file, ['Keperluan :']);
 
+                // Tulis Item
                 $i = 1;
                 foreach ($expenses as $exp) {
                     fputcsv($file, [$i++, $exp->description, 'Rp', $exp->amount]);
@@ -574,6 +646,7 @@ class ExpenseController extends Controller
                 fputcsv($file, ['', 'TOTAL', 'Rp', $total]);
                 fputcsv($file, []);
 
+                // Tulis Footer Tanda Tangan
                 fputcsv($file, ['Surabaya, ' . $dateStr]);
                 fputcsv($file, ['Dibuat Oleh', 'Mengetahui', 'Menyetujui']);
                 fputcsv($file, []);
@@ -585,6 +658,7 @@ class ExpenseController extends Controller
             return response()->stream($callback, 200, $headers);
         }
 
-        return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName'));
+        // FORMAT 2: Cetak Layar HTML (Untuk Print PDF)
+        return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName', 'reportTitle'));
     }
 }
