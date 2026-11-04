@@ -173,7 +173,7 @@
 
 @section('content')
 <div class="space-y-6 pb-10">
-    
+
     <!-- ALERT JATUH TEMPO H-7 -->
     @if($totalAlerts > 0)
     <div class="bg-red-50 border border-red-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -430,6 +430,62 @@
         </div>
     </div>
 
+    <!-- KARTU RINGKASAN OPERASIONAL (DATA MASTER & TRANSAKSI) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Produk -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+                <i data-feather="package" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase mb-0.5">Total Master Produk</p>
+                <h4 class="text-lg font-bold text-slate-800 leading-none">
+                    {{ $totalProduk }} <span class="text-[11px] font-medium text-slate-400 ml-1">dalam {{ $totalKategori }} kategori</span>
+                </h4>
+            </div>
+        </div>
+
+        <!-- Pelanggan -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                <i data-feather="users" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase mb-0.5">Pelanggan (Customer)</p>
+                <h4 class="text-lg font-bold text-slate-800 leading-none">
+                    {{ $totalPelanggan }} <span class="text-[11px] font-medium text-slate-400 ml-1">orang/badan</span>
+                </h4>
+            </div>
+        </div>
+
+        <!-- Supplier -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="p-3 bg-orange-50 text-orange-600 rounded-lg shrink-0">
+                <i data-feather="truck" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase mb-0.5">Pemasok (Supplier)</p>
+                <h4 class="text-lg font-bold text-slate-800 leading-none">
+                    {{ $totalPemasok }} <span class="text-[11px] font-medium text-slate-400 ml-1">orang/badan</span>
+                </h4>
+            </div>
+        </div>
+
+        <!-- Total Transaksi -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center hover:shadow-md transition-shadow">
+            <p class="text-[11px] text-slate-500 font-bold uppercase mb-1.5 flex items-center gap-1">
+                <i data-feather="file-text" class="w-3 h-3"></i> Total Dokumen Transaksi
+            </p>
+            <div class="flex justify-between items-center text-[13px] font-bold text-slate-700 bg-slate-50 px-2 py-1 rounded">
+                <span title="Sales Order (Penjualan)">SO: <span class="text-indigo-600">{{ $totalSO }}</span></span>
+                <span class="text-slate-300">|</span>
+                <span title="Purchase Order (Pembelian)">PO: <span class="text-orange-600">{{ $totalPO }}</span></span>
+                <span class="text-slate-300">|</span>
+                <span title="Kas Bon Dana (Biaya)">KBD: <span class="text-emerald-600">{{ $totalExpense }}</span></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Bagian Tengah: Grafik & Rekening -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -459,8 +515,8 @@
                                 <p class="font-semibold text-slate-700 text-xs truncate">{{ $piutang->contact->name }}</p>
                                 <!-- Penambahan Tanggal Jatuh Tempo Piutang -->
                                 <p class="text-[10px] text-slate-400 font-mono mt-0.5">
-                                    {{ $piutang->reference_no }} 
-                                    <span class="text-slate-300 mx-1">|</span> 
+                                    {{ $piutang->reference_no }}
+                                    <span class="text-slate-300 mx-1">|</span>
                                     <span class="text-red-500 font-semibold">Tempo: {{ \Carbon\Carbon::parse($piutang->due_date)->translatedFormat('d M Y') }}</span>
                                 </p>
                             </div>
@@ -486,7 +542,7 @@
                                 <!-- Penambahan Tanggal Jatuh Tempo Hutang -->
                                 <p class="text-[10px] text-slate-400 font-mono mt-0.5">
                                     {{ $hutang->reference_no }}
-                                    <span class="text-slate-300 mx-1">|</span> 
+                                    <span class="text-slate-300 mx-1">|</span>
                                     <span class="text-red-500 font-semibold">Tempo: {{ \Carbon\Carbon::parse($hutang->due_date)->translatedFormat('d M Y') }}</span>
                                 </p>
                             </div>
@@ -541,14 +597,14 @@
                     {
                         label: 'Uang Masuk (Kas)',
                         data: dataInflows,
-                        backgroundColor: '#22c55e', 
+                        backgroundColor: '#22c55e',
                         borderRadius: 4,
                         maxBarSize: 35
                     },
                     {
                         label: 'Uang Keluar (Kas)',
                         data: dataOutflows,
-                        backgroundColor: '#ef4444', 
+                        backgroundColor: '#ef4444',
                         borderRadius: 4,
                         maxBarSize: 35
                     }

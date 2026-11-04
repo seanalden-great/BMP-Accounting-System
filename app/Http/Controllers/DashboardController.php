@@ -219,11 +219,30 @@ class DashboardController extends Controller
             $chartOutflows[] = $outflow;
         }
 
+        // 8. DATA TAMBAHAN (STATISTIK MASTER & OPERASIONAL)
+        $totalProduk = \App\Models\Product::count();
+        $totalKategori = \App\Models\Category::count();
+        $totalPelanggan = \App\Models\Contact::where('type', 'Customer')->count();
+        $totalPemasok = \App\Models\Contact::where('type', 'Supplier')->count();
+
+        $totalSO = Sale::count();
+        $totalPO = Purchase::count();
+        $totalExpense = Expense::count();
+
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+        //     'poAlerts', 'soAlerts', 'totalAlerts' // <-- Meneruskan data alert ke view
+        // ));
+
+        // Pastikan variabel baru tersebut dimasukkan ke dalam compact()
         return view('dashboard', compact(
             'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
             'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
             'chartLabels', 'chartInflows', 'chartOutflows',
-            'poAlerts', 'soAlerts', 'totalAlerts' // <-- Meneruskan data alert ke view
+            'poAlerts', 'soAlerts', 'totalAlerts',
+            'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense'
         ));
     }
 }
