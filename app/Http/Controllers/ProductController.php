@@ -13,8 +13,8 @@
 //     {
 //         $products = Product::orderBy('id', 'desc')->get();
 //         // Ambil kategori untuk dropdown pada modal/form
-//         $categories = Category::orderBy('name', 'asc')->get(); 
-        
+//         $categories = Category::orderBy('name', 'asc')->get();
+
 //         return view('products.index', compact('products', 'categories'));
 //     }
 
@@ -78,12 +78,89 @@
 //         try {
 //             $product = Product::findOrFail($id);
 //             $product->delete();
-            
+
 //             return redirect()->route('products.index')
 //                 ->with('success', 'Produk berhasil dihapus.');
 //         } catch (\Exception $e) {
 //             return redirect()->back()
 //                 ->with('error', 'Gagal menghapus produk. Mungkin produk ini sudah dipakai di transaksi.');
+//         }
+//     }
+// }
+
+// namespace App\Http\Controllers;
+
+// use App\Models\Product;
+// use App\Models\Category;
+// use Illuminate\Http\Request;
+
+// class ProductController extends Controller
+// {
+//     // Menampilkan halaman daftar produk
+//     public function index()
+//     {
+//         // Ambil data produk sekaligus menjumlahkan kolom 'quantity' dari relasi 'stocks'
+//         $products = Product::withSum('stocks as total_stock', 'quantity')->orderBy('id', 'desc')->get();
+
+//         $categories = Category::orderBy('name', 'asc')->get();
+
+//         return view('products.index', compact('products', 'categories'));
+//     }
+
+//     // Menyimpan produk baru
+//     public function store(Request $request)
+//     {
+//         $validated = $request->validate([
+//             'sku'      => 'required|string|max:50|unique:products,sku',
+//             'name'     => 'required|string|max:150',
+//             'category' => 'nullable|string|max:50',
+//             'unit'     => 'nullable|string|max:20',
+//         ]);
+
+//         try {
+//             // Default nilai awal untuk harga dan stok adalah 0
+//             $validated['buy_price'] = 0;
+//             $validated['sell_price'] = 0;
+//             $validated['hpp'] = 0;
+//             $validated['stock'] = 0;
+
+//             Product::create($validated);
+//             return redirect()->route('products.index')->with('success', 'Master Produk berhasil ditambahkan.');
+//         } catch (\Exception $e) {
+//             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan produk. Pastikan SKU unik.');
+//         }
+//     }
+
+//     // Memperbarui data produk
+//     public function update(Request $request, $id)
+//     {
+//         $product = Product::findOrFail($id);
+
+//         $validated = $request->validate([
+//             'sku'      => 'required|string|max:50|unique:products,sku,' . $product->id,
+//             'name'     => 'required|string|max:150',
+//             'category' => 'nullable|string|max:50',
+//             'unit'     => 'nullable|string|max:20',
+//         ]);
+
+//         try {
+//             $product->update($validated);
+//             return redirect()->route('products.index')->with('success', 'Master Produk berhasil diperbarui.');
+//         } catch (\Exception $e) {
+//             return redirect()->back()->withInput()->with('error', 'Gagal mengupdate produk.');
+//         }
+//     }
+
+//     // Menghapus produk
+//     public function destroy($id)
+//     {
+//         try {
+//             $product = Product::findOrFail($id);
+//             $product->delete();
+
+//             return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
+//         } catch (\Exception $e) {
+//             return redirect()->back()->with('error', 'Gagal menghapus produk. Mungkin produk ini sudah dipakai di transaksi atau masih memiliki sisa stok di Gudang.');
 //         }
 //     }
 // }
@@ -96,15 +173,25 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // Menampilkan halaman daftar produk
-    public function index()
+    // Menampilkan halaman daftar produk beserta fitur Pencarian
+    public function index(Request $request)
     {
-        // Ambil data produk sekaligus menjumlahkan kolom 'quantity' dari relasi 'stocks'
-        $products = Product::withSum('stocks as total_stock', 'quantity')->orderBy('id', 'desc')->get();
-        
-        $categories = Category::orderBy('name', 'asc')->get(); 
-        
-        return view('products.index', compact('products', 'categories'));
+        $search = $request->query('search');
+
+        // Tarik data produk & jumlahkan stok dari relasi gudang
+        $query = Product::withSum('stocks as total_stock', 'quantity');
+
+        // Jika user mengetikkan kata kunci pencarian
+        if ($search) {
+            $query->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('sku', 'LIKE', '%' . $search . '%')
+                  ->orWhere('category', 'LIKE', '%' . $search . '%');
+        }
+
+        $products = $query->orderBy('id', 'desc')->get();
+        $categories = Category::orderBy('name', 'asc')->get();
+
+        return view('products.index', compact('products', 'categories', 'search'));
     }
 
     // Menyimpan produk baru
@@ -157,7 +244,7 @@ class ProductController extends Controller
         try {
             $product = Product::findOrFail($id);
             $product->delete();
-            
+
             return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus produk. Mungkin produk ini sudah dipakai di transaksi atau masih memiliki sisa stok di Gudang.');
