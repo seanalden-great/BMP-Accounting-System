@@ -198,4 +198,5 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/payroll', [PayrollController::class,'index'])->name('payroll.index');
+    Route::post('/payroll/employee', [PayrollController::class, 'storeEmployee'])->name('payroll.storeEmployee');
 });
