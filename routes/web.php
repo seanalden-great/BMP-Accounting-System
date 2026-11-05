@@ -32,7 +32,6 @@
 //     Route::post('/register', [AuthController::class, 'register']);
 // });
 
-
 // /*
 // |--------------------------------------------------------------------------
 // | Rute Terproteksi (Hanya Bisa Diakses Setelah Login)
@@ -42,9 +41,9 @@
 //     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 //     // Halaman Utama / Dashboard
-    // Route::get('/', function () {
-    //     return view('dashboard');
-    // })->name('dashboard');
+// Route::get('/', function () {
+//     return view('dashboard');
+// })->name('dashboard');
 
 //     // Pengaturan
 //     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
@@ -99,25 +98,25 @@
 //     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 // });
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SettingController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\FaqController;
-use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\PayrollController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\JournalController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FaqController;
+use App\Http\Controllers\FixedAssetController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\WarehouseController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -197,6 +196,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    Route::get('/payroll', [PayrollController::class,'index'])->name('payroll.index');
+    Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
     Route::post('/payroll/employee', [PayrollController::class, 'storeEmployee'])->name('payroll.storeEmployee');
+    // 3 RUTE BARU YANG HARUS DITAMBAHKAN:
+    Route::put('/payroll/employee/{id}', [PayrollController::class, 'updateEmployee'])->name('payroll.updateEmployee');
+    Route::delete('/payroll/employee/{id}', [PayrollController::class, 'destroyEmployee'])->name('payroll.destroyEmployee');
+    Route::post('/payroll/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
 });
