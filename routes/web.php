@@ -110,6 +110,7 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\ReportController;
