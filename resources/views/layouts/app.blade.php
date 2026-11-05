@@ -577,8 +577,8 @@
             <a href="{{ route('contacts.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
                 <i data-feather="users" class="w-4 h-4"></i> <span class="text-sm">Kontak</span>
             </a>
-            <a href="/payroll" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-l-2 border-transparent hover:border-teal-500">
-                <i data-feather="credit-card" class="w-4 h-4 text-teal-500"></i> <span class="text-sm font-semibold">Penggajian (HR)</span>
+            <a href="{{ route('payroll.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
+                <i data-feather="credit-card" class="w-4 h-4 text-teal-500"></i> <span class="text-sm">Payroll</span>
             </a>
             <div class="space-y-1">
                 <button onclick="document.getElementById('sub-reports').classList.toggle('hidden')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">

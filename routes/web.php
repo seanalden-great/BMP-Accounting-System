@@ -195,4 +195,6 @@ Route::middleware('auth')->group(function () {
     // Rute Pengaturan Profil
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::get('/payroll', [PayrollController::class,'index'])->name('payroll.index');
 });
