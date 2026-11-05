@@ -180,6 +180,7 @@ Route::middleware('auth')->group(function () {
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
     Route::get('/sales/overview', [SaleController::class, 'overview'])->name('sales.overview');
+    Route::get('/sales/efaktur', [SaleController::class, 'exportEfaktur'])->name('sales.efaktur');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
     Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');

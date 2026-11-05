@@ -1089,25 +1089,79 @@ class SaleController extends Controller
         return view('sales.index', compact('sales', 'nextDocNumber'));
     }
 
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'date'         => 'required|date',
+    //         'due_date'     => 'nullable|date',
+    //         // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
+    //         'contact_id'   => 'required|exists:contacts,id',
+    //         'notes'        => 'nullable|string',
+    //         'items'        => 'required|array|min:1',
+    //         'items.*.product_sku' => 'required|exists:products,sku',
+    //         'items.*.quantity'    => 'required|integer|min:1',
+    //         'items.*.price'       => 'required|numeric|min:0',
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
+    //         // Kalkulasi ini dihitung akurat berdasarkan inputan 'Tanggal SO'
+    //         $refNo = $this->generateDocNumber('SO', $validated['date']);
+
+    //         $sale = Sale::create([
+    //             'date'         => $validated['date'],
+    //             'due_date'     => $validated['due_date'] ?? $validated['date'],
+    //             'reference_no' => $refNo,
+    //             'contact_id'   => $validated['contact_id'],
+    //             'status'       => 'Pesanan',
+    //             'notes'        => $validated['notes'] ?? '',
+    //             'total'        => 0,
+    //         ]);
+
+    //         $grandTotal = 0;
+
+    //         foreach ($validated['items'] as $item) {
+    //             $subTotal = $item['quantity'] * $item['price'];
+    //             $grandTotal += $subTotal;
+
+    //             SaleItem::create([
+    //                 'sale_id'     => $sale->id,
+    //                 'product_sku' => $item['product_sku'],
+    //                 'quantity'    => $item['quantity'],
+    //                 'price'       => $item['price'],
+    //                 'sub_total'   => $subTotal,
+    //             ]);
+    //         }
+
+    //         $sale->update(['total' => $grandTotal]);
+
+    //         DB::commit();
+    //         return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat dengan nomor: ' . $refNo);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan penjualan');
+    //     }
+    // }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'date'         => 'required|date',
             'due_date'     => 'nullable|date',
-            // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
             'contact_id'   => 'required|exists:contacts,id',
             'notes'        => 'nullable|string',
             'items'        => 'required|array|min:1',
             'items.*.product_sku' => 'required|exists:products,sku',
             'items.*.quantity'    => 'required|integer|min:1',
             'items.*.price'       => 'required|numeric|min:0',
+            'items.*.tax_rate'    => 'required|integer|in:0,11,12', // Validasi input pajak dari user
         ]);
 
         DB::beginTransaction();
 
         try {
-            // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
-            // Kalkulasi ini dihitung akurat berdasarkan inputan 'Tanggal SO'
             $refNo = $this->generateDocNumber('SO', $validated['date']);
 
             $sale = Sale::create([
@@ -1118,12 +1172,19 @@ class SaleController extends Controller
                 'status'       => 'Pesanan',
                 'notes'        => $validated['notes'] ?? '',
                 'total'        => 0,
+                'total_tax'    => 0, // Inisialisasi awal
             ]);
 
             $grandTotal = 0;
+            $grandTax = 0;
 
             foreach ($validated['items'] as $item) {
-                $subTotal = $item['quantity'] * $item['price'];
+                // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
+                $dpp = $item['quantity'] * $item['price'];
+                $taxAmount = $dpp * ($item['tax_rate'] / 100);
+                $subTotal = $dpp + $taxAmount;
+
+                $grandTax += $taxAmount;
                 $grandTotal += $subTotal;
 
                 SaleItem::create([
@@ -1131,17 +1192,19 @@ class SaleController extends Controller
                     'product_sku' => $item['product_sku'],
                     'quantity'    => $item['quantity'],
                     'price'       => $item['price'],
+                    'tax_rate'    => $item['tax_rate'],
+                    'tax_amount'  => $taxAmount,
                     'sub_total'   => $subTotal,
                 ]);
             }
 
-            $sale->update(['total' => $grandTotal]);
+            $sale->update(['total' => $grandTotal, 'total_tax' => $grandTax]);
 
             DB::commit();
-            return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat dengan nomor: ' . $refNo);
+            return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat. Nilai Pajak telah dikalkulasi.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan penjualan');
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan.');
         }
     }
 
@@ -1365,5 +1428,55 @@ class SaleController extends Controller
         }
 
         return view('sales.overview', compact('sales', 'topProducts', 'predictions'));
+    }
+
+    // FITUR EMAS: EXPORT E-FAKTUR (Sesuai Skema DJP Pemerintah)
+    public function exportEfaktur(Request $request)
+    {
+        // Tarik semua penjualan yang ada pajaknya
+        $sales = Sale::with(['contact', 'items.product'])->where('status', '!=', 'Pesanan')->where('total_tax', '>', 0)->get();
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=eFaktur_Keluaran_" . Carbon::now()->format('Ymd') . ".csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($sales) {
+            $file = fopen('php://output', 'w');
+
+            // Cetak Format Header DJP e-Faktur
+            fputcsv($file, ['FK', 'KD_JENIS_TRANSAKSI', 'FG_PENGGANTI', 'NOMOR_FAKTUR', 'MASA_PAJAK', 'TAHUN_PAJAK', 'TANGGAL_FAKTUR', 'NPWP', 'NAMA', 'ALAMAT_LENGKAP', 'JUMLAH_DPP', 'JUMLAH_PPN', 'JUMLAH_PPNBM', 'ID_KETERANGAN_TAMBAHAN', 'FG_UANG_MUKA', 'UANG_MUKA_DPP', 'UANG_MUKA_PPN', 'UANG_MUKA_PPNBM', 'REFERENSI']);
+            fputcsv($file, ['OF', 'KODE_OBJEK', 'NAMA', 'HARGA_SATUAN', 'JUMLAH_BARANG', 'TOTAL_HARGA', 'DISKON', 'DPP', 'PPN', 'TARIF_PPNBM', 'PPNBM']);
+
+            foreach ($sales as $sale) {
+                $date = Carbon::parse($sale->date);
+                $npwp = '00.000.000.0-000.000'; // Harus diganti dengan NPWP Customer di sistem asli
+                $dppTotal = $sale->total - $sale->total_tax;
+
+                // Baris FK (Faktur Keluaran) -> Data Induk
+                fputcsv($file, [
+                    'FK', '01', '0', str_replace('/', '', $sale->reference_no), $date->month, $date->year, $date->format('d/m/Y'),
+                    $npwp, $sale->contact->name, $sale->contact->address ?? '-',
+                    $dppTotal, $sale->total_tax, 0, '', '0', 0, 0, 0, $sale->reference_no
+                ]);
+
+                // Baris OF (Objek Faktur) -> Rincian Barang
+                foreach ($sale->items as $item) {
+                    if ($item->tax_rate > 0) {
+                        $dppItem = $item->quantity * $item->price;
+                        fputcsv($file, [
+                            'OF', $item->product_sku, $item->product->name ?? $item->product_sku,
+                            $item->price, $item->quantity, $dppItem, 0, $dppItem, $item->tax_amount, 0, 0
+                        ]);
+                    }
+                }
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

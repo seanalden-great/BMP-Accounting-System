@@ -1316,6 +1316,9 @@ $products = \App\Models\Product::all();
                 class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm flex items-center gap-2">
                 <i data-feather="plus" class="w-4 h-4"></i> Buat SO Baru
             </button>
+            <a href="{{ route('sales.efaktur') }}" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+                <i data-feather="download" class="w-4 h-4"></i> Ekspor e-Faktur DJP
+            </a>
         </div>
 
         <!-- Tabel SO -->
@@ -1467,6 +1470,7 @@ $products = \App\Models\Product::all();
                                         <th class="p-2 border text-sm font-semibold">Produk (Info Stok)</th>
                                         <th class="p-2 border text-sm font-semibold w-24">Qty</th>
                                         <th class="p-2 border text-sm font-semibold w-32">Harga Jual</th>
+                                        <th class="p-2 border text-sm font-semibold w-24 text-center">PPN</th>
                                         <th class="p-2 border text-sm font-semibold w-32 text-right">Subtotal</th>
                                         <th class="p-2 border w-12 text-center"></th>
                                     </tr>
@@ -1537,12 +1541,43 @@ $products = \App\Models\Product::all();
         const productsData = @json($products);
         let rowIdx = 0;
 
+        // function addRow() {
+        //     let tbody = document.getElementById('itemBody');
+        //     let tr = document.createElement('tr');
+        //     let selectOptions = `<option value="" disabled selected>Pilih Produk...</option>`;
+
+        //     // PERHATIAN: Menyematkan total_stock (Sisa Stok) ke dalam label Dropdown Option Penjualan
+        //     productsData.forEach(p => {
+        //         let stokAman = p.total_stock || 0;
+        //         selectOptions += `<option value="${p.sku}" data-price="${p.sell_price}">[${p.sku}] ${p.name} (Sisa Stok: ${stokAman})</option>`;
+        //     });
+
+        //     tr.innerHTML = `
+        //         <td class="p-1 border">
+        //             <select name="items[${rowIdx}][product_sku]" onchange="updatePrice(this, ${rowIdx})" required class="w-full p-1.5 text-sm outline-none bg-transparent font-medium">
+        //                 ${selectOptions}
+        //             </select>
+        //         </td>
+        //         <td class="p-1 border">
+        //             <input type="text" name="items[${rowIdx}][quantity]" id="qty_${rowIdx}" value="1" required oninput="formatRibuan(this); calcSub(${rowIdx})" class="format-ribuan w-full p-1.5 text-sm text-center outline-none bg-transparent">
+        //         </td>
+        //         <td class="p-1 border">
+        //             <input type="text" name="items[${rowIdx}][price]" id="price_${rowIdx}" required oninput="formatRibuan(this); calcSub(${rowIdx})" class="format-ribuan w-full p-1.5 text-sm text-right outline-none bg-transparent">
+        //         </td>
+        //         <td class="p-2 border text-right text-sm font-semibold bg-slate-50 subtotal-text" id="subtext_${rowIdx}">Rp 0</td>
+        //         <td class="p-1 border text-center">
+        //             <button type="button" onclick="this.closest('tr').remove(); calcGrand();" class="text-red-500 hover:text-red-700">X</button>
+        //         </td>
+        //     `;
+        //     tbody.appendChild(tr);
+        //     rowIdx++;
+        // }
+
         function addRow() {
             let tbody = document.getElementById('itemBody');
             let tr = document.createElement('tr');
             let selectOptions = `<option value="" disabled selected>Pilih Produk...</option>`;
 
-            // PERHATIAN: Menyematkan total_stock (Sisa Stok) ke dalam label Dropdown Option Penjualan
             productsData.forEach(p => {
                 let stokAman = p.total_stock || 0;
                 selectOptions += `<option value="${p.sku}" data-price="${p.sell_price}">[${p.sku}] ${p.name} (Sisa Stok: ${stokAman})</option>`;
@@ -1560,7 +1595,14 @@ $products = \App\Models\Product::all();
                 <td class="p-1 border">
                     <input type="text" name="items[${rowIdx}][price]" id="price_${rowIdx}" required oninput="formatRibuan(this); calcSub(${rowIdx})" class="format-ribuan w-full p-1.5 text-sm text-right outline-none bg-transparent">
                 </td>
-                <td class="p-2 border text-right text-sm font-semibold bg-slate-50 subtotal-text" id="subtext_${rowIdx}">Rp 0</td>
+                <td class="p-1 border text-center">
+                    <select name="items[${rowIdx}][tax_rate]" id="tax_${rowIdx}" onchange="calcSub(${rowIdx})" class="w-full p-1.5 text-xs font-bold text-red-600 outline-none bg-transparent">
+                        <option value="0">0%</option>
+                        <option value="11">11%</option>
+                        <option value="12" selected>12%</option>
+                    </select>
+                </td>
+                <td class="p-2 border text-right text-sm font-bold bg-slate-50 subtotal-text text-slate-800" id="subtext_${rowIdx}">Rp 0</td>
                 <td class="p-1 border text-center">
                     <button type="button" onclick="this.closest('tr').remove(); calcGrand();" class="text-red-500 hover:text-red-700">X</button>
                 </td>
@@ -1577,13 +1619,39 @@ $products = \App\Models\Product::all();
             calcSub(idx);
         }
 
+        // function calcSub(idx) {
+        //     let rawQ = document.getElementById(`qty_${idx}`).value.replace(/\./g, '') || 0;
+        //     let rawP = document.getElementById(`price_${idx}`).value.replace(/\./g, '') || 0;
+        //     let sub = parseInt(rawQ, 10) * parseInt(rawP, 10);
+        //     document.getElementById(`subtext_${idx}`).innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(sub);
+        //     calcGrand();
+        // }
+
+        // Fungsi Kalkulasi Subtotal Diperbarui (DPP + PPN)
         function calcSub(idx) {
             let rawQ = document.getElementById(`qty_${idx}`).value.replace(/\./g, '') || 0;
             let rawP = document.getElementById(`price_${idx}`).value.replace(/\./g, '') || 0;
-            let sub = parseInt(rawQ, 10) * parseInt(rawP, 10);
+            let taxRate = parseInt(document.getElementById(`tax_${idx}`).value) || 0;
+
+            // Rumus: (Qty x Harga) + Pajaknya
+            let dpp = parseInt(rawQ, 10) * parseInt(rawP, 10);
+            let taxAmount = dpp * (taxRate / 100);
+            let sub = dpp + taxAmount;
+
             document.getElementById(`subtext_${idx}`).innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(sub);
-            calcGrand();
+            calcGrand(); // Selalu panggil kalkulasi grand total jika subtotal berubah
         }
+
+        // function calcGrand() {
+        //     let total = 0;
+        //     document.querySelectorAll('[id^="qty_"]').forEach(el => {
+        //         let idx = el.id.split('_')[1];
+        //         let rawQ = document.getElementById(`qty_${idx}`).value.replace(/\./g, '') || 0;
+        //         let rawP = document.getElementById(`price_${idx}`).value.replace(/\./g, '') || 0;
+        //         total += parseInt(rawQ, 10) * parseInt(rawP, 10);
+        //     });
+        //     document.getElementById('grandTotalText').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(total);
+        // }
 
         function calcGrand() {
             let total = 0;
@@ -1591,7 +1659,11 @@ $products = \App\Models\Product::all();
                 let idx = el.id.split('_')[1];
                 let rawQ = document.getElementById(`qty_${idx}`).value.replace(/\./g, '') || 0;
                 let rawP = document.getElementById(`price_${idx}`).value.replace(/\./g, '') || 0;
-                total += parseInt(rawQ, 10) * parseInt(rawP, 10);
+                let taxRate = parseInt(document.getElementById(`tax_${idx}`).value) || 0;
+
+                let dpp = parseInt(rawQ, 10) * parseInt(rawP, 10);
+                let taxAmount = dpp * (taxRate / 100);
+                total += (dpp + taxAmount);
             });
             document.getElementById('grandTotalText').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(total);
         }
