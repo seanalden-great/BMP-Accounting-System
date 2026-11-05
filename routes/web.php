@@ -203,4 +203,5 @@ Route::middleware('auth')->group(function () {
     Route::put('/payroll/employee/{id}', [PayrollController::class, 'updateEmployee'])->name('payroll.updateEmployee');
     Route::delete('/payroll/employee/{id}', [PayrollController::class, 'destroyEmployee'])->name('payroll.destroyEmployee');
     Route::post('/payroll/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
+    Route::get('/payroll/slip/{id}/{employee_id}', [PayrollController::class, 'printSlip'])->name('payroll.printSlip');
 });
