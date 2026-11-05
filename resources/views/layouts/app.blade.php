@@ -529,6 +529,7 @@
                     <i data-feather="chevron-down" class="w-3 h-3 text-slate-400"></i>
                 </button>
                 <div id="sub-sales" class="hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                    <a href="{{ route('sales.overview') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400"><i data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i> Overview Analitik</a>
                     <a href="{{ route('sales.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pesanan Penjualan</a>
                     <a href="{{ route('sales.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pengiriman Penjualan</a>
                     <a href="{{ route('sales.invoices') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Tagihan Penjualan</a>
@@ -541,6 +542,7 @@
                     <i data-feather="chevron-down" class="w-3 h-3 text-slate-400"></i>
                 </button>
                 <div id="sub-purchases" class="hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                    <a href="{{ route('purchases.overview') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400"><i data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i> Overview Analitik</a>
                     <a href="{{ route('purchases.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pesanan Pembelian</a>
                     <a href="{{ route('purchases.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Penerimaan Pembelian</a>
                     <a href="{{ route('purchases.bills') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Tagihan Pembelian</a>

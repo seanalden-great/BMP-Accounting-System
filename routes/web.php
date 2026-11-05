@@ -175,9 +175,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('purchases', PurchaseController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('purchases/deliveries', [PurchaseController::class, 'showDeliveries'])->name('purchases.deliveries');
     Route::get('purchases/bills', [PurchaseController::class, 'showBills'])->name('purchases.bills');
+    Route::get('/purchases/overview', [PurchaseController::class, 'overview'])->name('purchases.overview');
     Route::resource('sales', SaleController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
+    Route::get('/sales/overview', [SaleController::class, 'overview'])->name('sales.overview');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
     Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');

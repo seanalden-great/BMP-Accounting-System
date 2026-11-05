@@ -140,7 +140,7 @@
 
 //             // Cari Akun Persediaan (13%)
 //             $inventoryAccount = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first();
-            
+
 //             // Cari Akun Bank
 //             $bankAccount = Account::where('code', $validated['payment_account'])->where('is_header', false)->first();
 
@@ -150,7 +150,7 @@
 //             }
 
 //             $journalCode = "BILL-" . Carbon::now()->format('Ymd') . "-" . $purchase->id;
-            
+
 //             $journal = Journal::create([
 //                 'date'         => Carbon::now(),
 //                 'description'  => "Pembayaran Tunai PO #" . $purchase->id . " (Ref: " . $purchase->reference_no . ") - " . $journalCode,
@@ -295,7 +295,7 @@
 
 //             // Cari Akun Persediaan (13%) dan Akun Hutang Usaha (30% / 3%)
 //             $inventoryAccount = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first();
-            
+
 //             $payableAccount = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first();
 //             if (!$payableAccount) {
 //                 $payableAccount = Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
@@ -373,7 +373,7 @@
 //             }
 
 //             $journalCode = "BILL-" . Carbon::now()->format('Ymd') . "-" . $purchase->id;
-            
+
 //             $journal = Journal::create([
 //                 'date'         => $validated['due_date'],
 //                 'description'  => "Pelunasan Hutang PO #" . $purchase->id . " (Ref: " . $purchase->reference_no . ") - " . $journalCode,
@@ -619,7 +619,7 @@
 //             }
 
 //             $journalCode = "BILL-" . Carbon::now()->format('Ymd') . "-" . $purchase->id;
-            
+
 //             $journal = Journal::create([
 //                 'date'         => $validated['due_date'],
 //                 'description'  => "Pelunasan Hutang PO #" . $purchase->id . " (Ref: " . $purchase->reference_no . ") - " . $journalCode,
@@ -651,7 +651,7 @@
 //     {
 //         $deliveries = Purchase::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'desc')->get();
 //         $pendingOrders = Purchase::with(['contact', 'items.product'])->where('status', 'Pesanan')->get();
-        
+
 //         // Ambil data gudang untuk dropdown di modal Penerimaan
 //         $warehouses = Warehouse::orderBy('name', 'asc')->get();
 
@@ -672,8 +672,8 @@ namespace App\Http\Controllers;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Product;
-use App\Models\ProductStock; 
-use App\Models\Warehouse;    
+use App\Models\ProductStock;
+use App\Models\Warehouse;
 use App\Models\Account;
 use App\Models\Journal;
 use App\Models\JournalEntry;
@@ -689,14 +689,14 @@ class PurchaseController extends Controller
         $date = Carbon::parse($dateString);
         $month = $date->month;
         $year = $date->year;
-        
+
         // Konversi angka bulan ke Romawi
         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
         $romanMonth = $romanMonths[$month];
-        
+
         // Cari data terakhir di bulan dan tahun yang sama (mencocokkan pola string)
         $suffix = "/{$type}/BMP/{$romanMonth}/{$year}";
-        
+
         if ($type === 'PO') {
             $latestDoc = Purchase::whereYear('date', $year)
                 ->whereMonth('date', $month)
@@ -721,10 +721,10 @@ class PurchaseController extends Controller
                 $nextSeq = intval($parts[0]) + 1;
             }
         }
-        
+
         // Format angka 3 digit (contoh: 001, 002, 010, 100)
         $seqStr = str_pad($nextSeq, 3, '0', STR_PAD_LEFT);
-        
+
         return "{$seqStr}{$suffix}";
     }
 
@@ -804,10 +804,10 @@ class PurchaseController extends Controller
         }
 
         $purchases = $query->get();
-        
+
         // Kalkulasi nomor PO selanjutnya untuk preview di form Modal
         $nextDocNumber = $this->generateDocNumber('PO', Carbon::now()->toDateString());
-        
+
         return view('purchases.index', compact('purchases', 'nextDocNumber'));
     }
 
@@ -973,7 +973,7 @@ class PurchaseController extends Controller
 
             // Generate Kode Tagihan Pembelian (PI) Otomatis
             $journalCode = $this->generateDocNumber('PI', $validated['due_date']);
-            
+
             $purchase->update([
                 'status'               => 'Tagihan',
                 'due_date'             => $validated['due_date'],
@@ -1024,5 +1024,62 @@ class PurchaseController extends Controller
         $readyDeliveries = Purchase::with(['contact', 'items.product'])->where('status', 'Pengiriman')->get();
         $banks = Account::where(function($query) { $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%'); })->where('is_header', false)->get();
         return view('purchases.bill', compact('bills', 'readyDeliveries', 'banks'));
+    }
+
+    // FITUR ANALITIK: OVERVIEW PENJUALAN & PREDIKSI REGRESI LINEAR
+    public function overview()
+    {
+        // 1. History & Detail Alur Stok
+        $purchases = Purchase::with(['contact', 'items.product'])->orderBy('date', 'desc')->get();
+
+        // 2. Daftar 5 Produk Terlaris
+        $topProducts = PurchaseItem::select('product_sku', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(sub_total) as total_revenue'))
+            ->groupBy('product_sku')
+            ->orderBy('total_qty', 'desc')
+            ->take(5)
+            ->with('product')
+            ->get();
+
+        // 3. Mesin Analitik: Algoritma Linear Regression (Y = a + bX)
+        $predictions = [];
+        if ($topProducts->isNotEmpty()) {
+            $topProductSku = $topProducts->first()->product_sku;
+            $historicalData = [];
+
+            // Ekstrak mundur data 6 bulan terakhir
+            for ($i = 5; $i >= 0; $i--) {
+                $date = Carbon::now()->subMonths($i);
+                $qty = PurchaseItem::where('product_sku', $topProductSku)
+                    ->whereHas('purchase', function($q) use ($date) {
+                        $q->whereMonth('date', $date->month)->whereYear('date', $date->year);
+                    })->sum('quantity');
+                $historicalData[] = ['month' => $date->translatedFormat('M Y'), 'qty' => $qty];
+            }
+
+            // Kalkulasi Matematika Regresi
+            $n = count($historicalData);
+            $sumX = 0; $sumY = 0; $sumXY = 0; $sumX2 = 0;
+            foreach ($historicalData as $i => $data) {
+                $x = $i + 1; // Sumbu X (Waktu/Bulan)
+                $y = $data['qty']; // Sumbu Y (Volume)
+                $sumX += $x; $sumY += $y; $sumXY += ($x * $y); $sumX2 += ($x * $x);
+            }
+
+            $denominator = ($n * $sumX2) - ($sumX * $sumX);
+            $b = $denominator != 0 ? (($n * $sumXY) - ($sumX * $sumY)) / $denominator : 0; // Slope (Kemiringan)
+            $a = ($sumY - ($b * $sumX)) / $n; // Intercept
+
+            $nextX = $n + 1;
+            $predictionValue = max(0, round($a + ($b * $nextX))); // Mencegah nilai negatif
+
+            $predictions = [
+                'product' => $topProducts->first()->product->name ?? $topProductSku,
+                'history' => $historicalData,
+                'next_month_prediction' => $predictionValue,
+                'trend' => $b > 0 ? 'Meningkat Tajam 📈' : ($b < 0 ? 'Menurun 📉' : 'Cenderung Stabil ➖')
+            ];
+        }
+
+        return view('purchases.overview', compact('purchases', 'topProducts', 'predictions'));
     }
 }

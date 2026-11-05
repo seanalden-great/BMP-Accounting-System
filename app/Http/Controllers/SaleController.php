@@ -141,13 +141,13 @@
 
 //             // Cari Akun-akun yang diperlukan
 //             $bankAcc = Account::where('code', $validated['payment_account'])->where('is_header', false)->first();
-            
+
 //             $revAcc = Account::where('code', 'LIKE', '50%')->where('is_header', false)->first();
 //             if (!$revAcc) $revAcc = Account::where('code', 'LIKE', '4%')->where('is_header', false)->first();
 
 //             $cogsAcc = Account::where('code', 'LIKE', '60%')->where('is_header', false)->first();
 //             if (!$cogsAcc) $cogsAcc = Account::where('code', 'LIKE', '5%')->where('is_header', false)->first();
-            
+
 //             $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first();
 //             if (!$invAcc) $invAcc = Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
 
@@ -157,7 +157,7 @@
 //             }
 
 //             $journalCode = "INV-S-" . Carbon::now()->format('Ymd') . "-" . $sale->id;
-            
+
 //             $j1 = Journal::create([
 //                 'date'         => Carbon::now(),
 //                 'description'  => "Penerimaan Dana Penjualan SO #" . $sale->id . " (" . $journalCode . ")",
@@ -387,7 +387,7 @@
 //             }
 
 //             $journalCode = "INV-S-" . Carbon::now()->format('Ymd') . "-" . $sale->id;
-            
+
 //             $j1 = Journal::create([
 //                 'date'         => Carbon::now(),
 //                 'description'  => "Pelunasan Piutang SO #" . $sale->id . " (Ref: " . $sale->reference_no . ") - " . $journalCode,
@@ -527,7 +527,7 @@
 //                     ->orderBy('id', 'asc')
 //                     ->lockForUpdate()
 //                     ->get();
-                
+
 //                 $totalAvailable = $availableStocks->sum('quantity');
 
 //                 if ($totalAvailable < $neededQty) {
@@ -543,17 +543,17 @@
 //                     if ($neededQty <= 0) break;
 
 //                     $take = min($stock->quantity, $neededQty);
-                    
+
 //                     // Kurangi stok di tabel product_stocks (Gudang Spesifik)
 //                     $stock->quantity -= $take;
 //                     $stock->save();
 
 //                     $neededQty -= $take;
-                    
+
 //                     $warehouseName = $stock->warehouse ? $stock->warehouse->name : 'Gudang Unknown';
 //                     $takenNotes[] = "{$take} unit dari {$warehouseName}";
 //                 }
-                
+
 //                 $deliveryLog[] = "{$product->name} (" . implode(', ', $takenNotes) . ")";
 //             }
 
@@ -640,7 +640,7 @@
 //             }
 
 //             $journalCode = "INV-S-" . Carbon::now()->format('Ymd') . "-" . $sale->id;
-            
+
 //             $j1 = Journal::create([
 //                 'date'         => Carbon::now(),
 //                 'description'  => "Pelunasan Piutang SO #" . $sale->id . " (Ref: " . $sale->reference_no . ") - " . $journalCode,
@@ -695,20 +695,20 @@
 //         $date = Carbon::parse($dateString);
 //         $month = $date->month;
 //         $year = $date->year;
-        
+
 //         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
 //         $romanMonth = $romanMonths[$month];
-        
+
 //         // Akhiran dokumen (Contoh: /SJ/BMP/XI/2026 atau /GKP/BMP/XI/2026)
 //         $suffix = "/{$type}/BMP/{$romanMonth}/{$year}";
-        
+
 //         // Karena Surat Jalan & Invoice masuk ke tabel Jurnal, kita cari urutan terakhir di sana
 //         $latestDoc = Journal::whereYear('date', $year)
 //             ->whereMonth('date', $month)
 //             ->where('reference_no', 'LIKE', '%'.$suffix)
 //             ->orderBy('id', 'desc')
 //             ->first();
-            
+
 //         $nextSeq = 1;
 //         if ($latestDoc && $latestDoc->reference_no) {
 //             $parts = explode('/', $latestDoc->reference_no);
@@ -716,7 +716,7 @@
 //                 $nextSeq = intval($parts[0]) + 1;
 //             }
 //         }
-        
+
 //         return str_pad($nextSeq, 3, '0', STR_PAD_LEFT) . $suffix;
 //     }
 
@@ -797,7 +797,7 @@
 //             }
 
 //             $totalHPP = 0;
-//             $deliveryLog = []; 
+//             $deliveryLog = [];
 
 //             foreach ($sale->items as $item) {
 //                 $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
@@ -809,7 +809,7 @@
 //                     ->orderBy('id', 'asc')
 //                     ->lockForUpdate()
 //                     ->get();
-                
+
 //                 $totalAvailable = $availableStocks->sum('quantity');
 
 //                 if ($totalAvailable < $neededQty) {
@@ -824,16 +824,16 @@
 //                     if ($neededQty <= 0) break;
 
 //                     $take = min($stock->quantity, $neededQty);
-                    
+
 //                     $stock->quantity -= $take;
 //                     $stock->save();
 
 //                     $neededQty -= $take;
-                    
+
 //                     $warehouseName = $stock->warehouse ? $stock->warehouse->name : 'Gudang Unknown';
 //                     $takenNotes[] = "{$take} unit dari {$warehouseName}";
 //                 }
-                
+
 //                 $deliveryLog[] = "{$product->name} (" . implode(', ', $takenNotes) . ")";
 //             }
 
@@ -911,7 +911,7 @@
 //             // AUTO-GENERATE KODE INVOICE (GKP)
 //             $now = Carbon::now();
 //             $journalCode = $this->generateDocNumber('GKP', $now);
-            
+
 //             $sale->update([
 //                 'status'               => 'Tagihan',
 //                 'payment_account_code' => $validated['payment_account'],
@@ -972,13 +972,13 @@ class SaleController extends Controller
         $date = Carbon::parse($dateString);
         $month = $date->month;
         $year = $date->year;
-        
+
         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
         $romanMonth = $romanMonths[$month];
-        
+
         // Akhiran dokumen (Contoh: /SO/BMP/XI/2026, /SJ/BMP/XI/2026 atau /GKP/BMP/XI/2026)
         $suffix = "/{$type}/BMP/{$romanMonth}/{$year}";
-        
+
         if ($type === 'SO') {
             // Pencarian untuk dokumen SO (Pesanan Penjualan)
             $latestDoc = Sale::whereYear('date', $year)
@@ -994,7 +994,7 @@ class SaleController extends Controller
                 ->orderBy('id', 'desc')
                 ->first();
         }
-            
+
         $nextSeq = 1;
         if ($latestDoc && $latestDoc->reference_no) {
             $parts = explode('/', $latestDoc->reference_no);
@@ -1002,7 +1002,7 @@ class SaleController extends Controller
                 $nextSeq = intval($parts[0]) + 1;
             }
         }
-        
+
         return str_pad($nextSeq, 3, '0', STR_PAD_LEFT) . $suffix;
     }
 
@@ -1082,10 +1082,10 @@ class SaleController extends Controller
         }
 
         $sales = $query->get();
-        
+
         // Kalkulasi nomor SO selanjutnya untuk preview di form Modal
         $nextDocNumber = $this->generateDocNumber('SO', Carbon::now()->toDateString());
-        
+
         return view('sales.index', compact('sales', 'nextDocNumber'));
     }
 
@@ -1158,7 +1158,7 @@ class SaleController extends Controller
             }
 
             $totalHPP = 0;
-            $deliveryLog = []; 
+            $deliveryLog = [];
 
             foreach ($sale->items as $item) {
                 $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
@@ -1170,7 +1170,7 @@ class SaleController extends Controller
                     ->orderBy('id', 'asc')
                     ->lockForUpdate()
                     ->get();
-                
+
                 $totalAvailable = $availableStocks->sum('quantity');
 
                 if ($totalAvailable < $neededQty) {
@@ -1185,16 +1185,16 @@ class SaleController extends Controller
                     if ($neededQty <= 0) break;
 
                     $take = min($stock->quantity, $neededQty);
-                    
+
                     $stock->quantity -= $take;
                     $stock->save();
 
                     $neededQty -= $take;
-                    
+
                     $warehouseName = $stock->warehouse ? $stock->warehouse->name : 'Gudang Unknown';
                     $takenNotes[] = "{$take} unit dari {$warehouseName}";
                 }
-                
+
                 $deliveryLog[] = "{$product->name} (" . implode(', ', $takenNotes) . ")";
             }
 
@@ -1271,7 +1271,7 @@ class SaleController extends Controller
             // AUTO-GENERATE KODE INVOICE (GKP)
             $now = Carbon::now();
             $journalCode = $this->generateDocNumber('GKP', $now);
-            
+
             $sale->update([
                 'status'               => 'Tagihan',
                 'payment_account_code' => $validated['payment_account'],
@@ -1308,5 +1308,62 @@ class SaleController extends Controller
         $readyDeliveries = Sale::with(['contact', 'items.product'])->where('status', 'Pengiriman')->get();
         $banks = Account::where(function($query) { $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%'); })->where('is_header', false)->get();
         return view('sales.invoice', compact('invoices', 'readyDeliveries', 'banks'));
+    }
+
+    // FITUR ANALITIK: OVERVIEW PENJUALAN & PREDIKSI REGRESI LINEAR
+    public function overview()
+    {
+        // 1. History & Detail Alur Stok
+        $sales = Sale::with(['contact', 'items.product'])->orderBy('date', 'desc')->get();
+
+        // 2. Daftar 5 Produk Terlaris
+        $topProducts = SaleItem::select('product_sku', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(sub_total) as total_revenue'))
+            ->groupBy('product_sku')
+            ->orderBy('total_qty', 'desc')
+            ->take(5)
+            ->with('product')
+            ->get();
+
+        // 3. Mesin Analitik: Algoritma Linear Regression (Y = a + bX)
+        $predictions = [];
+        if ($topProducts->isNotEmpty()) {
+            $topProductSku = $topProducts->first()->product_sku;
+            $historicalData = [];
+
+            // Ekstrak mundur data 6 bulan terakhir
+            for ($i = 5; $i >= 0; $i--) {
+                $date = Carbon::now()->subMonths($i);
+                $qty = SaleItem::where('product_sku', $topProductSku)
+                    ->whereHas('sale', function($q) use ($date) {
+                        $q->whereMonth('date', $date->month)->whereYear('date', $date->year);
+                    })->sum('quantity');
+                $historicalData[] = ['month' => $date->translatedFormat('M Y'), 'qty' => $qty];
+            }
+
+            // Kalkulasi Matematika Regresi
+            $n = count($historicalData);
+            $sumX = 0; $sumY = 0; $sumXY = 0; $sumX2 = 0;
+            foreach ($historicalData as $i => $data) {
+                $x = $i + 1; // Sumbu X (Waktu/Bulan)
+                $y = $data['qty']; // Sumbu Y (Volume)
+                $sumX += $x; $sumY += $y; $sumXY += ($x * $y); $sumX2 += ($x * $x);
+            }
+
+            $denominator = ($n * $sumX2) - ($sumX * $sumX);
+            $b = $denominator != 0 ? (($n * $sumXY) - ($sumX * $sumY)) / $denominator : 0; // Slope (Kemiringan)
+            $a = ($sumY - ($b * $sumX)) / $n; // Intercept
+
+            $nextX = $n + 1;
+            $predictionValue = max(0, round($a + ($b * $nextX))); // Mencegah nilai negatif
+
+            $predictions = [
+                'product' => $topProducts->first()->product->name ?? $topProductSku,
+                'history' => $historicalData,
+                'next_month_prediction' => $predictionValue,
+                'trend' => $b > 0 ? 'Meningkat Tajam 📈' : ($b < 0 ? 'Menurun 📉' : 'Cenderung Stabil ➖')
+            ];
+        }
+
+        return view('sales.overview', compact('sales', 'topProducts', 'predictions'));
     }
 }
