@@ -314,67 +314,168 @@ class JournalController extends Controller
         // }
 
         // FORMAT 1: CSV / EXCEL
+        // if ($format === 'csv') {
+        //     $headers = [
+        //         "Content-type"        => "text/csv; charset=UTF-8", // Pastikan encoding UTF-8
+        //         "Content-Disposition" => "attachment; filename=Mutasi_{$type}_{$bank->name}.csv",
+        //         "Pragma"              => "no-cache",
+        //         "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+        //         "Expires"             => "0"
+        //     ];
+
+        //     $callback = function() use ($journals, $bank, $saldoAwal, $reportName, $startDate, $endDate) {
+        //         $file = fopen('php://output', 'w');
+
+        //         // Tambahkan BOM (Byte Order Mark) agar Excel otomatis mendeteksi format secara rapi
+        //         fputs($file, "\xEF\xBB\xBF");
+
+        //         // KUNCI PERBAIKAN: Gunakan pemisah Titik Koma (;) khusus untuk Excel region Indonesia
+        //         $delimiter = ';';
+
+        //         // Tulis Header Info
+        //         fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA'], $delimiter);
+        //         fputcsv($file, [$reportName], $delimiter);
+        //         fputcsv($file, ['Rekening:', $bank->name . ' (' . $bank->code . ')'], $delimiter);
+
+        //         $tglAwal = $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : 'Awal';
+        //         $tglAkhir = $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : 'Akhir';
+        //         fputcsv($file, ['Periode:', $tglAwal . ' s/d ' . $tglAkhir], $delimiter);
+
+        //         fputcsv($file, [], $delimiter); // Baris kosong pemisah
+
+        //         // Tulis Header Tabel (SUSUNAN PERSIS SEPERTI DI WEB)
+        //         fputcsv($file, [
+        //             'No.',
+        //             'Tanggal',
+        //             'Uraian / Keterangan',
+        //             'No. AKUN',
+        //             'DEBET',
+        //             'KREDIT',
+        //             'SISA SALDO',
+        //             '', // Celah kolom kosong pemisah seperti di web
+        //             'KETERANGAN / LAWAN'
+        //         ], $delimiter);
+
+        //         $runningBalance = $saldoAwal;
+        //         $rowNumber = 1;
+
+        //         // Tulis Baris Saldo Awal (Jika Ada)
+        //         if ($startDate) {
+        //             fputcsv($file, [
+        //                 '-',
+        //                 \Carbon\Carbon::parse($startDate)->format('d-M-Y'),
+        //                 'SALDO AWAL (Pindahan)',
+        //                 '',
+        //                 '',
+        //                 '',
+        //                 $runningBalance, // Angka asli agar bisa di-sum oleh Excel
+        //                 '',
+        //                 'Akumulasi historis'
+        //             ], $delimiter);
+        //         }
+
+        //         // Tulis Rincian Baris Transaksi
+        //         foreach ($journals as $journal) {
+        //             foreach ($journal->entries as $entry) {
+        //                 if ($entry->account_code == $bank->code) {
+        //                     $runningBalance += ($entry->debit - $entry->credit);
+
+        //                     $lawan = $journal->entries->where('account_code', '!=', $bank->code)->first();
+        //                     $lawanName = $lawan ? $lawan->account->name : 'Tanpa Keterangan';
+
+        //                     $desc = $journal->description;
+        //                     if ($journal->reference_no) {
+        //                         $desc .= ' - ' . $journal->reference_no;
+        //                     }
+
+        //                     fputcsv($file, [
+        //                         $rowNumber++,
+        //                         \Carbon\Carbon::parse($journal->date)->format('d-M-Y'),
+        //                         $desc,
+        //                         $entry->account_code,
+        //                         $entry->debit > 0 ? $entry->debit : '',   // Biarkan berupa angka mentah
+        //                         $entry->credit > 0 ? $entry->credit : '', // tanpa format rupiah agar bisa
+        //                         $runningBalance,                          // dijumlahkan oleh rumus SUM Excel
+        //                         '', // Celah kolom kosong
+        //                         $lawanName
+        //                     ], $delimiter);
+        //                 }
+        //             }
+        //         }
+        //         fclose($file);
+        //     };
+
+        //     return response()->stream($callback, 200, $headers);
+        // }
+
+        // FORMAT 1: CSV / EXCEL (MENGGUNAKAN TRIK HTML-TO-EXCEL AGAR TAMPILAN 100% PERSIS WEB)
         if ($format === 'csv') {
+            // Kita ubah extension menjadi .xls agar Excel memprioritaskannya
             $headers = [
-                "Content-type"        => "text/csv; charset=UTF-8", // Pastikan encoding UTF-8
-                "Content-Disposition" => "attachment; filename=Mutasi_{$type}_{$bank->name}.csv",
+                "Content-type"        => "application/vnd.ms-excel",
+                "Content-Disposition" => "attachment; filename=Mutasi_{$type}_{$bank->name}.xls",
                 "Pragma"              => "no-cache",
                 "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
                 "Expires"             => "0"
             ];
 
             $callback = function() use ($journals, $bank, $saldoAwal, $reportName, $startDate, $endDate) {
-                $file = fopen('php://output', 'w');
+                // Tuliskan Format HTML lengkap dengan Inline CSS
+                echo '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+                echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>';
+                echo '<body>';
 
-                // Tambahkan BOM (Byte Order Mark) agar Excel otomatis mendeteksi format secara rapi
-                fputs($file, "\xEF\xBB\xBF");
+                // --- BAGIAN 1: HEADER INFORMASI PERUSAHAAN ---
+                echo '<table border="0" style="font-family: Arial, sans-serif;">';
+                echo '<tr><th colspan="9" style="font-size:16px; font-weight:bold; text-align:center;">PT. BERLIAN MANDIRI PERKASA</th></tr>';
+                echo '<tr><th colspan="9" style="font-size:14px; font-weight:bold; text-align:center;">' . $reportName . '</th></tr>';
+                echo '<tr><td colspan="9"></td></tr>'; // Jeda Kosong
 
-                // KUNCI PERBAIKAN: Gunakan pemisah Titik Koma (;) khusus untuk Excel region Indonesia
-                $delimiter = ';';
-
-                // Tulis Header Info
-                fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA'], $delimiter);
-                fputcsv($file, [$reportName], $delimiter);
-                fputcsv($file, ['Rekening:', $bank->name . ' (' . $bank->code . ')'], $delimiter);
-
+                echo '<tr><td colspan="2"><strong>Buku Besar Akun:</strong></td><td colspan="7">' . $bank->name . ' (' . $bank->code . ')</td></tr>';
                 $tglAwal = $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : 'Awal';
                 $tglAkhir = $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : 'Akhir';
-                fputcsv($file, ['Periode:', $tglAwal . ' s/d ' . $tglAkhir], $delimiter);
+                echo '<tr><td colspan="2"><strong>Periode:</strong></td><td colspan="7">' . $tglAwal . ' s/d ' . $tglAkhir . '</td></tr>';
+                echo '<tr><td colspan="9"></td></tr>'; // Jeda Kosong
+                echo '</table>';
 
-                fputcsv($file, [], $delimiter); // Baris kosong pemisah
-
-                // Tulis Header Tabel (SUSUNAN PERSIS SEPERTI DI WEB)
-                fputcsv($file, [
-                    'No.',
-                    'Tanggal',
-                    'Uraian / Keterangan',
-                    'No. AKUN',
-                    'DEBET',
-                    'KREDIT',
-                    'SISA SALDO',
-                    '', // Celah kolom kosong pemisah seperti di web
-                    'KETERANGAN / LAWAN'
-                ], $delimiter);
+                // --- BAGIAN 2: HEADER TABEL (Desain Rapi Persis Web) ---
+                echo '<table border="1" style="font-family: Arial, sans-serif; font-size: 12px; border-collapse: collapse;">';
+                echo '<thead style="background-color: #f1f5f9;">'; // bg-slate-100
+                echo '<tr>';
+                echo '<th style="padding:8px; text-align:center;">No.</th>';
+                echo '<th style="padding:8px; text-align:center;">Tanggal</th>';
+                echo '<th style="padding:8px; text-align:center;">Uraian / Keterangan</th>';
+                echo '<th style="padding:8px; text-align:center;">No. AKUN</th>';
+                echo '<th style="padding:8px; text-align:center;">DEBET</th>';
+                echo '<th style="padding:8px; text-align:center;">KREDIT</th>';
+                echo '<th style="padding:8px; text-align:center;">SISA SALDO</th>';
+                echo '<th style="padding:8px; background-color: #ffffff; border:none;"></th>'; // Kolom Spasi Pemisah
+                echo '<th style="padding:8px; text-align:center;">KETERANGAN / LAWAN</th>';
+                echo '</tr>';
+                echo '</thead>';
+                echo '<tbody>';
 
                 $runningBalance = $saldoAwal;
                 $rowNumber = 1;
 
-                // Tulis Baris Saldo Awal (Jika Ada)
+                // --- BAGIAN 3: BARIS SALDO AWAL (Jika Ada Filter) ---
                 if ($startDate) {
-                    fputcsv($file, [
-                        '-',
-                        \Carbon\Carbon::parse($startDate)->format('d-M-Y'),
-                        'SALDO AWAL (Pindahan)',
-                        '',
-                        '',
-                        '',
-                        $runningBalance, // Angka asli agar bisa di-sum oleh Excel
-                        '',
-                        'Akumulasi historis'
-                    ], $delimiter);
+                    echo '<tr style="background-color: #eff6ff;">'; // bg-blue-50
+                    echo '<td style="padding:8px; text-align:center; color: #94a3b8;">-</td>';
+                    echo '<td style="padding:8px; text-align:center; color: #475569;">' . \Carbon\Carbon::parse($startDate)->format('d-M-Y') . '</td>';
+                    echo '<td style="padding:8px; font-weight:bold; color: #1e40af;">SALDO AWAL (Pindahan)</td>';
+                    echo '<td></td><td></td><td></td>';
+
+                    // Logika Warna: Merah jika minus (Kredit), Biru jika positif (Debit)
+                    $color = $runningBalance < 0 ? '#dc2626' : '#1d4ed8';
+                    $salStr = $runningBalance < 0 ? '(Rp ' . number_format(abs($runningBalance), 0, ',', '.') . ')' : 'Rp ' . number_format($runningBalance, 0, ',', '.');
+                    echo '<td style="padding:8px; text-align:right; font-weight:bold; color: ' . $color . ';">' . $salStr . '</td>';
+                    echo '<td style="background-color: #ffffff; border:none;"></td>'; // Spasi
+                    echo '<td style="padding:8px; text-align:center; color: #64748b; font-style: italic;">Akumulasi historis</td>';
+                    echo '</tr>';
                 }
 
-                // Tulis Rincian Baris Transaksi
+                // --- BAGIAN 4: BARIS PERULANGAN MUTASI (Jurnal) ---
                 foreach ($journals as $journal) {
                     foreach ($journal->entries as $entry) {
                         if ($entry->account_code == $bank->code) {
@@ -388,21 +489,29 @@ class JournalController extends Controller
                                 $desc .= ' - ' . $journal->reference_no;
                             }
 
-                            fputcsv($file, [
-                                $rowNumber++,
-                                \Carbon\Carbon::parse($journal->date)->format('d-M-Y'),
-                                $desc,
-                                $entry->account_code,
-                                $entry->debit > 0 ? $entry->debit : '',   // Biarkan berupa angka mentah
-                                $entry->credit > 0 ? $entry->credit : '', // tanpa format rupiah agar bisa
-                                $runningBalance,                          // dijumlahkan oleh rumus SUM Excel
-                                '', // Celah kolom kosong
-                                $lawanName
-                            ], $delimiter);
+                            $debit = $entry->debit > 0 ? 'Rp ' . number_format($entry->debit, 0, ',', '.') : '';
+                            $credit = $entry->credit > 0 ? 'Rp ' . number_format($entry->credit, 0, ',', '.') : '';
+
+                            $balColor = $runningBalance < 0 ? '#dc2626' : '#2563eb';
+                            $balStr = $runningBalance < 0 ? '(Rp ' . number_format(abs($runningBalance), 0, ',', '.') . ')' : 'Rp ' . number_format($runningBalance, 0, ',', '.');
+
+                            echo '<tr>';
+                            echo '<td style="padding:8px; text-align:center;">' . $rowNumber++ . '</td>';
+                            echo '<td style="padding:8px; text-align:center;">' . \Carbon\Carbon::parse($journal->date)->format('d-M-Y') . '</td>';
+                            echo '<td style="padding:8px;">' . $desc . '</td>';
+                            echo '<td style="padding:8px; text-align:center; font-weight:bold;">' . $entry->account_code . '</td>';
+                            echo '<td style="padding:8px; text-align:right; font-weight:500;">' . $debit . '</td>';
+                            echo '<td style="padding:8px; text-align:right; font-weight:500;">' . $credit . '</td>';
+                            echo '<td style="padding:8px; text-align:right; font-weight:bold; color: ' . $balColor . ';">' . $balStr . '</td>';
+                            echo '<td style="background-color: #ffffff; border:none;"></td>'; // Spasi
+                            echo '<td style="padding:8px; text-align:center; color: #475569; font-weight:500;">' . $lawanName . '</td>';
+                            echo '</tr>';
                         }
                     }
                 }
-                fclose($file);
+
+                // Tutup dokumen HTML
+                echo '</tbody></table></body></html>';
             };
 
             return response()->stream($callback, 200, $headers);
