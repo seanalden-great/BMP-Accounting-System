@@ -526,6 +526,32 @@
 
     <script>
         // JAVASCRIPT: LOGIKA MODAL DINAMIS (TAMBAH & EDIT)
+        // function openEmployeeModal(mode = 'create', data = null) {
+        //     const form = document.getElementById('employeeForm');
+
+        //     if (mode === 'edit') {
+        //         document.getElementById('modalTitle').innerText = 'Ubah Data Karyawan';
+        //         document.getElementById('formMethod').value = 'PUT';
+        //         form.action = `/payroll/employee/${data.id}`;
+
+        //         form.nik.value = data.nik;
+        //         form.name.value = data.name;
+        //         form.position.value = data.position;
+        //         form.basic_salary.value = data.basic_salary;
+        //         formatRibuan(form.basic_salary); // Panggil fungsi agar otomatis ada titiknya saat diedit
+        //         form.bank_account.value = data.bank_account || '';
+        //         form.has_bpjs.value = data.has_bpjs ? '1' : '0';
+        //     } else {
+        //         document.getElementById('modalTitle').innerText = 'Tambah Data Karyawan Baru';
+        //         document.getElementById('formMethod').value = 'POST';
+        //         form.action = `{{ route('payroll.storeEmployee') }}`;
+        //         form.reset();
+        //     }
+
+        //     document.getElementById('employeeModal').classList.remove('hidden');
+        // }
+
+        // JAVASCRIPT: LOGIKA MODAL DINAMIS (TAMBAH & EDIT)
         function openEmployeeModal(mode = 'create', data = null) {
             const form = document.getElementById('employeeForm');
 
@@ -537,8 +563,17 @@
                 form.nik.value = data.nik;
                 form.name.value = data.name;
                 form.position.value = data.position;
-                form.basic_salary.value = data.basic_salary;
-                formatRibuan(form.basic_salary); // Panggil fungsi agar otomatis ada titiknya saat diedit
+
+                // PERBAIKAN: Gunakan Math.floor untuk membuang desimal .00 dari Database
+                let rawSalary = Math.floor(data.basic_salary) || 0;
+                form.basic_salary.value = rawSalary;
+                formatRibuan(form.basic_salary); // Sekarang nominal tidak akan bocor nambah 2 nol
+
+                // Jika input absent_days ada di form, kita isi juga
+                if (form.absent_days) {
+                    form.absent_days.value = data.absent_days || 0;
+                }
+
                 form.bank_account.value = data.bank_account || '';
                 form.has_bpjs.value = data.has_bpjs ? '1' : '0';
             } else {
@@ -546,6 +581,8 @@
                 document.getElementById('formMethod').value = 'POST';
                 form.action = `{{ route('payroll.storeEmployee') }}`;
                 form.reset();
+
+                if (form.absent_days) { form.absent_days.value = 0; }
             }
 
             document.getElementById('employeeModal').classList.remove('hidden');
