@@ -1,4 +1,4 @@
-<!-- resources/views/journals/export_print.blade.php -->
+{{-- <!-- resources/views/journals/export_print.blade.php -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -84,6 +84,107 @@
                             <td class="right font-bold" style="{{ $running < 0 ? 'color:red;' : '' }}">{{ number_format($running, 0, ',', '.') }}</td>
                         </tr>
                     @endif
+                @endforeach
+            @endforeach
+        </tbody>
+    </table>
+</body>
+</html> --}}
+
+<!-- resources/views/journals/export_print.blade.php -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Cetak Mutasi Bank</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { font-size: 18px; font-weight: bold; }
+        .subtitle { font-size: 14px; font-weight: bold; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #333; padding: 6px; }
+        th { background-color: #f1f5f9; text-align: center; font-weight: bold; }
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .red { color: #dc2626; }
+        .blue { color: #2563eb; }
+        .spacer { border: none; background-color: transparent; width: 20px; }
+        .info-table { width: 50%; border: none; margin-bottom: 20px; }
+        .info-table td { border: none; padding: 3px; font-weight: bold; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body onload="window.print()">
+    <button class="no-print" onclick="window.print()" style="padding:10px; margin-bottom:20px;">🖨️ Cetak Dokumen</button>
+
+    <div class="header">
+        <div class="title">PT. BERLIAN MANDIRI PERKASA</div>
+        <div class="subtitle">{{ $reportName }}</div>
+    </div>
+
+    <table class="info-table">
+        <tr><td>Buku Besar Akun</td><td>:</td><td>{{ $bank->name }} ({{ $bank->code }})</td></tr>
+        <tr><td>Periode</td><td>:</td><td>{{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : 'Awal' }} s/d {{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : 'Akhir' }}</td></tr>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Tanggal</th>
+                <th>Uraian / Keterangan</th>
+                <th>No. AKUN</th>
+                <th>DEBET</th>
+                <th>KREDIT</th>
+                <th>SISA SALDO</th>
+                <th class="spacer"></th>
+                <th>KETERANGAN / LAWAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $runningBalance = $saldoAwal; $rowNumber = 1; @endphp
+
+            @if($startDate)
+            <tr style="background-color: #eff6ff;">
+                <td class="center">-</td>
+                <td class="center">{{ \Carbon\Carbon::parse($startDate)->format('d-M-Y') }}</td>
+                <td style="font-weight:bold;">SALDO AWAL (Pindahan)</td>
+                <td></td><td></td><td></td>
+                <td class="right font-bold {{ $runningBalance < 0 ? 'red' : 'blue' }}">
+                    {{ $runningBalance < 0 ? '(Rp ' . number_format(abs($runningBalance), 0, ',', '.') . ')' : 'Rp ' . number_format($runningBalance, 0, ',', '.') }}
+                </td>
+                <td class="spacer"></td>
+                <td class="center" style="font-style:italic; color:#555;">Akumulasi historis</td>
+            </tr>
+            @endif
+
+            @foreach($journals as $journal)
+                @foreach($journal->entries as $entry)
+                    @php
+                        $isBankRow = ($entry->account_code == $bank->code);
+                        if ($isBankRow) { $runningBalance += ($entry->debit - $entry->credit); }
+
+                        $desc = $journal->description;
+                        if ($journal->reference_no) { $desc .= ' - ' . $journal->reference_no; }
+                    @endphp
+                    <tr>
+                        <td class="center">{{ $rowNumber++ }}</td>
+                        <td class="center">{{ \Carbon\Carbon::parse($journal->date)->format('d-M-Y') }}</td>
+                        <td>{{ $desc }}</td>
+                        <td class="center" style="font-weight:bold;">{{ $entry->account_code }}</td>
+                        <td class="right">{{ $entry->debit > 0 ? 'Rp ' . number_format($entry->debit, 0, ',', '.') : '' }}</td>
+                        <td class="right">{{ $entry->credit > 0 ? 'Rp ' . number_format($entry->credit, 0, ',', '.') : '' }}</td>
+                        <td class="right" style="font-weight:bold;">
+                            @if($isBankRow)
+                                <span class="{{ $runningBalance < 0 ? 'red' : 'blue' }}">
+                                    {{ $runningBalance < 0 ? '(Rp ' . number_format(abs($runningBalance), 0, ',', '.') . ')' : 'Rp ' . number_format($runningBalance, 0, ',', '.') }}
+                                </span>
+                            @endif
+                        </td>
+                        <td class="spacer"></td>
+                        <td class="center">{{ $entry->account ? $entry->account->name : 'Tanpa Keterangan' }}</td>
+                    </tr>
                 @endforeach
             @endforeach
         </tbody>
