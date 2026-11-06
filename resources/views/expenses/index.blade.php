@@ -2222,14 +2222,16 @@
             form.account_code.value = data.account_code;
             form.payment_code.value = data.payment_code;
 
-            form.amount.value = data.amount;
-            formatRibuan(form.amount); // Panggil fungsi ribuan agar otomatis ada titiknya
+            // PERBAIKAN: Gunakan parseInt/Math.floor untuk membuang desimal .00 dari Database
+            let rawAmount = Math.floor(data.amount) || 0;
+            form.amount.value = rawAmount;
+            formatRibuan(form.amount); // Sekarang tidak akan nambah 2 digit nol lagi
 
             form.description.value = data.description;
 
             document.getElementById('expModal').classList.remove('hidden');
         }
-        
+
         function formatRibuan(inputElement) {
             let value = inputElement.value.replace(/[^0-9]/g, '');
             if (value !== '') {
