@@ -242,7 +242,7 @@ class DashboardController extends Controller
             'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
             'chartLabels', 'chartInflows', 'chartOutflows',
             'poAlerts', 'soAlerts', 'totalAlerts',
-            'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense'
+            'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
         ));
     }
 }
