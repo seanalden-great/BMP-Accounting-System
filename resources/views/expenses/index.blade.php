@@ -2200,6 +2200,36 @@
 
     <!-- Script Kumpulan Fungsi -->
     <script>
+        function openCreateModal() {
+            document.getElementById('modalTitle').innerText = 'Catat Pengeluaran Baru';
+            const form = document.getElementById('expenseForm');
+            form.action = `{{ route('expenses.store') }}`;
+            document.getElementById('formMethod').value = 'POST';
+            form.reset();
+            form.date.value = '{{ date('Y-m-d') }}';
+            document.getElementById('expModal').classList.remove('hidden');
+        }
+
+        function openEditModal(data) {
+            document.getElementById('modalTitle').innerText = 'Edit Data Pengeluaran';
+            const form = document.getElementById('expenseForm');
+            form.action = `/expenses/${data.id}`;
+            document.getElementById('formMethod').value = 'PUT'; // Metode PUT untuk Update
+
+            // Isi form dengan data lama
+            form.date.value = data.date.split('T')[0]; // Format tanggal aman
+            form.reference_no.value = data.reference_no || '';
+            form.account_code.value = data.account_code;
+            form.payment_code.value = data.payment_code;
+
+            form.amount.value = data.amount;
+            formatRibuan(form.amount); // Panggil fungsi ribuan agar otomatis ada titiknya
+
+            form.description.value = data.description;
+
+            document.getElementById('expModal').classList.remove('hidden');
+        }
+        
         function formatRibuan(inputElement) {
             let value = inputElement.value.replace(/[^0-9]/g, '');
             if (value !== '') {
