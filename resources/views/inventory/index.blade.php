@@ -211,9 +211,25 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label>
                         <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
                     </div>
-                    <div>
+                    {{-- <div>
                         <label class="block text-sm font-bold text-indigo-900 mb-1">Lokasi Gudang</label>
                         <select name="warehouse_id" required class="w-full border border-indigo-200 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="" disabled selected>-- Pilih Gudang --</option>
+                            @foreach($warehouses as $wh)
+                                <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
+                            @endforeach
+                        </select>
+                    </div> --}}
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-bold text-indigo-900">Lokasi Gudang</label>
+                            <button type="button" onclick="openQuickWarehouseModal()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
+                                <i data-feather="plus" class="w-3 h-3"></i> Tambah Baru
+                            </button>
+                        </div>
+                        <!-- PERHATIKAN penambahan id="warehouseDropdown" di sini -->
+                        <select name="warehouse_id" id="warehouseDropdown" required class="w-full border border-indigo-200 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="" disabled selected>-- Pilih Gudang --</option>
                             @foreach($warehouses as $wh)
                                 <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
@@ -261,6 +277,36 @@
             </form>
         </div>
     </div>
+
+    <!-- MODAL POP-UP TAMBAH GUDANG CEPAT -->
+    <div id="quickWarehouseModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
+                <h3 class="text-lg font-bold text-slate-800">Tambah Gudang Baru</h3>
+                <button type="button" onclick="closeQuickWarehouseModal()" class="text-slate-400 hover:text-slate-700 transition-colors"><i data-feather="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form id="quickWarehouseForm" onsubmit="submitQuickWarehouse(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Gudang</label>
+                    <input type="text" name="code" required placeholder="Misal: WH-002" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Gudang / Cabang</label>
+                    <input type="text" name="name" required placeholder="Misal: Gudang Transit Jakarta" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Alamat Lokasi (Opsional)</label>
+                    <textarea name="location" rows="3" placeholder="Alamat lengkap gudang..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeQuickWarehouseModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-bold transition-colors">Batal</button>
+                    <button type="submit" id="btnSaveWarehouse" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- ========================================== -->
@@ -294,6 +340,59 @@
             // Hilangkan semua titik sebelum data dikirim ke Controller/Database
             input.value = input.value.replace(/\./g, '');
         });
+    }
+
+    // FUNGSI UNTUK MODAL GUDANG CEPAT (AJAX)
+    function openQuickWarehouseModal() {
+        document.getElementById('quickWarehouseModal').classList.remove('hidden');
+    }
+
+    function closeQuickWarehouseModal() {
+        document.getElementById('quickWarehouseModal').classList.add('hidden');
+        document.getElementById('quickWarehouseForm').reset();
+    }
+
+    async function submitQuickWarehouse(e) {
+        e.preventDefault();
+        const form = document.getElementById('quickWarehouseForm');
+        const btn = document.getElementById('btnSaveWarehouse');
+        const formData = new FormData(form);
+
+        btn.disabled = true;
+        btn.innerText = 'Menyimpan...';
+
+        try {
+            const response = await fetch("{{ route('warehouses.store') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json"
+                },
+                body: formData
+            });
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Buat opsi dropdown baru secara dinamis
+                const newOption = document.createElement("option");
+                newOption.value = result.warehouse.id;
+                newOption.text = `[${result.warehouse.code}] ${result.warehouse.name}`;
+
+                const dropdown = document.getElementById('warehouseDropdown');
+                dropdown.add(newOption);
+                dropdown.value = result.warehouse.id; // Otomatis pilih gudang yang baru dibuat
+
+                closeQuickWarehouseModal();
+                alert('Gudang berhasil ditambahkan dan dipilih!');
+            } else {
+                alert(result.message || 'Gagal menambahkan gudang.');
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan jaringan.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Simpan Data';
+        }
     }
 </script>
 @endsection

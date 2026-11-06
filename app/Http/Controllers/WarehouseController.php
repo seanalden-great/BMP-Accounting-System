@@ -16,6 +16,23 @@ class WarehouseController extends Controller
     }
 
     // Menyimpan data gudang baru
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'code'     => 'required|string|unique:warehouses,code',
+    //         'name'     => 'required|string|max:100',
+    //         'location' => 'nullable|string',
+    //     ]);
+
+    //     try {
+    //         Warehouse::create($validated);
+    //         return redirect()->back()->with('success', 'Gudang berhasil ditambahkan.');
+    //     } catch (\Exception $e) {
+    //         return redirect()->back()->withInput()->with('error', 'Gagal menambahkan gudang.');
+    //     }
+    // }
+
+    // Menyimpan data gudang baru (Mendukung Web Normal & Fetch AJAX)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -25,9 +42,25 @@ class WarehouseController extends Controller
         ]);
 
         try {
-            Warehouse::create($validated);
+            $warehouse = Warehouse::create($validated);
+
+            // Jika request datang dari AJAX (Fetch API modal pop-up), kembalikan JSON
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Gudang berhasil ditambahkan.',
+                    'warehouse' => $warehouse
+                ]);
+            }
+
             return redirect()->back()->with('success', 'Gudang berhasil ditambahkan.');
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menambahkan gudang: ' . $e->getMessage()
+                ], 500);
+            }
             return redirect()->back()->withInput()->with('error', 'Gagal menambahkan gudang.');
         }
     }
@@ -57,7 +90,7 @@ class WarehouseController extends Controller
     {
         try {
             $warehouse = Warehouse::findOrFail($id);
-            
+
             // Proteksi 1: Gudang ID 1 (Gudang Utama bawaan sistem) tidak boleh dihapus
             if ($warehouse->id == 1) {
                 return redirect()->back()->with('error', 'Gudang Utama tidak dapat dihapus dari sistem.');
