@@ -578,46 +578,57 @@
 
         </div>
     </div>
+
+    <!-- BAGIAN BAWAH: ANALITIK PROPORSI (DIAGRAM LINGKARAN) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Pie Chart: Struktur Pengeluaran -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">
+                <i data-feather="pie-chart" class="w-5 h-5 text-rose-600"></i> Struktur Pengeluaran (Bulan Ini)
+            </h3>
+            <div class="relative w-full h-64 flex-1 flex justify-center">
+                <canvas id="expensePieChart"></canvas>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-4">Perbandingan belanja stok barang vs biaya operasional</p>
+        </div>
+
+        <!-- Pie Chart: Distribusi Saldo Bank -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">
+                <i data-feather="pie-chart" class="w-5 h-5 text-teal-600"></i> Distribusi Saldo Kas & Bank
+            </h3>
+            <div class="relative w-full h-64 flex-1 flex justify-center">
+                <canvas id="bankPieChart"></canvas>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-4">Persentase sebaran likuiditas perusahaan di berbagai rekening</p>
+        </div>
+    </div>
 </div>
 
 <!-- Skrip Inisialisasi Chart.js Dinamis -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const ctx = document.getElementById('cashFlowChart').getContext('2d');
-
+        // ==========================================
+        // 1. GRAFIK BATANG: ARUS KAS (CASH FLOW)
+        // ==========================================
+        const ctxFlow = document.getElementById('cashFlowChart').getContext('2d');
         const labels = @json($chartLabels);
         const dataInflows = @json($chartInflows);
         const dataOutflows = @json($chartOutflows);
 
-        new Chart(ctx, {
+        new Chart(ctxFlow, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Uang Masuk (Kas)',
-                        data: dataInflows,
-                        backgroundColor: '#22c55e',
-                        borderRadius: 4,
-                        maxBarSize: 35
-                    },
-                    {
-                        label: 'Uang Keluar (Kas)',
-                        data: dataOutflows,
-                        backgroundColor: '#ef4444',
-                        borderRadius: 4,
-                        maxBarSize: 35
-                    }
+                    { label: 'Uang Masuk (Kas)', data: dataInflows, backgroundColor: '#22c55e', borderRadius: 4, maxBarSize: 35 },
+                    { label: 'Uang Keluar (Kas)', data: dataOutflows, backgroundColor: '#ef4444', borderRadius: 4, maxBarSize: 35 }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: { boxWidth: 12, font: { family: 'sans-serif', size: 12 } }
-                    },
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { family: 'sans-serif', size: 12 } } },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -633,10 +644,81 @@
                         grid: { color: '#f1f5f9' },
                         ticks: {
                             callback: function(value) {
-                                if (value >= 1000000) {
-                                    return 'Rp ' + (value / 1000000) + 'M';
-                                }
+                                if (value >= 1000000) return 'Rp ' + (value / 1000000) + 'M';
                                 return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ==========================================
+        // 2. GRAFIK DOUGHNUT: STRUKTUR PENGELUARAN
+        // ==========================================
+        const pmbBulanIni = {{ $pembelianBulanIni ?? 0 }};
+        const byaBulanIni = {{ $biayaBulanIni ?? 0 }};
+
+        const ctxExpense = document.getElementById('expensePieChart').getContext('2d');
+        new Chart(ctxExpense, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pembelian Brg (PO)', 'Biaya Operasional (KBD)'],
+                datasets: [{
+                    data: [pmbBulanIni, byaBulanIni],
+                    backgroundColor: ['#f97316', '#e11d48'], // Orange untuk Beli, Merah untuk Biaya
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 20, font: { family: 'sans-serif', size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.raw || 0;
+                                return ' ' + context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ==========================================
+        // 3. GRAFIK DOUGHNUT: DISTRIBUSI SALDO BANK
+        // ==========================================
+        const bankDetails = @json($rekeningDetails);
+        const bankLabels = bankDetails.map(b => b.name);
+        const bankData = bankDetails.map(b => b.balance);
+
+        // Warna dinamis jika banknya banyak
+        const bankColors = ['#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#64748b'];
+
+        const ctxBank = document.getElementById('bankPieChart').getContext('2d');
+        new Chart(ctxBank, {
+            type: 'doughnut',
+            data: {
+                labels: bankLabels.length > 0 ? bankLabels : ['Belum ada saldo'],
+                datasets: [{
+                    data: bankData.length > 0 ? bankData : [1],
+                    backgroundColor: bankData.length > 0 ? bankColors : ['#e2e8f0'],
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 20, font: { family: 'sans-serif', size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (bankData.length === 0) return ' Belum ada data';
+                                let value = context.raw || 0;
+                                return ' ' + context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
                             }
                         }
                     }
