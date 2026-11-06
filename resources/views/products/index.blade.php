@@ -662,7 +662,7 @@
 
                 <div class="bg-blue-50 text-blue-800 text-xs p-3 rounded-lg border border-blue-100 flex items-start gap-2 mt-4">
                     <i data-feather="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                    <p><strong>Info ERP:</strong> Stok Awal, HPP, dan Harga Jual diatur secara otomatis melalui modul Pembelian, Penjualan, dan Penyesuaian Stok (Inventori).</p>
+                    <p><strong>Info ERP:</strong> Stok Awal, HPP, Harga Jual, dan Harga Beli diatur secara otomatis melalui modul Pembelian, Penjualan, dan Penyesuaian Stok (Inventori).</p>
                 </div>
 
                 <div class="mt-8 flex justify-end gap-3 pt-2">
