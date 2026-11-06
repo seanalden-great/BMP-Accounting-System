@@ -182,7 +182,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales/overview', [SaleController::class, 'overview'])->name('sales.overview');
     Route::get('/sales/efaktur', [SaleController::class, 'exportEfaktur'])->name('sales.efaktur');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
-    Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
+    // Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
+    Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
     Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');
 
     Route::get('/journals/export', [JournalController::class, 'export'])->name('journals.export');

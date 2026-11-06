@@ -492,6 +492,70 @@ class ExpenseController extends Controller
         }
     }
 
+    // FUNGSI BARU: UPDATE (EDIT) DATA BIAYA BESERTA JURNALNYA
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'date'         => 'required|date',
+            'reference_no' => 'nullable|string|max:50',
+            'contact_id'   => 'nullable|exists:contacts,id',
+            'account_code' => 'required|exists:accounts,code',
+            'payment_code' => 'required|exists:accounts,code',
+            'amount'       => 'required|numeric|min:1',
+            'description'  => 'required|string',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $expense = Expense::findOrFail($id);
+
+            // Catat tanggal lama untuk mencari Jurnal Aslinya nanti
+            $oldDate = Carbon::parse($expense->date)->format('Ymd');
+
+            // 1. Update Data Induk Biaya
+            $expense->update([
+                'date'         => $validated['date'],
+                'reference_no' => $validated['reference_no'] ?? '',
+                'contact_id'   => $validated['contact_id'] ?? null,
+                'account_code' => $validated['account_code'],
+                'payment_code' => $validated['payment_code'],
+                'amount'       => $validated['amount'],
+                'description'  => $validated['description'],
+            ]);
+
+            // 2. Format Ulang Deskripsi Jurnal
+            $jDesc = "Biaya: " . $validated['description'];
+            if (!empty($validated['reference_no'])) {
+                $jDesc .= " (Ref: " . $validated['reference_no'] . ")";
+            }
+
+            // 3. Cari dan Ganti Jurnal Lama dengan yang Baru
+            $journalCode = "EXP-" . $oldDate . "-" . $expense->id;
+            $journal = Journal::where('reference_no', $journalCode)->first();
+
+            if ($journal) {
+                // Update Induk Jurnal
+                $journal->update([
+                    'date' => $validated['date'],
+                    'description' => $jDesc,
+                ]);
+
+                // Hapus entry lama lalu buat entry baru
+                JournalEntry::where('journal_id', $journal->id)->delete();
+
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['account_code'], 'debit' => $validated['amount'], 'credit' => 0]);
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['payment_code'], 'debit' => 0, 'credit' => $validated['amount']]);
+            }
+
+            DB::commit();
+            return redirect()->route('expenses.index')->with('success', 'Catatan biaya dan jurnal akuntansinya berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui catatan biaya.');
+        }
+    }
+
     public function destroy($id)
     {
         try {
