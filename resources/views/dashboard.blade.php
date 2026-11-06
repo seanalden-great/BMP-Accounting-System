@@ -653,20 +653,65 @@
             }
         });
 
+        // // ==========================================
+        // // 2. GRAFIK DOUGHNUT: STRUKTUR PENGELUARAN
+        // // ==========================================
+        // const pmbBulanIni = {{ $pembelianBulanIni ?? 0 }};
+        // const byaBulanIni = {{ $biayaBulanIni ?? 0 }};
+
+        // const ctxExpense = document.getElementById('expensePieChart').getContext('2d');
+        // new Chart(ctxExpense, {
+        //     type: 'doughnut',
+        //     data: {
+        //         labels: ['Pembelian Brg (PO)', 'Biaya Operasional (KBD)'],
+        //         datasets: [{
+        //             data: [pmbBulanIni, byaBulanIni],
+        //             backgroundColor: ['#f97316', '#e11d48'], // Orange untuk Beli, Merah untuk Biaya
+        //             borderWidth: 2,
+        //             hoverOffset: 6
+        //         }]
+        //     },
+        //     options: {
+        //         responsive: true, maintainAspectRatio: false, cutout: '65%',
+        //         plugins: {
+        //             legend: { position: 'bottom', labels: { padding: 20, font: { family: 'sans-serif', size: 11 } } },
+        //             tooltip: {
+        //                 callbacks: {
+        //                     label: function(context) {
+        //                         let value = context.raw || 0;
+        //                         return ' ' + context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // });
+
         // ==========================================
         // 2. GRAFIK DOUGHNUT: STRUKTUR PENGELUARAN
         // ==========================================
         const pmbBulanIni = {{ $pembelianBulanIni ?? 0 }};
         const byaBulanIni = {{ $biayaBulanIni ?? 0 }};
 
+        // KUNCI PERBAIKAN: Logika Cadangan (Fallback) jika nominal = 0
+        let expData = [pmbBulanIni, byaBulanIni];
+        let expColors = ['#f97316', '#e11d48']; // Orange, Merah
+        let expLabels = ['Pembelian Brg (PO)', 'Biaya Operasional (KBD)'];
+
+        if (pmbBulanIni === 0 && byaBulanIni === 0) {
+            expData = [1]; // Beri nilai 1 murni untuk memancing Chart.js menggambar lingkaran utuh
+            expColors = ['#e2e8f0']; // Warna abu-abu pucat (Netral)
+            expLabels = ['Belum ada pengeluaran bulan ini'];
+        }
+
         const ctxExpense = document.getElementById('expensePieChart').getContext('2d');
         new Chart(ctxExpense, {
             type: 'doughnut',
             data: {
-                labels: ['Pembelian Brg (PO)', 'Biaya Operasional (KBD)'],
+                labels: expLabels,
                 datasets: [{
-                    data: [pmbBulanIni, byaBulanIni],
-                    backgroundColor: ['#f97316', '#e11d48'], // Orange untuk Beli, Merah untuk Biaya
+                    data: expData,
+                    backgroundColor: expColors,
                     borderWidth: 2,
                     hoverOffset: 6
                 }]
@@ -678,6 +723,9 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
+                                // Jika tidak ada pengeluaran, ubah teks tooltipnya
+                                if (pmbBulanIni === 0 && byaBulanIni === 0) return ' Belum ada data transaksi';
+
                                 let value = context.raw || 0;
                                 return ' ' + context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
                             }
