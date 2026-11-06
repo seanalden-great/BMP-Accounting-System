@@ -171,6 +171,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class)->except(['create', 'show']);
     Route::resource('contacts', ContactController::class)->except(['create', 'show']);
     Route::resource('faqs', FaqController::class)->except(['create', 'show']);
+    Route::get('/accounts/export', [AccountController::class, 'export'])->name('accounts.export');
     Route::resource('accounts', AccountController::class)->except(['create', 'show', 'edit']);
     Route::resource('purchases', PurchaseController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('purchases/deliveries', [PurchaseController::class, 'showDeliveries'])->name('purchases.deliveries');
