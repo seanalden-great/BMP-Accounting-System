@@ -301,7 +301,8 @@
                         <select name="po_id" required onchange="document.getElementById('billForm').action = '/purchases/' + this.value + '/bill';" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="" disabled selected>-- Pilih Dokumen Pengiriman Barang --</option>
                             @foreach($readyDeliveries as $po)
-                                <option value="{{ $po->id }}">[PO #{{ $po->id }}] {{ $po->contact->name }} - Rp {{ number_format($po->total, 0, ',', '.') }}</option>
+                                {{-- <option value="{{ $po->id }}">[PO #{{ $po->id }}] {{ $po->contact->name }} - Rp {{ number_format($po->total, 0, ',', '.') }}</option> --}}
+                                <option value="{{ $po->id }}">[{{ $po->reference_no ?: 'PO #'.$po->id }}] {{ $po->contact->name }} - Rp {{ number_format($po->total, 0, ',', '.') }}</option>
                             @endforeach
                         </select>
                     </div>

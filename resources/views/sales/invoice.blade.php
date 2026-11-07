@@ -192,7 +192,8 @@
                         <select name="so_id" required onchange="document.getElementById('invForm').action = '/sales/' + this.value + '/invoice';" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-rose-500">
                             <option value="" disabled selected>-- Pilih Dokumen Pengiriman Barang --</option>
                             @foreach($readyDeliveries as $so)
-                                <option value="{{ $so->id }}">[SO #{{ $so->id }}] {{ $so->contact->name }} - Rp {{ number_format($so->total, 0, ',', '.') }}</option>
+                                {{-- <option value="{{ $so->id }}">[SO #{{ $so->id }}] {{ $so->contact->name }} - Rp {{ number_format($so->total, 0, ',', '.') }}</option> --}}
+                                <option value="{{ $so->id }}">[{{ $so->reference_no ?: 'SO #'.$so->id }}] {{ $so->contact->name }} - Rp {{ number_format($so->total, 0, ',', '.') }}</option>
                             @endforeach
                         </select>
                     </div>

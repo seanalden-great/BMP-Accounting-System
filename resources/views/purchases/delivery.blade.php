@@ -236,7 +236,8 @@
                     <select name="po_id" required onchange="document.getElementById('receiveForm').action = '/purchases/' + this.value + '/receive';" class="w-full border border-emerald-200 rounded-lg p-3 outline-none mb-4 font-semibold text-slate-700">
                         <option value="" disabled selected>-- Pilih PO yang Diterima --</option>
                         @foreach($pendingOrders as $po)
-                            <option value="{{ $po->id }}">[PO #{{ $po->id }}] {{ $po->contact->name }}</option>
+                            {{-- <option value="{{ $po->id }}">[PO #{{ $po->id }}] {{ $po->contact->name }}</option> --}}
+                            <option value="{{ $po->id }}">[{{ $po->reference_no ?: 'PO #'.$po->id }}] {{ $po->contact->name }}</option>
                         @endforeach
                     </select>
                 </div>
