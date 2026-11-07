@@ -39,4 +39,34 @@ class SettingController extends Controller
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pengaturan.');
         }
     }
+
+    // --- FITUR BARU: MANAJEMEN HAK AKSES ROLE (RBAC) ---
+    public function rolePermissions()
+    {
+        $setting = CompanySetting::firstOrCreate(['id' => 1], ['name' => 'PT Berlianmandiri Perkasa', 'tax_rate' => 11.0]);
+
+        // Decode data JSON dari database menjadi Array PHP
+        $permissions = $setting->role_permissions ? json_decode($setting->role_permissions, true) : [];
+
+        // Definisikan Role dan Menu yang ada di ERP Anda
+        $roles = ['Admin', 'Gudang', 'Developer', 'Direktur'];
+        $menus = [
+            'Dashboard', 'Penjualan', 'Pembelian', 'Biaya', 'Produk',
+            'Inventori', 'Aset Tetap', 'Kas & Bank', 'Akun CoA',
+            'Kontak', 'Laporan Keuangan', 'Pengaturan', 'Penggajian'
+        ];
+
+        return view('settings.roles', compact('roles', 'menus', 'permissions'));
+    }
+
+    public function updateRolePermissions(Request $request)
+    {
+        $setting = CompanySetting::first();
+
+        // $request->permissions berisi array 2D hasil centangan HTML
+        $setting->role_permissions = json_encode($request->permissions ?? []);
+        $setting->save();
+
+        return redirect()->route('settings.roles')->with('success', 'Matriks Hak Akses (Role) berhasil diperbarui dan diterapkan!');
+    }
 }

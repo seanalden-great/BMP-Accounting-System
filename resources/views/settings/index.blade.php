@@ -4,13 +4,25 @@
 @section('content')
 <div class="space-y-6 pb-10 max-w-4xl mx-auto md:mx-0">
     <!-- HEADER -->
-    <div class="flex justify-between items-center gap-4">
+    {{-- <div class="flex justify-between items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <i data-feather="settings" class="text-slate-600 w-7 h-7"></i> Pengaturan Sistem
             </h1>
             <p class="text-slate-500 mt-1">Kelola profil perusahaan dan konfigurasi dasar aplikasi ERP Anda</p>
         </div>
+    </div> --}}
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                <i data-feather="settings" class="text-slate-600 w-7 h-7"></i> Pengaturan Sistem
+            </h1>
+            <p class="text-slate-500 mt-1">Kelola profil perusahaan dan konfigurasi dasar aplikasi ERP Anda</p>
+        </div>
+        <a href="{{ route('settings.roles') }}" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-2">
+            <i data-feather="shield" class="w-4 h-4"></i> Hak Akses (Role)
+        </a>
     </div>
 
     <!-- FORM PENGATURAN -->
@@ -18,18 +30,18 @@
         <form action="{{ route('settings.update') }}" method="POST" class="divide-y divide-slate-100">
             @csrf
             @method('PUT')
-            
+
             <div class="p-6 md:p-8">
                 <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                     <i data-feather="monitor" class="w-5 h-5 text-slate-400"></i> Profil Perusahaan
                 </h3>
-                
+
                 <div class="space-y-5 max-w-2xl">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Perusahaan</label>
                         <input type="text" name="name" required value="{{ old('name', $setting->name) }}" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
                     </div>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">

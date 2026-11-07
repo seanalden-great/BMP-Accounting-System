@@ -144,6 +144,8 @@ Route::middleware('auth')->group(function () {
 
     // Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::get('/settings/roles', [SettingController::class, 'rolePermissions'])->name('settings.roles');
+    Route::put('/settings/roles', [SettingController::class, 'updateRolePermissions'])->name('settings.updateRoles');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     // Inventori / Stok

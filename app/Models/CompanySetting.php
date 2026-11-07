@@ -14,6 +14,7 @@ class CompanySetting extends Model
         'address',
         'phone',
         'email',
-        'tax_rate'
+        'tax_rate',
+        'role_permissions'
     ];
 }
