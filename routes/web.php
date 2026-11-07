@@ -169,7 +169,7 @@ Route::middleware('auth')->group(function () {
     Route::post('fixed-assets/{id}/depreciate', [FixedAssetController::class, 'depreciate'])->name('fixed-assets.depreciate');
 
     // Resource Routes Standar
-    Route::resource('products', ProductController::class)->except(['create', 'show']);
+    Route::resource('products', ProductController::class)->except(['create']);
     Route::resource('categories', CategoryController::class)->except(['create', 'show']);
     Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
     Route::resource('contacts', ContactController::class)->except(['create', 'show']);

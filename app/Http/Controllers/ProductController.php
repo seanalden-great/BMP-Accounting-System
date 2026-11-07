@@ -194,6 +194,35 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'categories', 'search'));
     }
 
+    // Menampilkan detail riwayat produk (Buku Besar Kartu Stok)
+    public function show($id)
+    {
+        $product = Product::withSum('stocks as total_stock', 'quantity')->findOrFail($id);
+
+        // 1. Ambil sebaran stok per gudang
+        $stocks = \App\Models\ProductStock::with('warehouse')->where('product_sku', $product->sku)->get();
+
+        // 2. Ambil Riwayat Pembelian (PO) - Barang Masuk
+        $purchaseHistory = \App\Models\PurchaseItem::with('purchase.contact')
+            ->where('product_sku', $product->sku)
+            ->get()
+            ->sortByDesc(function($item) { return $item->purchase->date ?? ''; });
+
+        // 3. Ambil Riwayat Penjualan (SO) - Barang Keluar
+        $saleHistory = \App\Models\SaleItem::with('sale.contact')
+            ->where('product_sku', $product->sku)
+            ->get()
+            ->sortByDesc(function($item) { return $item->sale->date ?? ''; });
+
+        // 4. Ambil Riwayat Penyesuaian Stok (Stock Opname)
+        $adjustments = \App\Models\StockAdjustment::with('warehouse')
+            ->where('product_sku', $product->sku)
+            ->orderBy('date', 'desc')->orderBy('id', 'desc')
+            ->get();
+
+        return view('products.show', compact('product', 'stocks', 'purchaseHistory', 'saleHistory', 'adjustments'));
+    }
+
     // Menyimpan produk baru
     public function store(Request $request)
     {

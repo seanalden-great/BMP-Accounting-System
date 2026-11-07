@@ -598,8 +598,23 @@
                             </span>
                         </td>
 
+                        {{-- <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openProductModal('edit', {{ json_encode($product) }})" class="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Edit Master Produk"><i data-feather="edit" class="w-4 h-4"></i></button>
+                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus produk ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Hapus Produk"><i data-feather="trash-2" class="w-4 h-4"></i></button>
+                                </form>
+                            </div>
+                        </td> --}}
                         <td class="p-4 text-center">
                             <div class="flex items-center justify-center gap-2">
+                                <!-- TOMBOL DETAIL (BARU) -->
+                                <a href="{{ route('products.show', $product->id) }}" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200" title="Lihat Riwayat Kartu Stok & Detail">
+                                    <i data-feather="eye" class="w-4 h-4"></i>
+                                </a>
+
                                 <button onclick="openProductModal('edit', {{ json_encode($product) }})" class="text-blue-500 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Edit Master Produk"><i data-feather="edit" class="w-4 h-4"></i></button>
                                 <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus produk ini?');">
                                     @csrf
