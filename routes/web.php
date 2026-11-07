@@ -171,6 +171,7 @@ Route::middleware('auth')->group(function () {
     // Resource Routes Standar
     Route::resource('products', ProductController::class)->except(['create', 'show']);
     Route::resource('categories', CategoryController::class)->except(['create', 'show']);
+    Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
     Route::resource('contacts', ContactController::class)->except(['create', 'show']);
     Route::resource('faqs', FaqController::class)->except(['create', 'show']);
     Route::get('/accounts/export', [AccountController::class, 'export'])->name('accounts.export');

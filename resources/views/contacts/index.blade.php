@@ -3,9 +3,9 @@
 
 @section('content')
 <div class="space-y-6 pb-10 relative">
-    
+
     <!-- HEADER -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    {{-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <i data-feather="users" class="w-7 h-7 text-blue-600"></i> Buku Kontak
@@ -15,11 +15,43 @@
         <button onclick="openModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
             <i data-feather="plus" class="w-4 h-4"></i> Tambah Kontak
         </button>
+    </div> --}}
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                <i data-feather="users" class="w-7 h-7 text-blue-600"></i> Buku Kontak
+            </h1>
+            <p class="text-slate-500 mt-1">Kelola data Pelanggan (Customer) dan Pemasok (Supplier)</p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <!-- Dropdown Ekspor -->
+            <div class="relative group">
+                <button class="bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2">
+                    <i data-feather="printer" class="w-4 h-4"></i> Ekspor Data
+                </button>
+                <div class="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                    <div class="px-3 py-2 bg-slate-50 border-b font-bold text-xs text-slate-400 uppercase">Lap. Internal (Asli)</div>
+                    <a href="{{ route('contacts.export', ['contact_type' => request('type'), 'type' => 'internal', 'format' => 'csv']) }}" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Unduh Excel (CSV)</a>
+                    <a href="{{ route('contacts.export', ['contact_type' => request('type'), 'type' => 'internal', 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700 border-b">Cetak PDF / Layar</a>
+
+                    <div class="px-3 py-2 bg-purple-50 border-b font-bold text-xs text-purple-500 uppercase">Lap. Pajak (Tax)</div>
+                    <a href="{{ route('contacts.export', ['contact_type' => request('type'), 'type' => 'pajak', 'format' => 'csv']) }}" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Unduh Excel (CSV)</a>
+                    <a href="{{ route('contacts.export', ['contact_type' => request('type'), 'type' => 'pajak', 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Cetak PDF / Layar</a>
+                </div>
+            </div>
+
+            <button onclick="openModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                <i data-feather="plus" class="w-4 h-4"></i> Tambah Kontak
+            </button>
+        </div>
     </div>
 
     <!-- TABEL -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        
+
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between gap-4">
             <form method="GET" action="{{ route('contacts.index') }}" class="flex items-center gap-2 w-full">
                 <!-- Kita serahkan filter/search ke Backend Controller agar data sinkron -->
@@ -86,11 +118,11 @@
                 <h3 id="modalTitle" class="text-lg font-bold text-slate-800">Tambah Kontak Baru</h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 transition-colors"><i data-feather="x" class="w-5 h-5"></i></button>
             </div>
-            
+
             <form id="contactForm" method="POST" action="{{ route('contacts.store') }}" class="p-5 overflow-y-auto custom-scrollbar">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
-                
+
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2">
@@ -131,12 +163,12 @@
     function openModal(mode, contact = null) {
         const modal = document.getElementById('contactModal');
         const form = document.getElementById('contactForm');
-        
+
         if (mode === 'edit') {
             document.getElementById('modalTitle').innerText = "Edit Kontak";
             document.getElementById('formMethod').value = "PUT";
             form.action = `/contacts/${contact.id}`; // Arahkan ke route UPDATE
-            
+
             document.getElementById('inputName').value = contact.name;
             document.getElementById('inputType').value = contact.type;
             document.getElementById('inputPhone').value = contact.phone || '';
@@ -146,10 +178,10 @@
             document.getElementById('modalTitle').innerText = "Tambah Kontak Baru";
             document.getElementById('formMethod').value = "POST";
             form.action = "{{ route('contacts.store') }}";
-            
+
             form.reset();
         }
-        
+
         modal.classList.remove('hidden');
     }
 

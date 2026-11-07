@@ -18,7 +18,7 @@ class ContactController extends Controller
         }
 
         $contacts = $query->get();
-        
+
         return view('contacts.index', compact('contacts'));
     }
 
@@ -56,7 +56,7 @@ class ContactController extends Controller
 
         try {
             $contact = Contact::create($validated);
-            
+
             // Jika request datang dari AJAX (Fetch API) di form transaksi, kembalikan JSON
             if ($request->wantsJson()) {
                 return response()->json([
@@ -75,7 +75,7 @@ class ContactController extends Controller
                     'message' => 'Gagal menyimpan kontak: ' . $e->getMessage()
                 ], 500);
             }
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Gagal menyimpan kontak.');
@@ -112,12 +112,82 @@ class ContactController extends Controller
         try {
             $contact = Contact::findOrFail($id);
             $contact->delete();
-            
+
             return redirect()->route('contacts.index')
                 ->with('success', 'Kontak berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal menghapus kontak. Pastikan kontak ini belum dipakai di transaksi Pembelian/Penjualan.');
         }
+    }
+
+    // --- FITUR EKSPOR EXCEL & PDF ---
+    public function export(Request $request)
+    {
+        $contactType = $request->query('contact_type'); // 'Customer' atau 'Supplier' (opsional)
+        $type = $request->query('type', 'internal'); // 'internal' atau 'pajak'
+        $format = $request->query('format', 'csv'); // 'csv' atau 'pdf'
+
+        // 1. Tarik Data Sesuai Filter
+        $query = Contact::orderBy('name', 'asc');
+        if ($contactType) {
+            $query->where('type', $contactType);
+        }
+        $contacts = $query->get();
+
+        // 2. Tentukan Judul Laporan
+        $reportName = $type === 'pajak' ? 'DAFTAR KONTAK / RELASI BUKU (PAJAK)' : 'DAFTAR KONTAK / RELASI (INTERNAL)';
+        if ($contactType) {
+            $reportName .= ' - ' . strtoupper($contactType);
+        }
+
+        // 3. EXCEL EXPORT (HTML-TO-EXCEL SPOOFING)
+        if ($format === 'csv') {
+            $headers = [
+                "Content-type"        => "application/vnd.ms-excel",
+                "Content-Disposition" => "attachment; filename=Kontak_{$type}.xls",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($contacts, $reportName) {
+                echo '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
+                echo '<table border="0" style="font-family: Arial, sans-serif;">';
+                echo '<tr><th colspan="6" style="font-size:16px; font-weight:bold; text-align:center;">PT. BERLIAN MANDIRI PERKASA</th></tr>';
+                echo '<tr><th colspan="6" style="font-size:14px; font-weight:bold; text-align:center;">' . $reportName . '</th></tr>';
+                echo '<tr><td colspan="6"></td></tr></table>';
+
+                echo '<table border="1" style="font-family: Arial, sans-serif; font-size: 12px; border-collapse: collapse;">';
+                echo '<thead style="background-color: #e2e8f0;">';
+                echo '<tr>';
+                echo '<th style="padding:8px; text-align:center; width:50px;">No.</th>';
+                echo '<th style="padding:8px; text-align:center; width:200px;">Nama Kontak</th>';
+                echo '<th style="padding:8px; text-align:center; width:100px;">Tipe</th>';
+                echo '<th style="padding:8px; text-align:center; width:150px;">No. Telepon</th>';
+                echo '<th style="padding:8px; text-align:center; width:200px;">Email</th>';
+                echo '<th style="padding:8px; text-align:center; width:300px;">Alamat Lengkap</th>';
+                echo '</tr></thead><tbody>';
+
+                $no = 1;
+                foreach ($contacts as $contact) {
+                    echo '<tr>';
+                    echo '<td style="padding:8px; text-align:center;">' . $no++ . '</td>';
+                    echo '<td style="padding:8px; font-weight:bold;">' . $contact->name . '</td>';
+                    echo '<td style="padding:8px; text-align:center;">' . $contact->type . '</td>';
+                    echo '<td style="padding:8px;">' . ($contact->phone ?: '-') . '</td>';
+                    echo '<td style="padding:8px;">' . ($contact->email ?: '-') . '</td>';
+                    echo '<td style="padding:8px;">' . ($contact->address ?: '-') . '</td>';
+                    echo '</tr>';
+                }
+
+                echo '</tbody></table></body></html>';
+            };
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // 4. PDF EXPORT (Cetak Layar HTML)
+        return view('contacts.export_print', compact('contacts', 'reportName'));
     }
 }
