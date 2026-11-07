@@ -161,12 +161,22 @@
 
             @foreach($journals as $journal)
                 @foreach($journal->entries as $entry)
-                    @php
+                    {{-- @php
                         $isBankRow = ($entry->account_code == $bank->code);
                         if ($isBankRow) { $runningBalance += ($entry->debit - $entry->credit); }
 
                         $desc = $journal->description;
                         if ($journal->reference_no) { $desc .= ' - ' . $journal->reference_no; }
+                    @endphp --}}
+                    @php
+                        $isBankRow = ($entry->account_code == $bank->code);
+                        if ($isBankRow) { $runningBalance += ($entry->debit - $entry->credit); }
+
+                        $desc = $journal->description;
+                        // LOGIKA CERDAS: Hanya tambahkan referensi jika belum ada di dalam deskripsi
+                        if ($journal->reference_no && strpos($journal->description, $journal->reference_no) === false) {
+                            $desc .= ' - ' . $journal->reference_no;
+                        }
                     @endphp
                     <tr>
                         <td class="center">{{ $rowNumber++ }}</td>
