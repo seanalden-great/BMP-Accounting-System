@@ -1305,7 +1305,7 @@ $products = \App\Models\Product::all();
     @endphp
 
     <div class="space-y-6 pb-10">
-        <div class="flex justify-between items-center gap-4">
+        {{-- <div class="flex justify-between items-center gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
                     <i data-feather="shopping-bag" class="text-indigo-600 w-7 h-7"></i> Pesanan Penjualan (SO)
@@ -1319,6 +1319,27 @@ $products = \App\Models\Product::all();
             <a href="{{ route('sales.efaktur') }}" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
                 <i data-feather="download" class="w-4 h-4"></i> Ekspor e-Faktur DJP
             </a>
+        </div> --}}
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                    <i data-feather="shopping-bag" class="text-indigo-600 w-7 h-7"></i> Pesanan Penjualan (SO)
+                </h1>
+                <p class="text-slate-500 mt-1">Buat dokumen pesanan barang dari Pelanggan (Customer)</p>
+            </div>
+
+            <!-- PERBAIKAN: Bungkus kedua tombol dalam satu 'div' agar merapat harmonis di sebelah kanan -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <a href="{{ route('sales.efaktur') }}" class="w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                    <i data-feather="download" class="w-4 h-4"></i> Ekspor e-Faktur DJP
+                </a>
+
+                <button onclick="document.getElementById('soModal').classList.remove('hidden')"
+                    class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-feather="plus" class="w-4 h-4"></i> Buat SO Baru
+                </button>
+            </div>
         </div>
 
         <!-- Tabel SO -->
