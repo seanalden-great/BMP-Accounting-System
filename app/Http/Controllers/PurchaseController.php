@@ -811,24 +811,78 @@ class PurchaseController extends Controller
         return view('purchases.index', compact('purchases', 'nextDocNumber'));
     }
 
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'date'         => 'required|date',
+    //         'due_date'     => 'nullable|date',
+    //         // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
+    //         'contact_id'   => 'required|exists:contacts,id',
+    //         'notes'        => 'nullable|string',
+    //         'items'        => 'required|array|min:1',
+    //         'items.*.product_sku' => 'required|exists:products,sku',
+    //         'items.*.quantity'    => 'required|integer|min:1',
+    //         'items.*.price'       => 'required|numeric|min:0',
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
+    //         $refNo = $this->generateDocNumber('PO', $validated['date']);
+
+    //         $purchase = Purchase::create([
+    //             'date'         => $validated['date'],
+    //             'due_date'     => $validated['due_date'] ?? $validated['date'],
+    //             'reference_no' => $refNo,
+    //             'contact_id'   => $validated['contact_id'],
+    //             'status'       => 'Pesanan',
+    //             'notes'        => $validated['notes'] ?? '',
+    //             'total'        => 0,
+    //         ]);
+
+    //         $grandTotal = 0;
+
+    //         foreach ($validated['items'] as $item) {
+    //             $subTotal = $item['quantity'] * $item['price'];
+    //             $grandTotal += $subTotal;
+
+    //             PurchaseItem::create([
+    //                 'purchase_id' => $purchase->id,
+    //                 'product_sku' => $item['product_sku'],
+    //                 'quantity'    => $item['quantity'],
+    //                 'price'       => $item['price'],
+    //                 'sub_total'   => $subTotal,
+    //             ]);
+    //         }
+
+    //         $purchase->update(['total' => $grandTotal]);
+
+    //         DB::commit();
+    //         return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+    //     }
+    // }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'date'         => 'required|date',
             'due_date'     => 'nullable|date',
-            // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
             'contact_id'   => 'required|exists:contacts,id',
             'notes'        => 'nullable|string',
             'items'        => 'required|array|min:1',
             'items.*.product_sku' => 'required|exists:products,sku',
             'items.*.quantity'    => 'required|integer|min:1',
             'items.*.price'       => 'required|numeric|min:0',
+            'items.*.tax_rate'    => 'required|integer|in:0,11,12', // Validasi input pajak
         ]);
 
         DB::beginTransaction();
 
         try {
-            // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
             $refNo = $this->generateDocNumber('PO', $validated['date']);
 
             $purchase = Purchase::create([
@@ -839,12 +893,19 @@ class PurchaseController extends Controller
                 'status'       => 'Pesanan',
                 'notes'        => $validated['notes'] ?? '',
                 'total'        => 0,
+                'total_tax'    => 0, // Inisialisasi awal
             ]);
 
             $grandTotal = 0;
+            $grandTax = 0;
 
             foreach ($validated['items'] as $item) {
-                $subTotal = $item['quantity'] * $item['price'];
+                // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
+                $dpp = $item['quantity'] * $item['price'];
+                $taxAmount = $dpp * ($item['tax_rate'] / 100);
+                $subTotal = $dpp + $taxAmount;
+
+                $grandTax += $taxAmount;
                 $grandTotal += $subTotal;
 
                 PurchaseItem::create([
@@ -852,11 +913,16 @@ class PurchaseController extends Controller
                     'product_sku' => $item['product_sku'],
                     'quantity'    => $item['quantity'],
                     'price'       => $item['price'],
+                    'tax_rate'    => $item['tax_rate'],
+                    'tax_amount'  => $taxAmount,
                     'sub_total'   => $subTotal,
                 ]);
             }
 
-            $purchase->update(['total' => $grandTotal]);
+            $purchase->update([
+                'total' => $grandTotal,
+                'total_tax' => $grandTax
+            ]);
 
             DB::commit();
             return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);

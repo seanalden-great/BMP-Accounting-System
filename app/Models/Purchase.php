@@ -16,7 +16,8 @@ class Purchase extends Model
         'status',
         'total',
         'notes',
-        'payment_account_code'
+        'payment_account_code',
+        'total_tax'
     ];
 
     public function contact()
