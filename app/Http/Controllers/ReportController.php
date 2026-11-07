@@ -16,8 +16,8 @@ class ReportController extends Controller
 
         // Agregasi mutasi debit dan kredit
         $summaries = JournalEntry::select(
-                'account_code', 
-                DB::raw('COALESCE(SUM(debit), 0) as total_debit'), 
+                'account_code',
+                DB::raw('COALESCE(SUM(debit), 0) as total_debit'),
                 DB::raw('COALESCE(SUM(credit), 0) as total_credit')
             )
             ->groupBy('account_code')
@@ -49,25 +49,25 @@ class ReportController extends Controller
                 } else {
                     $balance = $totalDebit - $totalCredit;
                 }
-            } 
+            }
             elseif (str_starts_with($acc->code, '3')) {
                 $accType = "Kewajiban";
                 $balance = $totalCredit - $totalDebit;
-            } 
+            }
             elseif (str_starts_with($acc->code, '4')) {
                 $accType = "Modal";
                 $balance = $totalCredit - $totalDebit;
-            } 
+            }
             elseif (str_starts_with($acc->code, '5')) {
                 $accType = "Pendapatan";
                 $balance = $totalCredit - $totalDebit;
                 $netProfit += $balance; // Pendapatan menambah laba bersih
-            } 
+            }
             elseif (str_starts_with($acc->code, '6')) {
                 $accType = "HPP";
                 $balance = $totalDebit - $totalCredit;
                 $netProfit -= $balance; // HPP mengurangi laba bersih
-            } 
+            }
             elseif (str_starts_with($acc->code, '7')) {
                 $accType = "Beban";
                 $balance = $totalDebit - $totalCredit;
@@ -84,7 +84,19 @@ class ReportController extends Controller
             }
         }
 
-        // Return ke view Laporan
-        return view('reports.index', compact('reportData', 'netProfit'));
+        // FITUR BARU: Ambil Rincian Transaksi Jurnal untuk Pendapatan (Awalan 5) dan HPP (Awalan 6)
+        // Kita menggunakan sortByDesc secara dinamis agar urutan waktu transaksi (terbaru ke terlama) akurat
+        $detailPendapatan = JournalEntry::with(['journal', 'account'])
+            ->where('account_code', 'LIKE', '5%')
+            ->get()
+            ->sortByDesc(fn($entry) => $entry->journal->date ?? $entry->created_at);
+
+        $detailHPP = JournalEntry::with(['journal', 'account'])
+            ->where('account_code', 'LIKE', '6%')
+            ->get()
+            ->sortByDesc(fn($entry) => $entry->journal->date ?? $entry->created_at);
+
+        // Return ke view Laporan beserta variabel rincian (detail) yang baru dibuat
+        return view('reports.index', compact('reportData', 'netProfit', 'detailPendapatan', 'detailHPP'));
     }
 }
