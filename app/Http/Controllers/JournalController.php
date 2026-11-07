@@ -625,8 +625,14 @@ class JournalController extends Controller
                             $runningBalance += ($entry->debit - $entry->credit);
                         }
 
+                        // $desc = $journal->description;
+                        // if ($journal->reference_no) { $desc .= ' - ' . $journal->reference_no; }
+
                         $desc = $journal->description;
-                        if ($journal->reference_no) { $desc .= ' - ' . $journal->reference_no; }
+                        // Logika Cerdas: Tambahkan reference_no ke desc HANYA JIKA belum tertulis di dalamnya
+                        if ($journal->reference_no && strpos($journal->description, $journal->reference_no) === false) {
+                            $desc .= ' - ' . $journal->reference_no;
+                        }
 
                         $debit = $entry->debit > 0 ? 'Rp ' . number_format($entry->debit, 0, ',', '.') : '';
                         $credit = $entry->credit > 0 ? 'Rp ' . number_format($entry->credit, 0, ',', '.') : '';
