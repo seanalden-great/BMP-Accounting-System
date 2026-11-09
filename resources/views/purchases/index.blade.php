@@ -1357,13 +1357,51 @@ $products = \App\Models\Product::all();
                                 @endif
                             </td>
                             <td class="p-4 text-sm font-bold text-slate-800 text-right">Rp {{ number_format($po->total, 0, ',', '.') }}</td>
-                            <td class="p-4 text-center">
+                            {{-- <td class="p-4 text-center">
                                 <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">{{ $po->status }}</span>
                             </td>
                             <td class="p-4 text-center">
                                 <button onclick="document.getElementById('detailModal_{{ $po->id }}').classList.remove('hidden')" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="Lihat Detail Barang">
                                     <i data-feather="eye" class="w-4 h-4"></i>
                                 </button>
+                            </td> --}}
+
+                            <!-- Kolom Status Berwarna -->
+                            <td class="p-4 text-center">
+                                @if($po->status == 'Menunggu Persetujuan')
+                                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
+                                @elseif($po->status == 'Pesanan')
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
+                                @elseif($po->status == 'Ditolak')
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold line-through">Ditolak</span>
+                                @else
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{{ $po->status }}</span>
+                                @endif
+                            </td>
+
+                            <!-- Kolom Aksi Dinamis -->
+                            <td class="p-4 text-center">
+                                <div class="flex justify-center items-center gap-2">
+                                    <button onclick="document.getElementById('detailModal_{{ $po->id }}').classList.remove('hidden')" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-blue-200" title="Lihat Detail Barang">
+                                        <i data-feather="eye" class="w-4 h-4"></i>
+                                    </button>
+
+                                    <!-- Tombol Setuju/Tolak (Khusus Direktur/Admin dan Status Menunggu) -->
+                                    @if($po->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
+                                        <form action="{{ route('purchases.approve', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen ini?');">
+                                            @csrf
+                                            <button type="submit" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200" title="Setujui PO">
+                                                <i data-feather="check-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('purchases.reject', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK dokumen ini secara permanen?');">
+                                            @csrf
+                                            <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-200" title="Tolak PO">
+                                                <i data-feather="x-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

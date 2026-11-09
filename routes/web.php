@@ -181,6 +181,13 @@ Route::middleware('auth')->group(function () {
     Route::get('purchases/deliveries', [PurchaseController::class, 'showDeliveries'])->name('purchases.deliveries');
     Route::get('purchases/bills', [PurchaseController::class, 'showBills'])->name('purchases.bills');
     Route::get('/purchases/overview', [PurchaseController::class, 'overview'])->name('purchases.overview');
+    // Transaksi Pembelian Khusus
+    Route::post('purchases/{id}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
+    Route::post('purchases/{id}/bill', [PurchaseController::class, 'bill'])->name('purchases.bill');
+
+    // TAMBAHKAN DUA BARIS INI UNTUK SISTEM APPROVAL
+    Route::post('purchases/{id}/approve', [PurchaseController::class, 'approve'])->name('purchases.approve');
+    Route::post('purchases/{id}/reject', [PurchaseController::class, 'reject'])->name('purchases.reject');
     Route::resource('sales', SaleController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');

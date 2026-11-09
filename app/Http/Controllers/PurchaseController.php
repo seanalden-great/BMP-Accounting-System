@@ -885,15 +885,27 @@ class PurchaseController extends Controller
         try {
             $refNo = $this->generateDocNumber('PO', $validated['date']);
 
+            // $purchase = Purchase::create([
+            //     'date'         => $validated['date'],
+            //     'due_date'     => $validated['due_date'] ?? $validated['date'],
+            //     'reference_no' => $refNo,
+            //     'contact_id'   => $validated['contact_id'],
+            //     'status'       => 'Pesanan',
+            //     'notes'        => $validated['notes'] ?? '',
+            //     'total'        => 0,
+            //     'total_tax'    => 0, // Inisialisasi awal
+            // ]);
+
             $purchase = Purchase::create([
                 'date'         => $validated['date'],
                 'due_date'     => $validated['due_date'] ?? $validated['date'],
                 'reference_no' => $refNo,
                 'contact_id'   => $validated['contact_id'],
-                'status'       => 'Pesanan',
+                // UBAH BARIS INI:
+                'status'       => 'Menunggu Persetujuan',
                 'notes'        => $validated['notes'] ?? '',
                 'total'        => 0,
-                'total_tax'    => 0, // Inisialisasi awal
+                'total_tax'    => 0,
             ]);
 
             $grandTotal = 0;
@@ -1147,5 +1159,46 @@ class PurchaseController extends Controller
         }
 
         return view('purchases.overview', compact('purchases', 'topProducts', 'predictions'));
+    }
+
+    // --- FITUR BARU: SISTEM PERSETUJUAN (MAKER-CHECKER) ---
+    public function approve(Request $request, $id)
+    {
+        $purchase = Purchase::findOrFail($id);
+
+        // 1. Cek hak akses (Hanya Direktur atau Admin yang boleh Approve)
+        $userRole = auth()->user()->role;
+        if (!in_array($userRole, ['Direktur', 'Admin'])) {
+            return redirect()->back()->with('error', 'Akses Ditolak! Hanya Direktur atau Admin yang berhak menyetujui dokumen ini.');
+        }
+
+        if ($purchase->status !== 'Menunggu Persetujuan') {
+            return redirect()->back()->with('error', 'Dokumen tidak dalam status Menunggu Persetujuan.');
+        }
+
+        // 2. Setujui dan lepaskan ke Gudang
+        $purchase->update([
+            'status' => 'Pesanan',
+            'notes' => trim($purchase->notes . "\n[DISETUJUI] Oleh: " . auth()->user()->name . " (" . Carbon::now()->format('d/m/Y H:i') . ")")
+        ]);
+
+        return redirect()->back()->with('success', 'Pesanan Pembelian (PO) berhasil DISETUJUI dan diteruskan ke bagian Gudang.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $purchase = Purchase::findOrFail($id);
+
+        $userRole = auth()->user()->role;
+        if (!in_array($userRole, ['Direktur', 'Admin'])) {
+            return redirect()->back()->with('error', 'Akses Ditolak! Hanya Direktur atau Admin yang berhak menolak dokumen.');
+        }
+
+        $purchase->update([
+            'status' => 'Ditolak',
+            'notes' => trim($purchase->notes . "\n[DITOLAK] Oleh: " . auth()->user()->name . " (" . Carbon::now()->format('d/m/Y H:i') . ")")
+        ]);
+
+        return redirect()->back()->with('success', 'Pesanan Pembelian (PO) telah DITOLAK secara permanen.');
     }
 }
