@@ -212,12 +212,26 @@ class DashboardController extends Controller
             }
         }
 
-        // 5. RINCIAN PIUTANG
-        $piutangList = Sale::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // // 5. RINCIAN PIUTANG
+        // $piutangList = Sale::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // $totalPiutang = $piutangList->sum('total');
+
+        // // 6. RINCIAN HUTANG
+        // $hutangList = Purchase::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // $totalHutang = $hutangList->sum('total');
+
+        // 5. RINCIAN PIUTANG (Diurutkan dari Jatuh Tempo Paling Dekat)
+        $piutangList = Sale::with('contact')
+            ->where('status', 'Pengiriman')
+            ->orderBy('due_date', 'asc')
+            ->get();
         $totalPiutang = $piutangList->sum('total');
 
-        // 6. RINCIAN HUTANG
-        $hutangList = Purchase::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // 6. RINCIAN HUTANG (Diurutkan dari Jatuh Tempo Paling Dekat)
+        $hutangList = Purchase::with('contact')
+            ->where('status', 'Pengiriman')
+            ->orderBy('due_date', 'asc')
+            ->get();
         $totalHutang = $hutangList->sum('total');
 
         // 7. GRAFIK ARUS KAS
