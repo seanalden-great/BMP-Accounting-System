@@ -1372,7 +1372,7 @@ $products = \App\Models\Product::all();
                                 @endif
                             </td>
                             <td class="p-4 text-sm font-bold text-slate-800 text-right">Rp {{ number_format($so->total, 0, ',', '.') }}</td>
-                            <td class="p-4 text-center">
+                            {{-- <td class="p-4 text-center">
                                 <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">{{ $so->status }}</span>
                             </td>
                             <td class="p-4 text-center">
@@ -1380,6 +1380,44 @@ $products = \App\Models\Product::all();
                                 <button onclick="document.getElementById('detailModal_{{ $so->id }}').classList.remove('hidden')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors" title="Lihat Detail Barang">
                                     <i data-feather="eye" class="w-4 h-4"></i>
                                 </button>
+                            </td> --}}
+
+                            <!-- Kolom Status Berwarna -->
+                            <td class="p-4 text-center">
+                                @if($so->status == 'Menunggu Persetujuan')
+                                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
+                                @elseif($so->status == 'Pesanan')
+                                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
+                                @elseif($so->status == 'Ditolak')
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold line-through">Ditolak</span>
+                                @else
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{{ $so->status }}</span>
+                                @endif
+                            </td>
+
+                            <!-- Kolom Aksi Dinamis -->
+                            <td class="p-4 text-center">
+                                <div class="flex justify-center items-center gap-2">
+                                    <button onclick="document.getElementById('detailModal_{{ $so->id }}').classList.remove('hidden')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200" title="Lihat Detail Barang">
+                                        <i data-feather="eye" class="w-4 h-4"></i>
+                                    </button>
+
+                                    <!-- Tombol Setuju/Tolak (Khusus Direktur/Admin dan Status Menunggu) -->
+                                    @if($so->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
+                                        <form action="{{ route('sales.approve', $so->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen SO ini?');">
+                                            @csrf
+                                            <button type="submit" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200" title="Setujui SO">
+                                                <i data-feather="check-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('sales.reject', $so->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK dokumen SO ini secara permanen?');">
+                                            @csrf
+                                            <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-200" title="Tolak SO">
+                                                <i data-feather="x-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

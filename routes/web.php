@@ -193,6 +193,13 @@ Route::middleware('auth')->group(function () {
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
     Route::get('/sales/overview', [SaleController::class, 'overview'])->name('sales.overview');
     Route::get('/sales/efaktur', [SaleController::class, 'exportEfaktur'])->name('sales.efaktur');
+    // Transaksi Penjualan Khusus
+    Route::post('sales/{id}/deliver', [SaleController::class, 'deliver'])->name('sales.deliver');
+    Route::post('sales/{id}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
+
+    // TAMBAHKAN DUA BARIS INI UNTUK SISTEM APPROVAL PENJUALAN
+    Route::post('sales/{id}/approve', [SaleController::class, 'approve'])->name('sales.approve');
+    Route::post('sales/{id}/reject', [SaleController::class, 'reject'])->name('sales.reject');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     // Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
