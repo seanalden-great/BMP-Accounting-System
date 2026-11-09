@@ -132,14 +132,38 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
 
         // --- SISTEM PERINGATAN DINI (H-7 JATUH TEMPO) ---
-        $sevenDays = Carbon::now()->addDays(7)->toDateString();
-        // Cari Pembelian (Hutang) yang belum lunas (Pesanan/Pengiriman)
-        $poAlerts = Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        // $sevenDays = Carbon::now()->addDays(7)->toDateString();
+        // // Cari Pembelian (Hutang) yang belum lunas (Pesanan/Pengiriman)
+        // $poAlerts = Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        //     ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
+        // // Cari Penjualan (Piutang) yang belum lunas
+        // $soAlerts = Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        //     ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
+        // $totalAlerts = $poAlerts->count() + $soAlerts->count();
+
+        // --- SISTEM PERINGATAN DINI (KLASIFIKASI 3 LEVEL) ---
+        $today = Carbon::today()->toDateString();
+        $sevenDays = Carbon::today()->addDays(7)->toDateString();
+
+        // Tarik semua tagihan mentah yang belum lunas (H-7 hingga masa lampau)
+        $poAlertsRaw = Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
             ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
-        // Cari Penjualan (Piutang) yang belum lunas
-        $soAlerts = Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        $soAlertsRaw = Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
             ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
-        $totalAlerts = $poAlerts->count() + $soAlerts->count();
+
+        // Filter klasifikasi menggunakan Laravel Collections (Tanpa membebani Database berulang kali)
+        $poOverdue = $poAlertsRaw->filter(function($item) use ($today) { return $item->due_date < $today; });
+        $poToday   = $poAlertsRaw->filter(function($item) use ($today) { return $item->due_date == $today; });
+        $poUpcoming= $poAlertsRaw->filter(function($item) use ($today) { return $item->due_date > $today; });
+
+        $soOverdue = $soAlertsRaw->filter(function($item) use ($today) { return $item->due_date < $today; });
+        $soToday   = $soAlertsRaw->filter(function($item) use ($today) { return $item->due_date == $today; });
+        $soUpcoming= $soAlertsRaw->filter(function($item) use ($today) { return $item->due_date > $today; });
+
+        $totalOverdue = $poOverdue->count() + $soOverdue->count();
+        $totalToday   = $poToday->count() + $soToday->count();
+        $totalUpcoming= $poUpcoming->count() + $soUpcoming->count();
+        $totalAlerts  = $totalOverdue + $totalToday + $totalUpcoming;
 
         // 1. TOTAL PENDAPATAN
         $pendapatanBulanIni = Sale::whereIn('status', ['Pengiriman', 'Tagihan'])
@@ -237,11 +261,23 @@ class DashboardController extends Controller
         // ));
 
         // Pastikan variabel baru tersebut dimasukkan ke dalam compact()
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+        //     'poAlerts', 'soAlerts', 'totalAlerts',
+        //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
+        // ));
+
         return view('dashboard', compact(
             'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
             'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
             'chartLabels', 'chartInflows', 'chartOutflows',
-            'poAlerts', 'soAlerts', 'totalAlerts',
+
+            // Variabel Baru Notifikasi:
+            'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
+            'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
+
             'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
         ));
     }

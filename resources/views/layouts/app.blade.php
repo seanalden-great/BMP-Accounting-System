@@ -695,7 +695,7 @@
 </html> --}}
 
 <!-- resources/views/layouts/app.blade.php -->
-@php
+{{-- @php
     // LOGIKA GLOBAL NOTIFIKASI LONCENG H-7 UNTUK SELURUH HALAMAN
     $sevenDays = \Carbon\Carbon::now()->addDays(7)->toDateString();
     $poAlertGlobal = \App\Models\Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
@@ -703,6 +703,42 @@
     $soAlertGlobal = \App\Models\Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
         ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
     $totalAlertGlobal = $poAlertGlobal->count() + $soAlertGlobal->count();
+
+    // ==============================================================
+    // LOGIKA GLOBAL: PEMBACAAN MATRIKS HAK AKSES (RBAC)
+    // ==============================================================
+    $userRole = Auth::user()->role ?? 'Staff';
+    $companySetting = \App\Models\CompanySetting::first();
+    $rolePermissions = $companySetting && $companySetting->role_permissions ? json_decode($companySetting->role_permissions, true) : [];
+
+    // Fungsi penolong (helper) untuk mengecek apakah user boleh melihat menu
+    $hasAccess = function($menuName) use ($userRole, $rolePermissions) {
+        // Jika database matriks belum diatur (kosong sama sekali), beri akses ke Admin sebagai fallback keamanan
+        if (empty($rolePermissions)) {
+            return in_array($userRole, ['Admin', 'Direktur']);
+        }
+        // Cek apakah Role user terdaftar di JSON matriks dan memiliki centang untuk menu tersebut
+        return isset($rolePermissions[$userRole]) && in_array($menuName, $rolePermissions[$userRole]);
+    };
+@endphp --}}
+
+@php
+    // LOGIKA GLOBAL NOTIFIKASI LONCENG UNTUK SELURUH HALAMAN
+    $todayGlobal = \Carbon\Carbon::today()->toDateString();
+    $sevenDaysGlobal = \Carbon\Carbon::today()->addDays(7)->toDateString();
+
+    $poAlertsRawG = \App\Models\Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])->whereDate('due_date', '<=', $sevenDaysGlobal)->orderBy('due_date', 'asc')->get();
+    $soAlertsRawG = \App\Models\Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])->whereDate('due_date', '<=', $sevenDaysGlobal)->orderBy('due_date', 'asc')->get();
+
+    $poOverdueG = $poAlertsRawG->filter(fn($i) => $i->due_date < $todayGlobal);
+    $poTodayG   = $poAlertsRawG->filter(fn($i) => $i->due_date == $todayGlobal);
+    $poUpcomingG= $poAlertsRawG->filter(fn($i) => $i->due_date > $todayGlobal);
+
+    $soOverdueG = $soAlertsRawG->filter(fn($i) => $i->due_date < $todayGlobal);
+    $soTodayG   = $soAlertsRawG->filter(fn($i) => $i->due_date == $todayGlobal);
+    $soUpcomingG= $soAlertsRawG->filter(fn($i) => $i->due_date > $todayGlobal);
+
+    $totalAlertGlobal = $poAlertsRawG->count() + $soAlertsRawG->count();
 
     // ==============================================================
     // LOGIKA GLOBAL: PEMBACAAN MATRIKS HAK AKSES (RBAC)
@@ -904,7 +940,7 @@
                             @endif
                         </button>
                         <!-- Isi Dropdown -->
-                        <div class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                        {{-- <div class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                             <div class="bg-slate-50 border-b border-slate-200 p-3">
                                 <h4 class="font-bold text-slate-800 text-sm">Notifikasi Jatuh Tempo (H-7)</h4>
                             </div>
@@ -926,6 +962,77 @@
                                     @endforeach
                                 @else
                                     <div class="p-6 text-center text-slate-500 text-sm font-medium">
+                                        Selamat! Tidak ada tagihan mendesak.
+                                    </div>
+                                @endif
+                            </div>
+                        </div> --}}
+                        <!-- Isi Dropdown -->
+                        <div class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                            <div class="bg-slate-800 border-b border-slate-700 p-3">
+                                <h4 class="font-bold text-white text-sm">Pusat Notifikasi Keuangan</h4>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto custom-scrollbar p-0">
+                                @if($totalAlertGlobal > 0)
+
+                                    <!-- OVERDUE LIST -->
+                                    @if($poOverdueG->count() > 0 || $soOverdueG->count() > 0)
+                                        <div class="bg-red-50 text-red-800 text-xs font-black px-4 py-2 uppercase border-b border-red-100">Lewat Tempo (Menunggak)</div>
+                                        @foreach($poOverdueG as $po)
+                                            <a href="{{ route('purchases.bills') }}" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <p class="text-xs font-bold text-red-600 mb-1">Tagihan Pembelian (Hutang)</p>
+                                                <p class="text-sm font-semibold text-slate-800">{{ $po->reference_no ?: 'PO #'.$po->id }} - {{ $po->contact->name }}</p>
+                                                <p class="text-xs text-red-500 font-bold mt-1"><i data-feather="x-octagon" class="w-3 h-3 inline"></i> Lewat Sejak: {{ \Carbon\Carbon::parse($po->due_date)->translatedFormat('d M Y') }}</p>
+                                            </a>
+                                        @endforeach
+                                        @foreach($soOverdueG as $so)
+                                            <a href="{{ route('sales.invoices') }}" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <p class="text-xs font-bold text-blue-600 mb-1">Tagihan Penjualan (Piutang)</p>
+                                                <p class="text-sm font-semibold text-slate-800">{{ $so->reference_no ?: 'SO #'.$so->id }} - {{ $so->contact->name }}</p>
+                                                <p class="text-xs text-red-500 font-bold mt-1"><i data-feather="x-octagon" class="w-3 h-3 inline"></i> Lewat Sejak: {{ \Carbon\Carbon::parse($so->due_date)->translatedFormat('d M Y') }}</p>
+                                            </a>
+                                        @endforeach
+                                    @endif
+
+                                    <!-- TODAY LIST -->
+                                    @if($poTodayG->count() > 0 || $soTodayG->count() > 0)
+                                        <div class="bg-orange-50 text-orange-800 text-xs font-black px-4 py-2 uppercase border-b border-orange-100 border-t">Jatuh Tempo Hari Ini</div>
+                                        @foreach($poTodayG as $po)
+                                            <a href="{{ route('purchases.bills') }}" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <p class="text-xs font-bold text-red-600 mb-1">Tagihan Pembelian (Hutang)</p>
+                                                <p class="text-sm font-semibold text-slate-800">{{ $po->reference_no ?: 'PO #'.$po->id }} - {{ $po->contact->name }}</p>
+                                            </a>
+                                        @endforeach
+                                        @foreach($soTodayG as $so)
+                                            <a href="{{ route('sales.invoices') }}" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <p class="text-xs font-bold text-blue-600 mb-1">Tagihan Penjualan (Piutang)</p>
+                                                <p class="text-sm font-semibold text-slate-800">{{ $so->reference_no ?: 'SO #'.$so->id }} - {{ $so->contact->name }}</p>
+                                            </a>
+                                        @endforeach
+                                    @endif
+
+                                    <!-- UPCOMING LIST -->
+                                    @if($poUpcomingG->count() > 0 || $soUpcomingG->count() > 0)
+                                        <div class="bg-yellow-50 text-yellow-800 text-xs font-black px-4 py-2 uppercase border-b border-yellow-100 border-t">Mendekati H-7</div>
+                                        @foreach($poUpcomingG as $po)
+                                            <a href="{{ route('purchases.bills') }}" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <p class="text-xs font-bold text-red-600 mb-1">Tagihan Pembelian (Hutang)</p>
+                                                <p class="text-sm font-semibold text-slate-800">{{ $po->reference_no ?: 'PO #'.$po->id }} - {{ $po->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 font-medium mt-1"><i data-feather="clock" class="w-3 h-3 inline text-yellow-500"></i> Jatuh Tempo: {{ \Carbon\Carbon::parse($po->due_date)->translatedFormat('d M Y') }}</p>
+                                            </a>
+                                        @endforeach
+                                        @foreach($soUpcomingG as $so)
+                                            <a href="{{ route('sales.invoices') }}" class="block p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <p class="text-xs font-bold text-blue-600 mb-1">Tagihan Penjualan (Piutang)</p>
+                                                <p class="text-sm font-semibold text-slate-800">{{ $so->reference_no ?: 'SO #'.$so->id }} - {{ $so->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 font-medium mt-1"><i data-feather="clock" class="w-3 h-3 inline text-yellow-500"></i> Jatuh Tempo: {{ \Carbon\Carbon::parse($so->due_date)->translatedFormat('d M Y') }}</p>
+                                            </a>
+                                        @endforeach
+                                    @endif
+
+                                @else
+                                    <div class="p-8 text-center text-slate-500 text-sm font-medium flex flex-col items-center">
+                                        <i data-feather="check-circle" class="w-8 h-8 text-emerald-400 mb-2"></i>
                                         Selamat! Tidak ada tagihan mendesak.
                                     </div>
                                 @endif

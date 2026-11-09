@@ -382,7 +382,7 @@
 <div class="space-y-6 pb-10">
 
     <!-- ALERT JATUH TEMPO H-7 -->
-    @if($totalAlerts > 0)
+    {{-- @if($totalAlerts > 0)
     <div class="bg-red-50 border border-red-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
         <div class="p-3 bg-red-100 rounded-full text-red-600 shrink-0">
             <i data-feather="alert-triangle" class="w-6 h-6"></i>
@@ -390,6 +390,45 @@
         <div class="flex-1">
             <h4 class="font-bold text-red-800 text-lg">Perhatian! Terdapat {{ $totalAlerts }} Tagihan Mendekati Jatuh Tempo</h4>
             <p class="text-sm text-red-700 mt-1 font-medium">Batas waktu pelunasan kurang dari 7 hari. Segera periksa daftar selengkapnya melalui <b>Ikon Lonceng Notifikasi</b> di sudut kanan atas layar Anda.</p>
+        </div>
+    </div>
+    @endif --}}
+
+    <!-- ALERT 1: SUDAH LEWAT JATUH TEMPO (OVERDUE) -->
+    @if($totalOverdue > 0)
+    <div class="bg-red-50 border border-red-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div class="p-3 bg-red-100 rounded-full text-red-600 shrink-0">
+            <i data-feather="x-octagon" class="w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-bold text-red-800 text-lg">Peringatan Kritis! Terdapat {{ $totalOverdue }} Tagihan Lewat Jatuh Tempo</h4>
+            <p class="text-sm text-red-700 mt-1 font-medium">Tagihan ini sudah menunggak. Segera periksa daftar selengkapnya pada ikon lonceng untuk segera ditindaklanjuti.</p>
+        </div>
+    </div>
+    @endif
+
+    <!-- ALERT 2: JATUH TEMPO HARI INI -->
+    @if($totalToday > 0)
+    <div class="bg-orange-50 border border-orange-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div class="p-3 bg-orange-100 rounded-full text-orange-600 shrink-0">
+            <i data-feather="alert-circle" class="w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-bold text-orange-800 text-lg">Hari Ini! Terdapat {{ $totalToday }} Tagihan Jatuh Tempo</h4>
+            <p class="text-sm text-orange-700 mt-1 font-medium">Harap segera selesaikan tagihan/piutang yang memiliki batas waktu hari ini.</p>
+        </div>
+    </div>
+    @endif
+
+    <!-- ALERT 3: MENDEKATI JATUH TEMPO (H-7) -->
+    @if($totalUpcoming > 0)
+    <div class="bg-yellow-50 border border-yellow-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div class="p-3 bg-yellow-100 rounded-full text-yellow-600 shrink-0">
+            <i data-feather="clock" class="w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-bold text-yellow-800 text-lg">Perhatian! Terdapat {{ $totalUpcoming }} Tagihan Mendekati Jatuh Tempo</h4>
+            <p class="text-sm text-yellow-700 mt-1 font-medium">Batas waktu pelunasan kurang dari 7 hari ke depan. Mohon dipersiapkan.</p>
         </div>
     </div>
     @endif
