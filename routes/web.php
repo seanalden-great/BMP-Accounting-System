@@ -227,4 +227,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/payroll/employee/{id}', [PayrollController::class, 'destroyEmployee'])->name('payroll.destroyEmployee');
     Route::post('/payroll/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
     Route::get('/payroll/slip/{id}/{employee_id}', [PayrollController::class, 'printSlip'])->name('payroll.printSlip');
+
+    Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit.index');
 });
