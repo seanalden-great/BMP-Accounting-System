@@ -526,11 +526,35 @@
             </h1>
             <p class="text-slate-500 mt-1">Kelola data master barang dan jasa Anda</p>
         </div>
-        <div class="flex items-center gap-3">
+        {{-- <div class="flex items-center gap-3">
             <a href="{{ route('categories.index') }}" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
                 <i data-feather="tag" class="w-4 h-4 text-purple-600"></i> Kelola Kategori
             </a>
             <button onclick="openProductModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                <i data-feather="plus" class="w-4 h-4"></i> Tambah Master Produk
+            </button>
+        </div> --}}
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto mt-4 sm:mt-0">
+            <!-- Dropdown Ekspor -->
+            <div class="relative group">
+                <button class="w-full sm:w-auto bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-feather="printer" class="w-4 h-4"></i> Ekspor Data
+                </button>
+                <div class="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                    <div class="px-3 py-2 bg-slate-50 border-b font-bold text-xs text-slate-400 uppercase">Lap. Internal (Asli)</div>
+                    <a href="{{ route('products.export', ['search' => request('search'), 'type' => 'internal', 'format' => 'csv']) }}" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Unduh Excel (CSV)</a>
+                    <a href="{{ route('products.export', ['search' => request('search'), 'type' => 'internal', 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700 border-b">Cetak PDF / Layar</a>
+
+                    <div class="px-3 py-2 bg-purple-50 border-b font-bold text-xs text-purple-500 uppercase">Lap. Pajak (Tax)</div>
+                    <a href="{{ route('products.export', ['search' => request('search'), 'type' => 'pajak', 'format' => 'csv']) }}" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Unduh Excel (CSV)</a>
+                    <a href="{{ route('products.export', ['search' => request('search'), 'type' => 'pajak', 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-slate-50 font-semibold text-slate-700">Cetak PDF / Layar</a>
+                </div>
+            </div>
+
+            <a href="{{ route('categories.index') }}" class="w-full sm:w-auto bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
+                <i data-feather="tag" class="w-4 h-4 text-purple-600"></i> Kelola Kategori
+            </a>
+            <button onclick="openProductModal('create')" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center gap-2">
                 <i data-feather="plus" class="w-4 h-4"></i> Tambah Master Produk
             </button>
         </div>
