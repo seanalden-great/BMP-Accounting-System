@@ -848,6 +848,7 @@
                 <div id="sub-reports" class="hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
                     <a href="{{ route('reports.index', ['type' => 'profit-loss']) }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Laba Rugi</a>
                     <a href="{{ route('reports.index', ['type' => 'balance-sheet']) }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Neraca</a>
+                    <a href="{{ route('reports.index', ['type' => 'cash-flow']) }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Arus Kas (Cash Flow)</a>
                 </div>
             </div>
             @endif
