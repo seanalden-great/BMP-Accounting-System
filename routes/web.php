@@ -200,6 +200,9 @@ Route::middleware('auth')->group(function () {
     // TAMBAHKAN DUA BARIS INI UNTUK SISTEM APPROVAL PENJUALAN
     Route::post('sales/{id}/approve', [SaleController::class, 'approve'])->name('sales.approve');
     Route::post('sales/{id}/reject', [SaleController::class, 'reject'])->name('sales.reject');
+    // RUTE EKSPOR ASET TETAP (Wajib ditaruh di atas resource fixed-assets)
+    Route::get('/fixed-assets/export', [FixedAssetController::class, 'export'])->name('fixed-assets.export');
+    Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     // Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);

@@ -283,4 +283,81 @@ class FixedAssetController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses penyusutan.');
         }
     }
+    
+    // --- FITUR EKSPOR EXCEL & PDF ---
+    public function export(Request $request)
+    {
+        $type = $request->query('type', 'internal');
+        $format = $request->query('format', 'csv');
+
+        // Tarik data aset yang sama dengan index
+        $assets = FixedAsset::orderBy('purchase_date', 'desc')->orderBy('id', 'desc')->get();
+
+        $reportName = $type === 'pajak' ? 'DAFTAR ASET TETAP & PENYUSUTAN (PAJAK)' : 'DAFTAR ASET TETAP & PENYUSUTAN (INTERNAL)';
+
+        // EXCEL EXPORT (HTML-TO-EXCEL SPOOFING)
+        if ($format === 'csv') {
+            $headers = [
+                "Content-type"        => "application/vnd.ms-excel",
+                "Content-Disposition" => "attachment; filename=AsetTetap_{$type}.xls",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($assets, $reportName) {
+                echo '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
+                echo '<table border="0" style="font-family: Arial, sans-serif;">';
+                echo '<tr><th colspan="7" style="font-size:16px; font-weight:bold; text-align:center;">PT. BERLIAN MANDIRI PERKASA</th></tr>';
+                echo '<tr><th colspan="7" style="font-size:14px; font-weight:bold; text-align:center;">' . $reportName . '</th></tr>';
+                echo '<tr><td colspan="7"></td></tr></table>';
+
+                echo '<table border="1" style="font-family: Arial, sans-serif; font-size: 12px; border-collapse: collapse;">';
+                echo '<thead style="background-color: #e2e8f0;">';
+                echo '<tr>';
+                echo '<th style="padding:8px; text-align:center; width:50px;">No.</th>';
+                echo '<th style="padding:8px; text-align:center; width:250px;">Nama Aset / Inventaris</th>';
+                echo '<th style="padding:8px; text-align:center; width:120px;">Tgl Beli</th>';
+                echo '<th style="padding:8px; text-align:center; width:100px;">Umur (Bln)</th>';
+                echo '<th style="padding:8px; text-align:center; width:150px;">Harga Beli Awal</th>';
+                echo '<th style="padding:8px; text-align:center; width:150px;">Akumulasi Susut</th>';
+                echo '<th style="padding:8px; text-align:center; width:150px;">Nilai Buku (Sisa)</th>';
+                echo '</tr></thead><tbody>';
+
+                $no = 1;
+                $totalBeli = 0; $totalSusut = 0; $totalBuku = 0;
+
+                foreach ($assets as $ast) {
+                    $bookValue = $ast->purchase_price - $ast->accum_depreciation;
+                    $totalBeli += $ast->purchase_price;
+                    $totalSusut += $ast->accum_depreciation;
+                    $totalBuku += $bookValue;
+
+                    echo '<tr>';
+                    echo '<td style="padding:8px; text-align:center;">' . $no++ . '</td>';
+                    echo '<td style="padding:8px; font-weight:bold;">' . $ast->name . '</td>';
+                    echo '<td style="padding:8px; text-align:center;">' . \Carbon\Carbon::parse($ast->purchase_date)->format('d/m/Y') . '</td>';
+                    echo '<td style="padding:8px; text-align:center;">' . $ast->useful_life . '</td>';
+                    echo '<td style="padding:8px; text-align:right;">Rp ' . number_format($ast->purchase_price, 0, ',', '.') . '</td>';
+                    echo '<td style="padding:8px; text-align:right; color: #dc2626;">Rp ' . number_format($ast->accum_depreciation, 0, ',', '.') . '</td>';
+                    echo '<td style="padding:8px; text-align:right; font-weight:bold; color: #047857;">Rp ' . number_format($bookValue, 0, ',', '.') . '</td>';
+                    echo '</tr>';
+                }
+
+                echo '<tr style="background-color: #f8fafc; font-weight: bold;">';
+                echo '<td colspan="4" style="padding:8px; text-align:right;">TOTAL KESELURUHAN</td>';
+                echo '<td style="padding:8px; text-align:right;">Rp ' . number_format($totalBeli, 0, ',', '.') . '</td>';
+                echo '<td style="padding:8px; text-align:right; color: #dc2626;">Rp ' . number_format($totalSusut, 0, ',', '.') . '</td>';
+                echo '<td style="padding:8px; text-align:right; color: #047857;">Rp ' . number_format($totalBuku, 0, ',', '.') . '</td>';
+                echo '</tr>';
+
+                echo '</tbody></table></body></html>';
+            };
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // PDF EXPORT (Cetak Layar HTML)
+        return view('fixed_assets.export_print', compact('assets', 'reportName'));
+    }
 }
