@@ -814,12 +814,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
+                            {{-- @php
                                 // Inisialisasi running balance dimulai dari SALDO AWAL (bukan 0)
                                 $runningBalance = $saldoAwal ?? 0;
                                 $rowNumber = 1;
                                 // Balik urut                an jurnal dari terlama ke terbaru agar running balance benar (atas ke bawah)
                                 $sortedJournals = $journals->sortBy('date')->values();
+                            @endphp --}}
+
+                            @php
+                                // Inisialisasi running balance dimulai dari SALDO AWAL (bukan 0)
+                                $runningBalance = $saldoAwal ?? 0;
+                                $rowNumber = 1;
+
+                                // Langsung gunakan data jurnal asli tanpa perlu di-sort ulang
+                                $sortedJournals = $journals;
                             @endphp
 
                             <!-- Baris Saldo Awal (Hanya muncul jika filter tanggal digunakan) -->

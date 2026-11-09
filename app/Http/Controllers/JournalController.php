@@ -163,7 +163,8 @@ class JournalController extends Controller
                 }
 
                 // Tarik Induk Jurnal yang sudah terfilter
-                $journals = $query->orderBy('date', 'desc')->orderBy('id', 'desc')->get();
+                // $journals = $query->orderBy('date', 'desc')->orderBy('id', 'desc')->get();
+                $journals = $query->orderBy('date', 'asc')->orderBy('id', 'asc')->get();
             }
         }
 

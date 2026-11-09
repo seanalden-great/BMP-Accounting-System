@@ -319,6 +319,8 @@ class AccountController extends Controller
 
             return redirect()->back()->with('error', 'Gagal menyimpan akun baru');
         }
+
+        \App\Models\AuditLog::record('MEMBUAT', 'Akun COA', 'Membuat akun COA baru');
     }
 
     public function update(Request $request, $code)
