@@ -194,6 +194,8 @@ Route::middleware('auth')->group(function () {
     // TAMBAHKAN DUA BARIS INI UNTUK SISTEM APPROVAL
     Route::post('purchases/{id}/approve', [PurchaseController::class, 'approve'])->name('purchases.approve');
     Route::post('purchases/{id}/reject', [PurchaseController::class, 'reject'])->name('purchases.reject');
+    // --- FITUR BARU: RETUR PEMBELIAN (DEBIT NOTE) ---
+    Route::post('/purchases/{id}/return', [PurchaseController::class, 'processReturn'])->name('purchases.return');
     Route::resource('sales', SaleController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');

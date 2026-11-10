@@ -1201,4 +1201,69 @@ class PurchaseController extends Controller
 
         return redirect()->back()->with('success', 'Pesanan Pembelian (PO) telah DITOLAK secara permanen.');
     }
+
+    // --- FITUR BARU: RETUR PEMBELIAN (DEBIT NOTE) ---
+    public function processReturn(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'reason'       => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $purchase = Purchase::with('items')->findOrFail($id);
+
+            // Validasi: Hanya pesanan yang sudah diterima yang bisa dikembalikan (Retur)
+            if (!in_array($purchase->status, ['Pengiriman', 'Tagihan', 'Selesai'])) {
+                return redirect()->back()->with('error', 'Hanya pesanan yang sudah diterima di gudang yang dapat diproses retur.');
+            }
+
+            // 1. Tarik Keluar Stok Fisik dari Gudang (karena diretur ke supplier)
+            foreach ($purchase->items as $item) {
+                $stock = ProductStock::where('warehouse_id', $validated['warehouse_id'])
+                                     ->where('product_sku', $item->product_sku)->first();
+
+                if (!$stock || $stock->quantity < $item->quantity) {
+                    return redirect()->back()->with('error', 'Gagal: Stok di gudang yang Anda pilih tidak mencukupi untuk diretur. Pastikan Anda memilih gudang lokasi awal penerimaan barang.');
+                }
+
+                $stock->quantity -= $item->quantity; // Kurangi stok
+                $stock->save();
+            }
+
+            // 2. Buat Dokumen & Jurnal Pembalikan (Debit Note)
+            $now = Carbon::now();
+            $retCode = $this->generateDocNumber('RET', $now->toDateString()); // Auto-generate No. Surat Retur
+
+            $apAcc = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
+            $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+
+            // Jurnal Pembalik: Mengurangi Hutang dan Mengurangi Persediaan
+            $j1 = Journal::create([
+                'date'         => $now,
+                'description'  => "Retur Pembelian (Debit Note) PO #" . $purchase->id . " - " . $validated['reason'],
+                'reference_no' => $retCode,
+            ]);
+
+            // Debit: Hutang Usaha (Berkurang), Kredit: Persediaan (Berkurang)
+            JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $apAcc->code, 'debit' => $purchase->total, 'credit' => 0]);
+            JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $invAcc->code, 'debit' => 0, 'credit' => $purchase->total]);
+
+            // 3. Ubah status pesanan menjadi 'Diretur'
+            $purchase->update([
+                'status' => 'Diretur',
+                'notes'  => trim($purchase->notes . "\n[RETUR] " . $validated['reason'] . " (Surat Jalan Retur: " . $retCode . ")")
+            ]);
+
+            // 4. Lacak aktivitas keamanan
+            \App\Models\AuditLog::record('MENGEMBALIKAN', 'Pembelian', 'Memproses Retur Pembelian (Debit Note) ke Supplier untuk PO #' . $purchase->id);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Retur Pembelian (Debit Note) berhasil! Stok fisik telah dikeluarkan dari gudang dan Jurnal Pengurangan Hutang otomatis dibuat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal memproses retur: ' . $e->getMessage());
+        }
+    }
 }

@@ -1374,6 +1374,19 @@ $products = \App\Models\Product::all();
                             </td> --}}
 
                             <!-- Kolom Status Berwarna -->
+                            {{-- <td class="p-4 text-center">
+                                @if($po->status == 'Menunggu Persetujuan')
+                                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
+                                @elseif($po->status == 'Pesanan')
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
+                                @elseif($po->status == 'Ditolak')
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold line-through">Ditolak</span>
+                                @else
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{{ $po->status }}</span>
+                                @endif
+                            </td> --}}
+
+                            <!-- Kolom Status Berwarna -->
                             <td class="p-4 text-center">
                                 @if($po->status == 'Menunggu Persetujuan')
                                     <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
@@ -1381,6 +1394,8 @@ $products = \App\Models\Product::all();
                                     <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
                                 @elseif($po->status == 'Ditolak')
                                     <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold line-through">Ditolak</span>
+                                @elseif($po->status == 'Diretur')
+                                    <span class="px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-bold"><i data-feather="corner-up-right" class="w-3 h-3 inline mr-1"></i>Diretur (Kembali)</span>
                                 @else
                                     <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{{ $po->status }}</span>
                                 @endif
