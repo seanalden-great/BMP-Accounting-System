@@ -178,13 +178,30 @@
                             <td class="p-4 text-center"><span
                                     class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Terkirim</span>
                             </td>
-                            <td class="p-4 text-center">
+                            {{-- <td class="p-4 text-center">
                                 <button
                                     onclick="document.getElementById('detailModal_{{ $del->id }}').classList.remove('hidden')"
                                     class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition-colors"
                                     title="Lihat Detail Barang">
                                     <i data-feather="eye" class="w-4 h-4"></i>
                                 </button>
+                            </td> --}}
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        onclick="document.getElementById('detailModal_{{ $del->id }}').classList.remove('hidden')"
+                                        class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition-colors"
+                                        title="Lihat Detail Barang">
+                                        <i data-feather="eye" class="w-4 h-4"></i>
+                                    </button>
+
+                                    <!-- TOMBOL CETAK SURAT JALAN (BARU) -->
+                                    <a href="{{ route('sales.deliveryNote', $del->id) }}" target="_blank"
+                                        class="text-slate-500 hover:text-slate-800 hover:bg-slate-100 p-2 rounded-lg transition-colors border border-slate-200 shadow-sm"
+                                        title="Cetak Surat Jalan / Delivery Note">
+                                        <i data-feather="printer" class="w-4 h-4"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @endforeach

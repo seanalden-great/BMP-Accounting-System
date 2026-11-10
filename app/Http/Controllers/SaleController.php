@@ -1532,4 +1532,17 @@ class SaleController extends Controller
 
         return redirect()->back()->with('success', 'Pesanan Penjualan (SO) telah DITOLAK secara permanen.');
     }
+
+    // --- FITUR BARU: CETAK SURAT JALAN (DELIVERY NOTE) ---
+    public function printDeliveryNote($id)
+    {
+        $sale = Sale::with(['contact', 'items.product'])->findOrFail($id);
+
+        // Validasi: Surat Jalan hanya boleh dicetak setelah barang diproses kirim
+        if (!in_array($sale->status, ['Pengiriman', 'Tagihan', 'Selesai'])) {
+            return redirect()->back()->with('error', 'Surat Jalan hanya bisa dicetak jika status pesanan sudah masuk tahap Pengiriman.');
+        }
+
+        return view('sales.print_delivery_note', compact('sale'));
+    }
 }
