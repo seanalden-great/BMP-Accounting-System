@@ -174,9 +174,16 @@
                 </div>
             </div>
 
+            {{-- <button onclick="document.getElementById('assetModal').classList.remove('hidden')" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                <i data-feather="plus" class="w-4 h-4"></i> Beli Aset Baru
+            </button> --}}
+
+            <!-- CEK HAK AKSES CREATE (C) -->
+            @if(\App\Models\CompanySetting::canAction('C', 'Aset Tetap'))
             <button onclick="document.getElementById('assetModal').classList.remove('hidden')" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
                 <i data-feather="plus" class="w-4 h-4"></i> Beli Aset Baru
             </button>
+            @endif
         </div>
     </div>
 
@@ -206,7 +213,7 @@
                         <td class="p-4 text-sm text-right text-slate-800 font-medium">Rp {{ number_format($ast->purchase_price, 0, ',', '.') }}</td>
                         <td class="p-4 text-sm text-right text-red-600 font-medium">Rp {{ number_format($ast->accum_depreciation, 0, ',', '.') }}</td>
                         <td class="p-4 text-sm text-right text-emerald-700 font-bold">Rp {{ number_format($bookValue, 0, ',', '.') }}</td>
-                        <td class="p-4 text-center">
+                        {{-- <td class="p-4 text-center">
                             @if($ast->status === 'Aktif')
                                 <form action="{{ route('fixed-assets.depreciate', $ast->id) }}" method="POST" onsubmit="return confirm('Proses penyusutan 1 bulan untuk aset ini? Jurnal akan otomatis dibuat.');">
                                     @csrf
@@ -214,6 +221,31 @@
                                         <i data-feather="trending-down" class="w-3 h-3"></i> Susutkan
                                     </button>
                                 </form>
+                            @else
+                                <span class="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 w-full">
+                                    <i data-feather="check-circle" class="w-3 h-3"></i> Lunas
+                                </span>
+                            @endif
+                        </td> --}}
+
+                        <td class="p-4 text-center">
+                            @if($ast->status === 'Aktif')
+
+                                <!-- CEK HAK AKSES UPDATE (U) -->
+                                @if(\App\Models\CompanySetting::canAction('U', 'Aset Tetap'))
+                                <form action="{{ route('fixed-assets.depreciate', $ast->id) }}" method="POST" onsubmit="return confirm('Proses penyusutan 1 bulan untuk aset ini? Jurnal akan otomatis dibuat.');">
+                                    @csrf
+                                    <button type="submit" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 w-full transition-colors">
+                                        <i data-feather="trending-down" class="w-3 h-3"></i> Susutkan
+                                    </button>
+                                </form>
+                                @else
+                                <!-- Jika tidak punya hak UPDATE, tampilkan tombol terkunci -->
+                                <span class="bg-slate-100 text-slate-400 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 w-full cursor-not-allowed" title="Anda tidak memiliki hak akses (Update) untuk menyusutkan aset">
+                                    <i data-feather="lock" class="w-3 h-3"></i> Terkunci
+                                </span>
+                                @endif
+
                             @else
                                 <span class="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 w-full">
                                     <i data-feather="check-circle" class="w-3 h-3"></i> Lunas
