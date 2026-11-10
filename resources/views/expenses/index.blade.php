@@ -1829,10 +1829,18 @@
                     <i data-feather="plus" class="w-4 h-4"></i> Catat Biaya
                 </button> --}}
 
+                {{-- <button onclick="openCreateModal()"
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-2">
+                    <i data-feather="plus" class="w-4 h-4"></i> Catat Biaya
+                </button> --}}
+
+                <!-- CEK HAK AKSES CREATE (C) -->
+                @if(\App\Models\CompanySetting::canAction('C', 'Biaya'))
                 <button onclick="openCreateModal()"
                     class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-2">
                     <i data-feather="plus" class="w-4 h-4"></i> Catat Biaya
                 </button>
+                @endif
             </div>
         </div>
 
@@ -1944,7 +1952,7 @@
                             </td>
                             <td class="p-4 text-sm font-bold text-slate-800 text-right">Rp
                                 {{ number_format($exp->amount, 0, ',', '.') }}</td>
-                            <td class="p-4 text-center">
+                            {{-- <td class="p-4 text-center">
                                 <div class="flex items-center justify-center gap-1">
                                     <!-- TOMBOL EDIT BIAYA -->
                                     <button onclick="openEditModal({{ json_encode($exp) }})"
@@ -1960,6 +1968,35 @@
                                             class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded transition-colors"><i
                                                 data-feather="trash-2" class="w-4 h-4"></i></button>
                                     </form>
+                                </div>
+                            </td> --}}
+
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-1">
+
+                                    <!-- CEK HAK AKSES UPDATE (U) -->
+                                    @if(\App\Models\CompanySetting::canAction('U', 'Biaya'))
+                                    <!-- TOMBOL EDIT BIAYA -->
+                                    <button onclick="openEditModal({{ json_encode($exp) }})"
+                                        class="text-blue-500 hover:bg-blue-100 p-2 rounded transition-colors"
+                                        title="Edit Biaya"><i data-feather="edit" class="w-4 h-4"></i>
+                                    </button>
+                                    @endif
+
+                                    <!-- CEK HAK AKSES DELETE (D) -->
+                                    @if(\App\Models\CompanySetting::canAction('D', 'Biaya'))
+                                    <!-- TOMBOL HAPUS BIAYA -->
+                                    <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST"
+                                        onsubmit="return confirm('Yakin ingin menghapus catatan biaya ini? (Jurnal akuntansi terkait harus Anda hapus manual di menu Kas & Bank jika perlu)');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded transition-colors"><i
+                                                data-feather="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                    @endif
+
                                 </div>
                             </td>
                         </tr>
