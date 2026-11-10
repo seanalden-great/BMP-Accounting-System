@@ -37,7 +37,7 @@
                             @endforeach
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    {{-- <tbody class="divide-y divide-slate-100">
                         @foreach($menus as $menu)
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="p-4 text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -54,6 +54,58 @@
                                             class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
                                             {{ $isChecked ? 'checked' : '' }}>
                                     </label>
+                                </td>
+                            @endforeach
+                        </tr>
+                        @endforeach
+                    </tbody> --}}
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($menus as $menu)
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-4 text-sm font-bold text-slate-700 flex items-center gap-2">
+                                <i data-feather="grid" class="w-4 h-4 text-slate-400"></i> {{ $menu }}
+                            </td>
+                            @foreach($roles as $role)
+                                @php
+                                    $rolePerms = $permissions[$role] ?? [];
+
+                                    // Deteksi Format Lama (Jika masih pakai array 1D ['Menu A', 'Menu B']), ubah visualnya ke CRUD penuh
+                                    $isOldFormat = !empty($rolePerms) && isset($rolePerms[0]) && is_string($rolePerms[0]);
+                                    if ($isOldFormat) {
+                                        $newFormat = [];
+                                        foreach($rolePerms as $oldMenu) { $newFormat[$oldMenu] = ['C','R','U','D']; }
+                                        $rolePerms = $newFormat;
+                                    }
+
+                                    $menuPerms = $rolePerms[$menu] ?? [];
+                                    $canC = in_array('C', $menuPerms);
+                                    $canR = in_array('R', $menuPerms);
+                                    $canU = in_array('U', $menuPerms);
+                                    $canD = in_array('D', $menuPerms);
+                                @endphp
+                                <td class="p-3 text-center border-l border-slate-100">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <!-- C: CREATE -->
+                                        <label class="cursor-pointer" title="Create (Tambah Data)">
+                                            <input type="checkbox" name="permissions[{{ $role }}][{{ $menu }}][]" value="C" {{ $canC ? 'checked' : '' }} class="peer sr-only">
+                                            <div class="w-6 h-6 rounded flex items-center justify-center text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 peer-checked:bg-emerald-100 peer-checked:text-emerald-700 peer-checked:border-emerald-300 transition-all">C</div>
+                                        </label>
+                                        <!-- R: READ -->
+                                        <label class="cursor-pointer" title="Read (Lihat/Buka Menu)">
+                                            <input type="checkbox" name="permissions[{{ $role }}][{{ $menu }}][]" value="R" {{ $canR ? 'checked' : '' }} class="peer sr-only">
+                                            <div class="w-6 h-6 rounded flex items-center justify-center text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 peer-checked:bg-blue-100 peer-checked:text-blue-700 peer-checked:border-blue-300 transition-all">R</div>
+                                        </label>
+                                        <!-- U: UPDATE -->
+                                        <label class="cursor-pointer" title="Update (Ubah Data)">
+                                            <input type="checkbox" name="permissions[{{ $role }}][{{ $menu }}][]" value="U" {{ $canU ? 'checked' : '' }} class="peer sr-only">
+                                            <div class="w-6 h-6 rounded flex items-center justify-center text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 peer-checked:bg-orange-100 peer-checked:text-orange-700 peer-checked:border-orange-300 transition-all">U</div>
+                                        </label>
+                                        <!-- D: DELETE -->
+                                        <label class="cursor-pointer" title="Delete (Hapus Data)">
+                                            <input type="checkbox" name="permissions[{{ $role }}][{{ $menu }}][]" value="D" {{ $canD ? 'checked' : '' }} class="peer sr-only">
+                                            <div class="w-6 h-6 rounded flex items-center justify-center text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-300 transition-all">D</div>
+                                        </label>
+                                    </div>
                                 </td>
                             @endforeach
                         </tr>

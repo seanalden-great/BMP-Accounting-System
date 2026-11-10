@@ -748,13 +748,36 @@
     $rolePermissions = $companySetting && $companySetting->role_permissions ? json_decode($companySetting->role_permissions, true) : [];
 
     // Fungsi penolong (helper) untuk mengecek apakah user boleh melihat menu
+    // $hasAccess = function($menuName) use ($userRole, $rolePermissions) {
+    //     // Jika database matriks belum diatur (kosong sama sekali), beri akses ke Admin sebagai fallback keamanan
+    //     if (empty($rolePermissions)) {
+    //         return in_array($userRole, ['Admin', 'Direktur']);
+    //     }
+    //     // Cek apakah Role user terdaftar di JSON matriks dan memiliki centang untuk menu tersebut
+    //     return isset($rolePermissions[$userRole]) && in_array($menuName, $rolePermissions[$userRole]);
+    // };
+
+    // Fungsi penolong: Cek apakah user boleh melihat (Read) menu di Sidebar
     $hasAccess = function($menuName) use ($userRole, $rolePermissions) {
-        // Jika database matriks belum diatur (kosong sama sekali), beri akses ke Admin sebagai fallback keamanan
         if (empty($rolePermissions)) {
             return in_array($userRole, ['Admin', 'Direktur']);
         }
-        // Cek apakah Role user terdaftar di JSON matriks dan memiliki centang untuk menu tersebut
-        return isset($rolePermissions[$userRole]) && in_array($menuName, $rolePermissions[$userRole]);
+
+        // Jaga-jaga jika masih ada format data lama (Array 1D) di database
+        if (isset($rolePermissions[$userRole][0]) && is_string($rolePermissions[$userRole][0])) {
+            return in_array($menuName, $rolePermissions[$userRole]);
+        }
+
+        // Format Baru: Cek apakah menu tersebut memiliki huruf 'R' (Read)
+        return isset($rolePermissions[$userRole][$menuName]) && in_array('R', $rolePermissions[$userRole][$menuName]);
+    };
+
+    // Fungsi penolong baru: Cek hak aksi spesifik (Create, Update, Delete) di dalam halaman
+    $canAction = function($actionLetter, $menuName) use ($userRole, $rolePermissions) {
+        if (empty($rolePermissions)) return in_array($userRole, ['Admin', 'Direktur']);
+        if (isset($rolePermissions[$userRole][0]) && is_string($rolePermissions[$userRole][0])) return true; // Bypass format lama
+
+        return isset($rolePermissions[$userRole][$menuName]) && in_array($actionLetter, $rolePermissions[$userRole][$menuName]);
     };
 @endphp
 <!DOCTYPE html>
