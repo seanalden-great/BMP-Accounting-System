@@ -129,7 +129,7 @@
 @section('content')
     <div class="space-y-6 pb-10">
         <div class="flex justify-between items-center gap-4">
-            <div>
+            {{-- <div>
                 <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
                     <i data-feather="truck" class="text-purple-600 w-7 h-7"></i> Pengiriman Penjualan
                 </h1>
@@ -138,7 +138,22 @@
             <button onclick="document.getElementById('delModal').classList.remove('hidden')"
                 class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
                 <i data-feather="send" class="w-4 h-4"></i> Proses Pengiriman
+            </button> --}}
+
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                    <i data-feather="truck" class="text-purple-600 w-7 h-7"></i> Pengiriman Penjualan
+                </h1>
+                <p class="text-slate-500 mt-1">Sistem menggunakan alokasi FIFO (First-In, First-Out) lintas gudang.</p>
+            </div>
+
+            <!-- CEK HAK AKSES UPDATE (U) -->
+            @if(\App\Models\CompanySetting::canAction('U', 'Penjualan'))
+            <button onclick="document.getElementById('delModal').classList.remove('hidden')"
+                class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
+                <i data-feather="send" class="w-4 h-4"></i> Proses Pengiriman
             </button>
+            @endif
         </div>
 
         <!-- Tabel Riwayat (Surat Jalan) -->

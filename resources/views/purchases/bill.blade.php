@@ -204,9 +204,16 @@
             </h1>
             <p class="text-slate-500 mt-1">Kelola tagihan dari Pemasok dan potong saldo bank otomatis</p>
         </div>
+        {{-- <button onclick="document.getElementById('billModal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
+            <i data-feather="plus-circle" class="w-4 h-4"></i> Proses Pembayaran
+        </button> --}}
+
+        <!-- CEK HAK AKSES UPDATE (U) -->
+        @if(\App\Models\CompanySetting::canAction('U', 'Pembelian'))
         <button onclick="document.getElementById('billModal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
             <i data-feather="plus-circle" class="w-4 h-4"></i> Proses Pembayaran
         </button>
+        @endif
     </div>
 
     <!-- Tabel Riwayat Tagihan Lunas -->

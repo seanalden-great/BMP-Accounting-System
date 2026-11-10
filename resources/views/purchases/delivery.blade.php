@@ -150,9 +150,15 @@
             </h1>
             <p class="text-slate-500 mt-1">Pilih Gudang Penyimpanan untuk PO yang datang dari Pemasok</p>
         </div>
+        {{-- <button onclick="document.getElementById('delModal').classList.remove('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
+            <i data-feather="check-square" class="w-4 h-4"></i> Proses Penerimaan
+        </button> --}}
+        <!-- CEK HAK AKSES UPDATE (U) -->
+        @if(\App\Models\CompanySetting::canAction('U', 'Pembelian'))
         <button onclick="document.getElementById('delModal').classList.remove('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
             <i data-feather="check-square" class="w-4 h-4"></i> Proses Penerimaan
         </button>
+        @endif
     </div>
 
     <!-- Tabel Riwayat -->

@@ -92,14 +92,26 @@
 @section('content')
 <div class="space-y-6 pb-10">
     <div class="flex justify-between items-center gap-4">
-        <div>
+        {{-- <div>
             <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <i data-feather="file-text" class="text-rose-600 w-7 h-7"></i> Invoice & Penerimaan Dana
             </h1>
         </div>
         <button onclick="document.getElementById('invModal').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
             <i data-feather="plus-circle" class="w-4 h-4"></i> Terima Pembayaran
+        </button> --}}
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                <i data-feather="file-text" class="text-rose-600 w-7 h-7"></i> Invoice & Penerimaan Dana
+            </h1>
+        </div>
+
+        <!-- CEK HAK AKSES UPDATE (U) -->
+        @if(\App\Models\CompanySetting::canAction('U', 'Penjualan'))
+        <button onclick="document.getElementById('invModal').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2">
+            <i data-feather="plus-circle" class="w-4 h-4"></i> Terima Pembayaran
         </button>
+        @endif
     </div>
 
     <!-- Tabel Riwayat Tagihan Lunas -->

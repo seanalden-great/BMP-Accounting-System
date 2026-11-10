@@ -1335,10 +1335,18 @@ $products = \App\Models\Product::all();
                     <i data-feather="download" class="w-4 h-4"></i> Ekspor e-Faktur DJP
                 </a>
 
+                {{-- <button onclick="document.getElementById('soModal').classList.remove('hidden')"
+                    class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-feather="plus" class="w-4 h-4"></i> Buat SO Baru
+                </button> --}}
+
+                <!-- CEK HAK AKSES CREATE (C) -->
+                @if(\App\Models\CompanySetting::canAction('C', 'Penjualan'))
                 <button onclick="document.getElementById('soModal').classList.remove('hidden')"
                     class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
                     <i data-feather="plus" class="w-4 h-4"></i> Buat SO Baru
                 </button>
+                @endif
             </div>
         </div>
 
@@ -1403,7 +1411,23 @@ $products = \App\Models\Product::all();
                                     </button>
 
                                     <!-- Tombol Setuju/Tolak (Khusus Direktur/Admin dan Status Menunggu) -->
-                                    @if($so->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
+                                    {{-- @if($so->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
+                                        <form action="{{ route('sales.approve', $so->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen SO ini?');">
+                                            @csrf
+                                            <button type="submit" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200" title="Setujui SO">
+                                                <i data-feather="check-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('sales.reject', $so->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK dokumen SO ini secara permanen?');">
+                                            @csrf
+                                            <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-200" title="Tolak SO">
+                                                <i data-feather="x-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    @endif --}}
+                                    
+                                    <!-- Tombol Setuju/Tolak (Khusus Status Menunggu & Memiliki Hak UPDATE) -->
+                                    @if($so->status == 'Menunggu Persetujuan' && \App\Models\CompanySetting::canAction('U', 'Penjualan'))
                                         <form action="{{ route('sales.approve', $so->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen SO ini?');">
                                             @csrf
                                             <button type="submit" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200" title="Setujui SO">

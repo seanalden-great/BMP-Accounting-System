@@ -1322,10 +1322,17 @@ $products = \App\Models\Product::all();
                 </h1>
                 <p class="text-slate-500 mt-1">Buat dokumen pemesanan barang ke Pemasok/Supplier</p>
             </div>
+            {{-- <button onclick="document.getElementById('poModal').classList.remove('hidden')"
+                class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                <i data-feather="plus" class="w-4 h-4"></i> Buat PO Baru
+            </button> --}}
+            <!-- CEK HAK AKSES CREATE (C) -->
+            @if(\App\Models\CompanySetting::canAction('C', 'Pembelian'))
             <button onclick="document.getElementById('poModal').classList.remove('hidden')"
                 class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
                 <i data-feather="plus" class="w-4 h-4"></i> Buat PO Baru
             </button>
+            @endif
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -1387,7 +1394,23 @@ $products = \App\Models\Product::all();
                                     </button>
 
                                     <!-- Tombol Setuju/Tolak (Khusus Direktur/Admin dan Status Menunggu) -->
-                                    @if($po->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
+                                    {{-- @if($po->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
+                                        <form action="{{ route('purchases.approve', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen ini?');">
+                                            @csrf
+                                            <button type="submit" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200" title="Setujui PO">
+                                                <i data-feather="check-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('purchases.reject', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK dokumen ini secara permanen?');">
+                                            @csrf
+                                            <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-200" title="Tolak PO">
+                                                <i data-feather="x-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    @endif --}}
+
+                                    <!-- Tombol Setuju/Tolak (Khusus Status Menunggu & Memiliki Hak UPDATE) -->
+                                    @if($po->status == 'Menunggu Persetujuan' && \App\Models\CompanySetting::canAction('U', 'Pembelian'))
                                         <form action="{{ route('purchases.approve', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen ini?');">
                                             @csrf
                                             <button type="submit" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200" title="Setujui PO">
