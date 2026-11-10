@@ -513,6 +513,67 @@
         </div>
     </div>
 
+    <!-- Modal Form Mutasi Stok (Transfer Antar Gudang) -->
+    <div id="transferModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[55] p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-blue-50">
+                <h3 class="text-xl font-bold text-blue-900 flex items-center gap-2">
+                    <i data-feather="repeat" class="w-5 h-5"></i> Transfer Stok Internal
+                </h3>
+                <button onclick="document.getElementById('transferModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700"><i data-feather="x"></i></button>
+            </div>
+
+            <form action="{{ route('inventory.transfer') }}" method="POST" class="p-6 space-y-4" onsubmit="unformatRibuan(this)">
+                @csrf
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-rose-800 mb-1">Gudang Asal (Keluar)</label>
+                        <select name="from_warehouse_id" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 font-semibold bg-rose-50/30">
+                            <option value="" disabled selected>-- Pilih Gudang Asal --</option>
+                            @foreach ($warehouses as $wh) <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option> @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-emerald-800 mb-1">Gudang Tujuan (Masuk)</label>
+                        <select name="to_warehouse_id" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 font-semibold bg-emerald-50/30">
+                            <option value="" disabled selected>-- Pilih Gudang Tujuan --</option>
+                            @foreach ($warehouses as $wh) <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option> @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Pilih Produk</label>
+                        <select name="product_sku" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" disabled selected>-- Pilih Produk --</option>
+                            @foreach ($products as $p) <option value="{{ $p->sku }}">[{{ $p->sku }}] {{ $p->name }}</option> @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Jumlah Pemindahan</label>
+                        <input type="text" name="quantity" required placeholder="Berapa kuantitas?" oninput="formatRibuan(this)" class="format-ribuan w-full border border-slate-300 rounded-lg p-2.5 text-center font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Catatan Pengiriman Internal (Opsional)</label>
+                    <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="hidden">
+                    <textarea name="notes" rows="2" placeholder="Cth: Menggunakan mobil box B 1234 CD, driver Budi..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-800 font-medium">
+                    <b>Info Akuntansi:</b> Transaksi ini adalah mutasi barang fisik dan <b>tidak akan</b> memengaruhi Harga Pokok Penjualan (HPP) maupun mencetak beban jurnal di Buku Besar.
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('transferModal').classList.add('hidden')" class="px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-bold transition-colors">Batal</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm">Proses & Pindahkan Stok</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ========================================== -->
     <!-- HELPER JAVASCRIPT GLOBAL UNTUK INPUT ANGKA -->
     <!-- ========================================== -->

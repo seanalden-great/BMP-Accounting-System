@@ -1391,6 +1391,19 @@ $products = \App\Models\Product::all();
                             </td> --}}
 
                             <!-- Kolom Status Berwarna -->
+                            {{-- <td class="p-4 text-center">
+                                @if($so->status == 'Menunggu Persetujuan')
+                                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
+                                @elseif($so->status == 'Pesanan')
+                                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
+                                @elseif($so->status == 'Ditolak')
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold line-through">Ditolak</span>
+                                @else
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{{ $so->status }}</span>
+                                @endif
+                            </td> --}}
+
+                            <!-- Kolom Status Berwarna -->
                             <td class="p-4 text-center">
                                 @if($so->status == 'Menunggu Persetujuan')
                                     <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
@@ -1398,6 +1411,8 @@ $products = \App\Models\Product::all();
                                     <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
                                 @elseif($so->status == 'Ditolak')
                                     <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold line-through">Ditolak</span>
+                                @elseif($so->status == 'Diretur')
+                                    <span class="px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-bold"><i data-feather="corner-down-left" class="w-3 h-3 inline mr-1"></i>Diretur (Kembali)</span>
                                 @else
                                     <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{{ $so->status }}</span>
                                 @endif
@@ -1425,7 +1440,7 @@ $products = \App\Models\Product::all();
                                             </button>
                                         </form>
                                     @endif --}}
-                                    
+
                                     <!-- Tombol Setuju/Tolak (Khusus Status Menunggu & Memiliki Hak UPDATE) -->
                                     @if($so->status == 'Menunggu Persetujuan' && \App\Models\CompanySetting::canAction('U', 'Penjualan'))
                                         <form action="{{ route('sales.approve', $so->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI dokumen SO ini?');">

@@ -186,7 +186,7 @@
                                     <i data-feather="eye" class="w-4 h-4"></i>
                                 </button>
                             </td> --}}
-                            <td class="p-4 text-center">
+                            {{-- <td class="p-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <button
                                         onclick="document.getElementById('detailModal_{{ $del->id }}').classList.remove('hidden')"
@@ -201,6 +201,26 @@
                                         title="Cetak Surat Jalan / Delivery Note">
                                         <i data-feather="printer" class="w-4 h-4"></i>
                                     </a>
+                                </div>
+                            </td> --}}
+
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="document.getElementById('detailModal_{{ $del->id }}').classList.remove('hidden')" class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition-colors" title="Lihat Detail Barang">
+                                        <i data-feather="eye" class="w-4 h-4"></i>
+                                    </button>
+
+                                    <!-- TOMBOL CETAK SURAT JALAN -->
+                                    <a href="{{ route('sales.deliveryNote', $del->id) }}" target="_blank" class="text-slate-500 hover:text-slate-800 hover:bg-slate-100 p-2 rounded-lg transition-colors border border-slate-200 shadow-sm" title="Cetak Surat Jalan / Delivery Note">
+                                        <i data-feather="printer" class="w-4 h-4"></i>
+                                    </a>
+
+                                    <!-- CEK HAK AKSES UPDATE (U) UNTUK TOMBOL RETUR (BARU) -->
+                                    @if(\App\Models\CompanySetting::canAction('U', 'Penjualan'))
+                                    <button onclick="openReturnModal({{ $del->id }}, '{{ addslashes($del->contact->name) }}')" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-200 shadow-sm" title="Retur Barang (Kembalikan ke Gudang & Buat Jurnal Pembalik)">
+                                        <i data-feather="corner-down-left" class="w-4 h-4"></i>
+                                    </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -291,4 +311,53 @@
             </div>
         </div>
     </div>
+    <!-- MODAL FORM RETUR PENJUALAN -->
+    <div id="returnModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-rose-50">
+                <h3 class="text-lg font-bold text-rose-800 flex items-center gap-2">
+                    <i data-feather="corner-down-left" class="w-5 h-5"></i> Retur Penjualan (Credit Note)
+                </h3>
+                <button onclick="document.getElementById('returnModal').classList.add('hidden')" class="text-slate-400 hover:text-rose-700 transition-colors"><i data-feather="x"></i></button>
+            </div>
+
+            <form id="returnForm" method="POST" class="p-6 space-y-4">
+                @csrf
+                <p class="text-sm font-medium text-slate-600 mb-2">Proses retur pengiriman dari pelanggan: <b id="returnCustomerName" class="text-slate-800"></b></p>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Kembalikan Stok ke Gudang</label>
+                    <select name="warehouse_id" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-rose-500">
+                        <option value="" disabled selected>-- Pilih Gudang Penyimpanan Retur --</option>
+                        <!-- Panggil relasi Gudang langsung dari Blade agar rapi -->
+                        @foreach (\App\Models\Warehouse::all() as $wh)
+                            <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Alasan Retur / Cacat (Cetak Dokumen)</label>
+                    <textarea name="reason" required rows="2" placeholder="Cth: Barang rusak saat pengiriman, tidak sesuai pesanan..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-rose-500 resize-none"></textarea>
+                </div>
+
+                <div class="p-3 bg-rose-50 border border-rose-100 rounded text-xs text-rose-800 font-medium leading-relaxed">
+                    <b>Info Akuntansi Otomatis:</b><br/>Menekan tombol simpan akan menarik stok fisik kembali ke gudang pilihan Anda, dan secara otomatis menerbitkan dokumen <i>Credit Note</i> yang membalik (mengoreksi) angka Piutang, Pendapatan, dan HPP di Buku Besar tanpa menghapus histori aslinya.
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="document.getElementById('returnModal').classList.add('hidden')" class="px-4 py-2 text-slate-600 font-bold transition-colors hover:bg-slate-100 rounded-lg">Batal</button>
+                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2 rounded-lg font-bold transition-colors shadow-sm">Proses Retur Barang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Skrip Pemanggil Modal Retur -->
+    <script>
+        function openReturnModal(saleId, customerName) {
+            document.getElementById('returnCustomerName').innerText = customerName;
+            document.getElementById('returnForm').action = '/sales/' + saleId + '/return';
+            document.getElementById('returnModal').classList.remove('hidden');
+        }
+    </script>
 @endsection

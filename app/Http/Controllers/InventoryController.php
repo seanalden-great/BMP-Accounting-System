@@ -365,6 +365,8 @@ class InventoryController extends Controller
         try {
             $adj = StockAdjustment::findOrFail($id);
 
+            if(str_contains($adj->reason, '[MUTASI')) return redirect()->back()->with('error', 'Data Mutasi Antar Gudang terenkripsi. Silakan buat form mutasi balik secara manual jika terjadi kesalahan.');
+
             // 1. Rollback (Kembalikan) Stok Fisik Gudang
             $stockRecord = ProductStock::where('warehouse_id', $adj->warehouse_id)
                                        ->where('product_sku', $adj->product_sku)->first();
@@ -394,6 +396,76 @@ class InventoryController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal membatalkan penyesuaian: ' . $e->getMessage());
+        }
+    }
+
+    // --- FITUR BARU: MUTASI ANTAR GUDANG (TANPA JURNAL) ---
+    public function transferStock(Request $request)
+    {
+        $validated = $request->validate([
+            'date'              => 'required|date',
+            'from_warehouse_id' => 'required|exists:warehouses,id',
+            'to_warehouse_id'   => 'required|exists:warehouses,id|different:from_warehouse_id',
+            'product_sku'       => 'required|exists:products,sku',
+            'quantity'          => 'required|integer|min:1',
+            'notes'             => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $product = Product::where('sku', $validated['product_sku'])->lockForUpdate()->first();
+
+            // 1. Cek & Potong Stok Gudang Asal
+            $sourceStock = ProductStock::firstOrCreate(
+                ['warehouse_id' => $validated['from_warehouse_id'], 'product_sku' => $validated['product_sku']],
+                ['quantity' => 0]
+            );
+            if ($sourceStock->quantity < $validated['quantity']) {
+                return redirect()->back()->withInput()->with('error', 'Gagal: Stok di Gudang Asal tidak mencukupi untuk dipindahkan.');
+            }
+            $sourceStock->quantity -= $validated['quantity'];
+            $sourceStock->save();
+
+            // 2. Tambah Stok Gudang Tujuan
+            $destStock = ProductStock::firstOrCreate(
+                ['warehouse_id' => $validated['to_warehouse_id'], 'product_sku' => $validated['product_sku']],
+                ['quantity' => 0]
+            );
+            $destStock->quantity += $validated['quantity'];
+            $destStock->save();
+
+            // 3. Catat Riwayat (2 Baris Berlawanan Tanpa Total Value / Rp 0)
+            $sjCode = "TRF-" . Carbon::now()->format('His');
+            $reasonOut = "[MUTASI KELUAR] Ke Gudang ID: {$validated['to_warehouse_id']} (SJ: {$sjCode}) - " . ($validated['notes'] ?? '');
+            $reasonIn  = "[MUTASI MASUK] Dari Gudang ID: {$validated['from_warehouse_id']} (SJ: {$sjCode}) - " . ($validated['notes'] ?? '');
+
+            StockAdjustment::create([
+                'date'         => $validated['date'],
+                'warehouse_id' => $validated['from_warehouse_id'],
+                'product_sku'  => $validated['product_sku'],
+                'type'         => 'Pengurangan',
+                'quantity'     => $validated['quantity'],
+                'reason'       => $reasonOut,
+                'total_value'  => 0, // Rp 0 agar tidak dijurnal
+            ]);
+
+            StockAdjustment::create([
+                'date'         => $validated['date'],
+                'warehouse_id' => $validated['to_warehouse_id'],
+                'product_sku'  => $validated['product_sku'],
+                'type'         => 'Penambahan',
+                'quantity'     => $validated['quantity'],
+                'reason'       => $reasonIn,
+                'total_value'  => 0, // Rp 0 agar tidak dijurnal
+            ]);
+
+            \App\Models\AuditLog::record('MEMBUAT', 'Inventori', "Mutasi internal {$validated['quantity']} unit SKU: {$product->sku} ({$sjCode})");
+
+            DB::commit();
+            return redirect()->route('inventory.index')->with('success', 'Mutasi antar gudang berhasil! Surat Jalan Internal otomatis dicatat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal memproses mutasi stok: ' . $e->getMessage());
         }
     }
 }

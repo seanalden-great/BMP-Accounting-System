@@ -1545,4 +1545,82 @@ class SaleController extends Controller
 
         return view('sales.print_delivery_note', compact('sale'));
     }
+
+    // --- FITUR BARU: RETUR PENJUALAN (CREDIT NOTE) ---
+    public function processReturn(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'reason'       => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $sale = Sale::with('items')->findOrFail($id);
+
+            // Validasi: Hanya pesanan yang sudah dikirim atau ditagih yang bisa diretur
+            if (!in_array($sale->status, ['Pengiriman', 'Tagihan', 'Selesai'])) {
+                return redirect()->back()->with('error', 'Hanya pesanan yang sudah terkirim yang dapat diproses retur.');
+            }
+
+            // 1. Tarik Kembali Stok Fisik ke Gudang yang Dipilih
+            $totalHPP = 0;
+            foreach ($sale->items as $item) {
+                $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
+                $stock = ProductStock::firstOrCreate(
+                    ['warehouse_id' => $validated['warehouse_id'], 'product_sku' => $item->product_sku],
+                    ['quantity' => 0]
+                );
+
+                $stock->quantity += $item->quantity; // Kembalikan ke gudang
+                $stock->save();
+
+                $totalHPP += ($item->quantity * $product->hpp);
+            }
+
+            // 2. Buat Dokumen & Jurnal Pembalikan (Credit Note)
+            $now = Carbon::now();
+            $retCode = $this->generateDocNumber('RET', $now->toDateString()); // Auto-generate No. Surat Retur
+
+            $arAcc = Account::where('code', 'LIKE', '12%')->where('is_header', false)->first();
+            $revAcc = Account::where('code', 'LIKE', '50%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '4%')->where('is_header', false)->first();
+            $cogsAcc = Account::where('code', 'LIKE', '60%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '5%')->where('is_header', false)->first();
+            $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+
+            // Jurnal 1: Membalik Pendapatan dan Piutang
+            $j1 = Journal::create([
+                'date'         => $now,
+                'description'  => "Retur Penjualan (Credit Note) SO #" . $sale->id . " - " . $validated['reason'],
+                'reference_no' => $retCode,
+            ]);
+            JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $revAcc->code, 'debit' => $sale->total, 'credit' => 0]);
+            JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $arAcc->code, 'debit' => 0, 'credit' => $sale->total]);
+
+            // Jurnal 2: Membalik HPP dan Persediaan Barang
+            if ($totalHPP > 0) {
+                $j2 = Journal::create([
+                    'date'         => $now,
+                    'description'  => "Pembalikan HPP Retur SO #" . $sale->id,
+                    'reference_no' => $retCode,
+                ]);
+                JournalEntry::create(['journal_id' => $j2->id, 'account_code' => $invAcc->code, 'debit' => $totalHPP, 'credit' => 0]);
+                JournalEntry::create(['journal_id' => $j2->id, 'account_code' => $cogsAcc->code, 'debit' => 0, 'credit' => $totalHPP]);
+            }
+
+            // 3. Ubah status pesanan menjadi 'Diretur'
+            $sale->update([
+                'status' => 'Diretur',
+                'notes'  => trim($sale->notes . "\n[RETUR] " . $validated['reason'] . " (No. Dokumen: " . $retCode . ")")
+            ]);
+
+            // 4. Lacak aktivitas keamanan
+            \App\Models\AuditLog::record('MENGEMBALIKAN', 'Penjualan', 'Memproses Retur Penjualan penuh untuk SO #' . $sale->id);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Retur Penjualan (Credit Note) berhasil diproses! Stok fisik telah dikembalikan ke gudang dan Jurnal pembalik otomatis dibuat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal memproses retur: ' . $e->getMessage());
+        }
+    }
 }

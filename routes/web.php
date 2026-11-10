@@ -151,6 +151,8 @@ Route::middleware('auth')->group(function () {
     // Inventori / Stok
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock'])->name('inventory.adjust');
+    // --- FITUR BARU: MUTASI ANTAR GUDANG ---
+    Route::post('/inventory/transfer', [InventoryController::class, 'transferStock'])->name('inventory.transfer');
 
     // TAMBAHKAN DUA RUTE INI UNTUK UPDATE DAN DELETE
     Route::put('/inventory/{id}', [InventoryController::class, 'update'])->name('inventory.update');
@@ -205,6 +207,8 @@ Route::middleware('auth')->group(function () {
     Route::post('sales/{id}/approve', [SaleController::class, 'approve'])->name('sales.approve');
     Route::post('sales/{id}/reject', [SaleController::class, 'reject'])->name('sales.reject');
     Route::get('/sales/{id}/delivery-note', [SaleController::class, 'printDeliveryNote'])->name('sales.deliveryNote');
+    // --- FITUR BARU: RETUR PENJUALAN (CREDIT NOTE) ---
+    Route::post('/sales/{id}/return', [SaleController::class, 'processReturn'])->name('sales.return');
     // RUTE EKSPOR ASET TETAP (Wajib ditaruh di atas resource fixed-assets)
     Route::get('/fixed-assets/export', [FixedAssetController::class, 'export'])->name('fixed-assets.export');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
