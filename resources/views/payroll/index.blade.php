@@ -274,7 +274,7 @@
                 </h1>
                 <p class="text-slate-500 mt-1">Kelola data karyawan, komponen gaji, hitung BPJS, dan proses slip gaji.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
+            {{-- <div class="flex flex-wrap items-center gap-3">
                 <button onclick="openEmployeeModal('create')"
                     class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
                     <i data-feather="user-plus" class="w-4 h-4 text-blue-600"></i> Tambah Karyawan
@@ -289,6 +289,46 @@
                         <i data-feather="play-circle" class="w-4 h-4"></i> Proses Gaji Bulan Ini
                     </button>
                 </form>
+            </div> --}}
+
+            {{-- <div class="flex flex-wrap items-center gap-3">
+                <!-- CEK HAK AKSES CREATE (C) UNTUK PENGGAJIAN -->
+                @if(\App\Models\CompanySetting::canAction('C', 'Penggajian'))
+                <button onclick="openEmployeeModal('create')"
+                    class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+                    <i data-feather="user-plus" class="w-4 h-4 text-blue-600"></i> Tambah Karyawan
+                </button>
+
+                <!-- FORM PROSES GAJI BULAN INI -->
+                <form action="{{ route('payroll.process') }}" method="POST" class="inline"
+                    onsubmit="return confirm('Proses penggajian akan memotong Saldo Kas/Bank secara langsung dan mencetak rekap otomatis. Tindakan ini tidak bisa di-undo (dibatalkan). Lanjutkan?');">
+                    @csrf
+                    <button type="submit"
+                        class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+                        <i data-feather="play-circle" class="w-4 h-4"></i> Proses Gaji Bulan Ini
+                    </button>
+                </form>
+                @endif
+            </div> --}}
+
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- CEK HAK AKSES CREATE (C) UNTUK PENGGAJIAN -->
+                @if(\App\Models\CompanySetting::canAction('C', 'Penggajian'))
+                <button onclick="openEmployeeModal('create')"
+                    class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+                    <i data-feather="user-plus" class="w-4 h-4 text-blue-600"></i> Tambah Karyawan
+                </button>
+
+                <!-- FORM PROSES GAJI BULAN INI -->
+                <form action="{{ route('payroll.process') }}" method="POST" class="inline"
+                    onsubmit="return confirm('Proses penggajian akan memotong Saldo Kas/Bank secara langsung dan mencetak rekap otomatis. Tindakan ini tidak bisa di-undo (dibatalkan). Lanjutkan?');">
+                    @csrf
+                    <button type="submit"
+                        class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
+                        <i data-feather="play-circle" class="w-4 h-4"></i> Proses Gaji Bulan Ini
+                    </button>
+                </form>
+                @endif
             </div>
         </div>
 
@@ -350,7 +390,7 @@
                                             Terdaftar</span>
                                     @endif
                                 </td>
-                                <td class="p-4 text-center">
+                                {{-- <td class="p-4 text-center">
                                     <div class="flex items-center justify-center gap-1">
                                         <!-- TOMBOL EDIT KARYAWAN -->
                                         <button onclick="openEmployeeModal('edit', {{ json_encode($emp) }})"
@@ -368,6 +408,35 @@
                                                 title="Hapus Karyawan"><i data-feather="trash-2"
                                                     class="w-4 h-4"></i></button>
                                         </form>
+                                    </div>
+                                </td> --}}
+
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+
+                                        <!-- CEK HAK AKSES UPDATE (U) -->
+                                        @if(\App\Models\CompanySetting::canAction('U', 'Penggajian'))
+                                        <button onclick="openEmployeeModal('edit', {{ json_encode($emp) }})"
+                                            class="text-blue-500 hover:bg-blue-100 p-2 rounded transition-colors"
+                                            title="Edit Karyawan"><i data-feather="edit" class="w-4 h-4"></i>
+                                        </button>
+                                        @endif
+
+                                        <!-- CEK HAK AKSES DELETE (D) -->
+                                        @if(\App\Models\CompanySetting::canAction('D', 'Penggajian'))
+                                        <form action="{{ route('payroll.destroyEmployee', $emp->id) }}" method="POST"
+                                            class="inline"
+                                            onsubmit="return confirm('Apakah Anda sangat yakin ingin menghapus data karyawan ini dari sistem HRD?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="text-red-500 hover:bg-red-100 p-2 rounded transition-colors"
+                                                title="Hapus Karyawan"><i data-feather="trash-2"
+                                                    class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+
                                     </div>
                                 </td>
                             </tr>
