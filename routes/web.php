@@ -152,6 +152,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock'])->name('inventory.adjust');
 
+    // TAMBAHKAN DUA RUTE INI UNTUK UPDATE DAN DELETE
+    Route::put('/inventory/{id}', [InventoryController::class, 'update'])->name('inventory.update');
+    Route::delete('/inventory/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+
     // Kas & Bank dan Laporan
     Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
     Route::post('/journals', [JournalController::class, 'store'])->name('journals.store');

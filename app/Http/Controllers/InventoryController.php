@@ -21,7 +21,7 @@
 //             ->orderBy('date', 'desc')
 //             ->orderBy('id', 'desc')
 //             ->get();
-            
+
 //         // Ambil data produk untuk dropdown di modal/form penyesuaian
 //         $products = Product::orderBy('name', 'asc')->get();
 
@@ -89,7 +89,7 @@
 
 //                 if ($invAcc && $cogsAcc) {
 //                     $jCode = "ADJ-" . $product->sku . "-" . Carbon::now()->format('His');
-                    
+
 //                     $journal = Journal::create([
 //                         'date'         => $validated['date'],
 //                         'description'  => "Penyesuaian Stok: " . $validated['reason'] . " (" . $jCode . ")",
@@ -143,7 +143,7 @@ class InventoryController extends Controller
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->get();
-            
+
         // Ambil Master Data untuk Form Penyesuaian
         $products = Product::orderBy('name', 'asc')->get();
         $warehouses = Warehouse::orderBy('name', 'asc')->get(); // Ambil data Gudang
@@ -166,7 +166,7 @@ class InventoryController extends Controller
 
         try {
             $product = Product::where('sku', $validated['product_sku'])->lockForUpdate()->first();
-            
+
             // Cari stok produk di gudang yang dipilih (jika belum ada, buat baru qty 0)
             $stockRecord = ProductStock::firstOrCreate(
                 ['warehouse_id' => $validated['warehouse_id'], 'product_sku' => $validated['product_sku']],
@@ -228,6 +228,64 @@ class InventoryController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
+    }
+
+    // --- FITUR BARU: UPDATE KETERANGAN ---
+    // Di dalam sistem ERP yang ketat, Update Stok Opname HANYA diizinkan pada bagian 'Keterangan'.
+    // Jika angka qty salah, dokumen harus dihapus dan dibuat ulang untuk menjaga integritas Jurnal.
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate(['reason' => 'required|string|max:255']);
+        try {
+            $adj = StockAdjustment::findOrFail($id);
+            $adj->update(['reason' => $validated['reason']]);
+
+            // Lacak aktivitas untuk keamanan
+            \App\Models\AuditLog::record('MENGUBAH', 'Inventori', 'Mengubah alasan penyesuaian stok ID: ' . $id);
+
+            return redirect()->route('inventory.index')->with('success', 'Keterangan penyesuaian berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengubah penyesuaian.');
+        }
+    }
+
+    // --- FITUR BARU: DELETE (ROLLBACK STOK & JURNAL) ---
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $adj = StockAdjustment::findOrFail($id);
+
+            // 1. Rollback (Kembalikan) Stok Fisik Gudang
+            $stockRecord = ProductStock::where('warehouse_id', $adj->warehouse_id)
+                                       ->where('product_sku', $adj->product_sku)->first();
+            if ($stockRecord) {
+                if ($adj->type === 'Penambahan') {
+                    $stockRecord->quantity -= $adj->quantity; // Jika dulu ditambah, sekarang dikurangi
+                } else {
+                    $stockRecord->quantity += $adj->quantity; // Jika dulu dikurangi, sekarang dikembalikan
+                }
+                $stockRecord->save();
+            }
+
+            // 2. Lacak dan Hapus Jurnal Akuntansinya (Gunakan pola string di deskripsi)
+            $journal = Journal::where('description', 'LIKE', "Penyesuaian Stok Gudang ID:".$adj->warehouse_id." - ".$adj->reason."%")->first();
+            if ($journal) {
+                JournalEntry::where('journal_id', $journal->id)->delete();
+                $journal->delete();
+            }
+
+            // Lacak aktivitas
+            \App\Models\AuditLog::record('MENGHAPUS', 'Inventori', 'Menghapus/Membatalkan penyesuaian stok ('.$adj->quantity.' unit) pada SKU: ' . $adj->product_sku);
+
+            $adj->delete();
+            DB::commit();
+
+            return redirect()->route('inventory.index')->with('success', 'Penyesuaian stok berhasil dibatalkan. Stok dan Jurnal telah dikembalikan seperti semula.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal membatalkan penyesuaian: ' . $e->getMessage());
         }
     }
 }
