@@ -148,8 +148,15 @@
             <i data-feather="plus" class="w-4 h-4"></i> Stock Opname
         </button> --}}
             <!-- Cek Hak Akses CREATE (C) -->
-            @if (\App\Models\CompanySetting::canAction('C', 'Inventori'))
+            {{-- @if (\App\Models\CompanySetting::canAction('C', 'Inventori'))
                 <button onclick="document.getElementById('invModal').classList.remove('hidden')"
+                    class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                    <i data-feather="plus" class="w-4 h-4"></i> Stock Opname
+                </button>
+            @endif --}}
+
+            @if (\App\Models\CompanySetting::canAction('C', 'Inventori'))
+                <button onclick="openInvModal('create')"
                     class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
                     <i data-feather="plus" class="w-4 h-4"></i> Stock Opname
                 </button>
@@ -227,10 +234,19 @@
                                 <td class="p-4 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <!-- Cek Hak Akses UPDATE (U) -->
-                                        @if (\App\Models\CompanySetting::canAction('U', 'Inventori'))
+                                        {{-- @if (\App\Models\CompanySetting::canAction('U', 'Inventori'))
                                             <button onclick="openEditInvModal({{ json_encode($adj) }})"
                                                 class="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"
                                                 title="Ubah Keterangan">
+                                                <i data-feather="edit" class="w-4 h-4"></i>
+                                            </button>
+                                        @endif --}}
+
+                                        <!-- Cek Hak Akses UPDATE (U) -->
+                                        @if (\App\Models\CompanySetting::canAction('U', 'Inventori'))
+                                            <button onclick="openInvModal('edit', {{ json_encode($adj) }})"
+                                                class="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"
+                                                title="Ubah Keseluruhan Data">
                                                 <i data-feather="edit" class="w-4 h-4"></i>
                                             </button>
                                         @endif
@@ -264,7 +280,7 @@
         </div>
 
         <!-- Modal Form Penyesuaian Stok (Stock Opname) -->
-        <div id="invModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        {{-- <div id="invModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
                 <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
                     <h3 class="text-xl font-bold text-slate-800">Form Penyesuaian Stok Gudang</h3>
@@ -284,15 +300,6 @@
                             <input type="date" name="date" required value="{{ date('Y-m-d') }}"
                                 class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
                         </div>
-                        {{-- <div>
-                        <label class="block text-sm font-bold text-indigo-900 mb-1">Lokasi Gudang</label>
-                        <select name="warehouse_id" required class="w-full border border-indigo-200 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="" disabled selected>-- Pilih Gudang --</option>
-                            @foreach ($warehouses as $wh)
-                                <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
-                            @endforeach
-                        </select>
-                    </div> --}}
 
                         <div>
                             <div class="flex justify-between items-center mb-1">
@@ -360,6 +367,78 @@
                     </div>
                 </form>
             </div>
+        </div> --}}
+
+        <!-- Modal Form Dinamis (Create & Edit) -->
+        <div id="invModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
+                    <h3 id="invModalTitle" class="text-xl font-bold text-slate-800">Form Penyesuaian Stok Gudang</h3>
+                    <button type="button" onclick="closeInvModal()" class="text-slate-400 hover:text-slate-700">
+                        <i data-feather="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form id="invForm" action="{{ route('inventory.adjust') }}" method="POST" class="p-6 space-y-4" onsubmit="unformatRibuan(this)">
+                    @csrf
+                    <input type="hidden" name="_method" id="invFormMethod" value="POST">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label>
+                            <input type="date" name="date" id="inpDate" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-sm font-bold text-indigo-900">Lokasi Gudang</label>
+                                <button type="button" onclick="openQuickWarehouseModal()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1">
+                                    <i data-feather="plus" class="w-3 h-3"></i> Tambah Baru
+                                </button>
+                            </div>
+                            <select name="warehouse_id" id="inpWarehouse" required class="w-full border border-indigo-200 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="" disabled selected>-- Pilih Gudang --</option>
+                                @foreach ($warehouses as $wh)
+                                    <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-teal-900 mb-1">Pilih Produk</label>
+                        <select name="product_sku" id="inpProduct" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="" disabled selected>-- Pilih Produk --</option>
+                            @foreach ($products as $p)
+                                <option value="{{ $p->sku }}">[{{ $p->sku }}] {{ $p->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-teal-50 p-4 rounded-lg border border-teal-100">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Tipe Penyesuaian</label>
+                            <select name="type" id="inpType" required class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500 font-bold">
+                                <option value="Penambahan">➕ Penambahan Stok</option>
+                                <option value="Pengurangan">➖ Pengurangan Stok</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Kuantitas Selisih</label>
+                            <input type="text" name="quantity" id="inpQty" required placeholder="Berapa qty?" oninput="formatRibuan(this)" class="format-ribuan w-full border border-slate-300 rounded-lg p-2.5 text-center font-bold outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Alasan Penyesuaian</label>
+                        <textarea name="reason" id="inpReason" required rows="2" placeholder="Cth: Barang rusak..." class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500 resize-none"></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onclick="closeInvModal()" class="px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-bold">Batal</button>
+                        <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2">Simpan & Jurnal</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <!-- MODAL POP-UP TAMBAH GUDANG CEPAT -->
@@ -399,6 +478,38 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Edit Keterangan Stock Opname -->
+    <div id="editInvModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
+                <h3 class="text-xl font-bold text-slate-800">Ubah Keterangan Opname</h3>
+                <button onclick="document.getElementById('editInvModal').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-700"><i data-feather="x" class="w-5 h-5"></i></button>
+            </div>
+            <form method="POST" id="editInvForm" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Alasan / Keterangan Baru</label>
+                    <textarea name="reason" id="editReason" required rows="3"
+                        class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500 resize-none"></textarea>
+                    <div class="mt-2 p-3 bg-teal-50 border border-teal-100 rounded text-xs text-teal-800 font-medium">
+                        Sistem hanya mengizinkan pengubahan keterangan teks untuk menjaga integritas jurnal akuntansi. Jika
+                        terjadi kesalahan pada angka Qty (jumlah), Anda wajib menekan tombol <b>Hapus</b> untuk membatalkan
+                        jurnal, dan membuat Stock Opname baru.
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="document.getElementById('editInvModal').classList.add('hidden')"
+                        class="px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-bold transition-colors">Batal</button>
+                    <button type="submit"
+                        class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold transition-colors shadow-sm">Simpan
+                        Perubahan</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -487,46 +598,39 @@
                 btn.innerText = 'Simpan Data';
             }
         }
-    </script>
-    <!-- Modal Form Edit Keterangan Stock Opname -->
-    <div id="editInvModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
-            <div class="flex justify-between items-center p-5 border-b border-slate-200 bg-slate-50">
-                <h3 class="text-xl font-bold text-slate-800">Ubah Keterangan Opname</h3>
-                <button onclick="document.getElementById('editInvModal').classList.add('hidden')"
-                    class="text-slate-400 hover:text-slate-700"><i data-feather="x" class="w-5 h-5"></i></button>
-            </div>
-            <form method="POST" id="editInvForm" class="p-6 space-y-4">
-                @csrf
-                @method('PUT')
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Alasan / Keterangan Baru</label>
-                    <textarea name="reason" id="editReason" required rows="3"
-                        class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-teal-500 resize-none"></textarea>
-                    <div class="mt-2 p-3 bg-teal-50 border border-teal-100 rounded text-xs text-teal-800 font-medium">
-                        Sistem hanya mengizinkan pengubahan keterangan teks untuk menjaga integritas jurnal akuntansi. Jika
-                        terjadi kesalahan pada angka Qty (jumlah), Anda wajib menekan tombol <b>Hapus</b> untuk membatalkan
-                        jurnal, dan membuat Stock Opname baru.
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" onclick="document.getElementById('editInvModal').classList.add('hidden')"
-                        class="px-5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-bold transition-colors">Batal</button>
-                    <button type="submit"
-                        class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold transition-colors shadow-sm">Simpan
-                        Perubahan</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Tambahkan fungsi JavaScript ini di dalam blok <script>
-        Anda yang sudah ada -->
-    <script >
-        function openEditInvModal(adj) {
-            document.getElementById('editInvForm').action = '/inventory/' + adj.id;
-            document.getElementById('editReason').value = adj.reason;
-            document.getElementById('editInvModal').classList.remove('hidden');
+        function openInvModal(mode, adj = null) {
+            const modal = document.getElementById('invModal');
+            const form = document.getElementById('invForm');
+
+            if (mode === 'edit') {
+                document.getElementById('invModalTitle').innerText = "Edit Data Stock Opname";
+                document.getElementById('invFormMethod').value = "PUT";
+                form.action = `/inventory/${adj.id}`;
+
+                // Isi formulir dengan data lama
+                document.getElementById('inpDate').value = adj.date.split(' ')[0]; // Ambil Y-m-d
+                document.getElementById('inpWarehouse').value = adj.warehouse_id;
+                document.getElementById('inpProduct').value = adj.product_sku;
+                document.getElementById('inpType').value = adj.type;
+
+                const qtyInput = document.getElementById('inpQty');
+                qtyInput.value = adj.quantity;
+                formatRibuan(qtyInput); // Panggil fungsi ribuan agar format titik langsung muncul
+
+                document.getElementById('inpReason').value = adj.reason;
+            } else {
+                document.getElementById('invModalTitle').innerText = "Form Penyesuaian Stok Gudang";
+                document.getElementById('invFormMethod').value = "POST";
+                form.action = "{{ route('inventory.adjust') }}";
+                form.reset();
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeInvModal() {
+            document.getElementById('invModal').classList.add('hidden');
         }
     </script>
 @endsection

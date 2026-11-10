@@ -234,19 +234,127 @@ class InventoryController extends Controller
     // --- FITUR BARU: UPDATE KETERANGAN ---
     // Di dalam sistem ERP yang ketat, Update Stok Opname HANYA diizinkan pada bagian 'Keterangan'.
     // Jika angka qty salah, dokumen harus dihapus dan dibuat ulang untuk menjaga integritas Jurnal.
+    // public function update(Request $request, $id)
+    // {
+    //     $validated = $request->validate(['reason' => 'required|string|max:255']);
+    //     try {
+    //         $adj = StockAdjustment::findOrFail($id);
+    //         $adj->update(['reason' => $validated['reason']]);
+
+    //         // Lacak aktivitas untuk keamanan
+    //         \App\Models\AuditLog::record('MENGUBAH', 'Inventori', 'Mengubah alasan penyesuaian stok ID: ' . $id);
+
+    //         return redirect()->route('inventory.index')->with('success', 'Keterangan penyesuaian berhasil diperbarui.');
+    //     } catch (\Exception $e) {
+    //         return redirect()->back()->with('error', 'Gagal mengubah penyesuaian.');
+    //     }
+    // }
+
+    // --- FITUR UPDATE (FULL EDIT) ---
     public function update(Request $request, $id)
     {
-        $validated = $request->validate(['reason' => 'required|string|max:255']);
+        $validated = $request->validate([
+            'date'         => 'required|date',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'product_sku'  => 'required|exists:products,sku',
+            'type'         => 'required|in:Penambahan,Pengurangan',
+            'quantity'     => 'required|integer|min:1',
+            'reason'       => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
         try {
             $adj = StockAdjustment::findOrFail($id);
-            $adj->update(['reason' => $validated['reason']]);
 
-            // Lacak aktivitas untuk keamanan
-            \App\Models\AuditLog::record('MENGUBAH', 'Inventori', 'Mengubah alasan penyesuaian stok ID: ' . $id);
+            // ==========================================
+            // FASE 1: ROLLBACK (TARIK KEMBALI DATA LAMA)
+            // ==========================================
+            $oldStock = ProductStock::where('warehouse_id', $adj->warehouse_id)
+                                    ->where('product_sku', $adj->product_sku)->first();
+            if ($oldStock) {
+                if ($adj->type === 'Penambahan') {
+                    $oldStock->quantity -= $adj->quantity; // Tarik kembali
+                } else {
+                    $oldStock->quantity += $adj->quantity; // Kembalikan yang terpotong
+                }
+                $oldStock->save();
+            }
 
-            return redirect()->route('inventory.index')->with('success', 'Keterangan penyesuaian berhasil diperbarui.');
+            // Lacak dan Hapus Jurnal Lama
+            $oldJournal = Journal::where('description', 'LIKE', "Penyesuaian Stok Gudang ID:".$adj->warehouse_id." - ".$adj->reason."%")->first();
+            if ($oldJournal) {
+                JournalEntry::where('journal_id', $oldJournal->id)->delete();
+                $oldJournal->delete();
+            }
+
+            // ==========================================
+            // FASE 2: TERAPKAN DATA BARU HASIL EDITAN
+            // ==========================================
+            $product = Product::where('sku', $validated['product_sku'])->lockForUpdate()->first();
+            $newStock = ProductStock::firstOrCreate(
+                ['warehouse_id' => $validated['warehouse_id'], 'product_sku' => $validated['product_sku']],
+                ['quantity' => 0]
+            );
+
+            // Validasi jangan sampai stok minus saat dikurangi
+            if ($validated['type'] == 'Pengurangan' && $newStock->quantity < $validated['quantity']) {
+                DB::rollBack();
+                return redirect()->back()->withInput()->with('error', 'Stok di gudang tidak mencukupi untuk dikurangi.');
+            }
+
+            // Update stok fisik
+            if ($validated['type'] == 'Penambahan') {
+                $newStock->quantity += $validated['quantity'];
+            } else {
+                $newStock->quantity -= $validated['quantity'];
+            }
+            $newStock->save();
+
+            $totalValue = $validated['quantity'] * $product->hpp;
+
+            // Buat Jurnal Baru
+            if ($totalValue > 0) {
+                $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+                $cogsAcc = Account::where('code', 'LIKE', '60%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '5%')->where('is_header', false)->first();
+
+                if ($invAcc && $cogsAcc) {
+                    $jCode = "ADJ-" . $product->sku . "-" . Carbon::now()->format('His');
+                    $journal = Journal::create([
+                        'date'         => $validated['date'],
+                        'description'  => "Penyesuaian Stok Gudang ID:".$validated['warehouse_id']." - " . $validated['reason'] . " (" . $jCode . ")",
+                        'reference_no' => $jCode,
+                    ]);
+
+                    if ($validated['type'] == 'Penambahan') {
+                        JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $invAcc->code, 'debit' => $totalValue, 'credit' => 0]);
+                        JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $cogsAcc->code, 'debit' => 0, 'credit' => $totalValue]);
+                    } else {
+                        JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $cogsAcc->code, 'debit' => $totalValue, 'credit' => 0]);
+                        JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $invAcc->code, 'debit' => 0, 'credit' => $totalValue]);
+                    }
+                }
+            }
+
+            // ==========================================
+            // FASE 3: SIMPAN PERUBAHAN KE DATABASE
+            // ==========================================
+            $adj->update([
+                'date'         => $validated['date'],
+                'warehouse_id' => $validated['warehouse_id'],
+                'product_sku'  => $validated['product_sku'],
+                'type'         => $validated['type'],
+                'quantity'     => $validated['quantity'],
+                'reason'       => $validated['reason'],
+                'total_value'  => $totalValue,
+            ]);
+
+            \App\Models\AuditLog::record('MENGUBAH', 'Inventori', 'Mengubah data penyesuaian stok ID: ' . $id . ' secara penuh');
+
+            DB::commit();
+            return redirect()->route('inventory.index')->with('success', 'Data Stock Opname berhasil diubah secara penuh beserta Jurnalnya.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal mengubah penyesuaian.');
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal mengubah penyesuaian: ' . $e->getMessage());
         }
     }
 
