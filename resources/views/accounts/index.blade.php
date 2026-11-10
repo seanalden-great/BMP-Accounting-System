@@ -44,9 +44,15 @@
                     </div>
                 </div>
 
+                {{-- <button onclick="openModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                    <i data-feather="plus" class="w-4 h-4"></i> Tambah Akun
+                </button> --}}
+                <!-- CEK HAK AKSES CREATE (C) -->
+                @if(\App\Models\CompanySetting::canAction('C', 'Akun CoA'))
                 <button onclick="openModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
                     <i data-feather="plus" class="w-4 h-4"></i> Tambah Akun
                 </button>
+                @endif
             </div>
         </div>
 
@@ -98,7 +104,7 @@
                                     (Rp {{ number_format(abs($acc['sisa']), 0, ',', '.') }})
                                 @endif
                             </td>
-                            <td class="border border-slate-400 p-2 text-center">
+                            {{-- <td class="border border-slate-400 p-2 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <!-- Passing data akun sebagai JSON object ke JS -->
                                     <button onclick="openModal('edit', {{ json_encode($acc) }})"
@@ -114,6 +120,33 @@
                                             <i data-feather="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </form>
+                                </div>
+                            </td> --}}
+                            <td class="border border-slate-400 p-2 text-center">
+                                <div class="flex items-center justify-center gap-2">
+
+                                    <!-- CEK HAK AKSES UPDATE (U) -->
+                                    @if(\App\Models\CompanySetting::canAction('U', 'Akun CoA'))
+                                    <!-- Passing data akun sebagai JSON object ke JS -->
+                                    <button onclick="openModal('edit', {{ json_encode($acc) }})"
+                                        class="text-slate-400 hover:text-blue-600 transition-colors" title="Edit Akun">
+                                        <i data-feather="edit" class="w-4 h-4"></i>
+                                    </button>
+                                    @endif
+
+                                    <!-- CEK HAK AKSES DELETE (D) -->
+                                    @if(\App\Models\CompanySetting::canAction('D', 'Akun CoA'))
+                                    <form action="{{ route('accounts.destroy', $acc['code']) }}" method="POST" class="inline"
+                                        onsubmit="return confirm('Yakin ingin menghapus akun {{ $acc['code'] }}? Pastikan belum ada transaksi di dalamnya.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-slate-400 hover:text-red-600 transition-colors"
+                                            title="Hapus Akun">
+                                            <i data-feather="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                    @endif
+
                                 </div>
                             </td>
                         </tr>
