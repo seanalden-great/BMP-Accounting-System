@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Models\Auth;
+use Illuminate\Support\Facades\Auth;
 
 class CompanySetting extends Model
 {
