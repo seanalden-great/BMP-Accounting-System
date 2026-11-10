@@ -43,9 +43,16 @@
                 </div>
             </div>
 
+            {{-- <button onclick="openModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                <i data-feather="plus" class="w-4 h-4"></i> Tambah Kontak
+            </button> --}}
+
+            <!-- CEK HAK AKSES CREATE (C) -->
+            @if(\App\Models\CompanySetting::canAction('C', 'Kontak'))
             <button onclick="openModal('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
                 <i data-feather="plus" class="w-4 h-4"></i> Tambah Kontak
             </button>
+            @endif
         </div>
     </div>
 
@@ -92,7 +99,7 @@
                         <td class="p-4 text-sm text-slate-600 font-medium">{{ $contact->phone ?: '-' }}</td>
                         <td class="p-4 text-sm text-slate-600">{{ $contact->email ?: '-' }}</td>
                         <td class="p-4 text-sm text-slate-600 truncate max-w-xs" title="{{ $contact->address }}">{{ $contact->address ?: '-' }}</td>
-                        <td class="p-4 text-center">
+                        {{-- <td class="p-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <button onclick="openModal('edit', {{ $contact }})" class="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors" title="Edit"><i data-feather="edit" class="w-4 h-4"></i></button>
                                 <form action="{{ route('contacts.destroy', $contact->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus kontak ini?');">
@@ -100,6 +107,30 @@
                                     @method('DELETE')
                                     <button type="submit" class="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors" title="Hapus"><i data-feather="trash-2" class="w-4 h-4"></i></button>
                                 </form>
+                            </div>
+                        </td> --}}
+
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+
+                                <!-- CEK HAK AKSES UPDATE (U) -->
+                                @if(\App\Models\CompanySetting::canAction('U', 'Kontak'))
+                                <button onclick="openModal('edit', {{ $contact }})" class="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors" title="Edit">
+                                    <i data-feather="edit" class="w-4 h-4"></i>
+                                </button>
+                                @endif
+
+                                <!-- CEK HAK AKSES DELETE (D) -->
+                                @if(\App\Models\CompanySetting::canAction('D', 'Kontak'))
+                                <form action="{{ route('contacts.destroy', $contact->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus kontak ini? Transaksi lampau tidak akan ikut terhapus.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors" title="Hapus">
+                                        <i data-feather="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                                @endif
+
                             </div>
                         </td>
                     </tr>
