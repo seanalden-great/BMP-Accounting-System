@@ -13,7 +13,7 @@
         </div>
     </div> --}}
 
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    {{-- <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
                 <i data-feather="settings" class="text-slate-600 w-7 h-7"></i> Pengaturan Sistem
@@ -23,6 +23,27 @@
         <a href="{{ route('settings.roles') }}" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-2">
             <i data-feather="shield" class="w-4 h-4"></i> Hak Akses (Role)
         </a>
+    </div> --}}
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                <i data-feather="settings" class="text-slate-600 w-7 h-7"></i> Pengaturan Sistem
+            </h1>
+            <p class="text-slate-500 mt-1">Kelola profil perusahaan dan konfigurasi dasar aplikasi ERP Anda</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <!-- TOMBOL DAFTAR PENGGUNA (BARU) -->
+            <a href="{{ route('settings.users') }}" class="w-full sm:w-auto bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm flex items-center justify-center gap-2">
+                <i data-feather="users" class="w-4 h-4 text-blue-600"></i> Daftar Pengguna
+            </a>
+
+            <!-- TOMBOL HAK AKSES (LAMA) -->
+            <a href="{{ route('settings.roles') }}" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm flex items-center justify-center gap-2">
+                <i data-feather="shield" class="w-4 h-4 text-emerald-400"></i> Hak Akses (Role)
+            </a>
+        </div>
     </div>
 
     <!-- FORM PENGATURAN -->

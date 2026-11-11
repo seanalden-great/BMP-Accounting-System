@@ -148,6 +148,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/roles', [SettingController::class, 'updateRolePermissions'])->name('settings.updateRoles');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
+    // --- FITUR BARU: MANAJEMEN PENGGUNA ---
+    Route::get('/settings/users', [SettingController::class, 'users'])->name('settings.users');
+    Route::put('/settings/users/{id}', [SettingController::class, 'updateUser'])->name('settings.updateUser');
+    Route::delete('/settings/users/{id}', [SettingController::class, 'deleteUser'])->name('settings.deleteUser');
+
     // Inventori / Stok
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock'])->name('inventory.adjust');

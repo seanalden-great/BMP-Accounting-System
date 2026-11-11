@@ -69,4 +69,44 @@ class SettingController extends Controller
 
         return redirect()->route('settings.roles')->with('success', 'Matriks Hak Akses (Role) berhasil diperbarui dan diterapkan!');
     }
+
+    // =========================================================
+    // FITUR BARU: MANAJEMEN PENGGUNA TERDAFTAR (USER MANAGEMENT)
+    // =========================================================
+    public function users()
+    {
+        // Ambil semua data user, urutkan berdasarkan nama
+        $users = \App\Models\User::orderBy('name', 'asc')->get();
+        // Daftar jabatan standar di perusahaan
+        $roles = ['Admin', 'Direktur', 'Gudang', 'Developer', 'Staff'];
+
+        return view('settings.users', compact('users', 'roles'));
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        $request->validate(['role' => 'required|string']);
+        $user = \App\Models\User::findOrFail($id);
+
+        // Pengaman: Cegah eksekutif menurunkan jabatannya sendiri saat sedang login
+        if ($user->id === auth()->id() && !in_array($request->role, ['Admin', 'Direktur'])) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Anda tidak diizinkan menurunkan jabatan akun Anda sendiri (Anti-Lockout).');
+        }
+
+        $user->update(['role' => $request->role]);
+        return redirect()->back()->with('success', "Hak akses untuk {$user->name} berhasil diperbarui menjadi {$request->role}!");
+    }
+
+    public function deleteUser($id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+
+        // Pengaman bunuh diri: Tidak boleh menghapus akun yang sedang dipakai
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        $user->delete();
+        return redirect()->back()->with('success', 'Akun pengguna berhasil dihapus permanen dari sistem ERP.');
+    }
 }
