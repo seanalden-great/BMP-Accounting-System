@@ -1161,27 +1161,78 @@ class SaleController extends Controller
 
         DB::beginTransaction();
 
-        try {
-            $refNo = $this->generateDocNumber('SO', $validated['date']);
+        // try {
+        //     $refNo = $this->generateDocNumber('SO', $validated['date']);
 
-            // $sale = Sale::create([
-            //     'date'         => $validated['date'],
-            //     'due_date'     => $validated['due_date'] ?? $validated['date'],
-            //     'reference_no' => $refNo,
-            //     'contact_id'   => $validated['contact_id'],
-            //     'status'       => 'Pesanan',
-            //     'notes'        => $validated['notes'] ?? '',
-            //     'total'        => 0,
-            //     'total_tax'    => 0, // Inisialisasi awal
-            // ]);
+        //     // $sale = Sale::create([
+        //     //     'date'         => $validated['date'],
+        //     //     'due_date'     => $validated['due_date'] ?? $validated['date'],
+        //     //     'reference_no' => $refNo,
+        //     //     'contact_id'   => $validated['contact_id'],
+        //     //     'status'       => 'Pesanan',
+        //     //     'notes'        => $validated['notes'] ?? '',
+        //     //     'total'        => 0,
+        //     //     'total_tax'    => 0, // Inisialisasi awal
+        //     // ]);
+
+        //     $sale = Sale::create([
+        //         'date'         => $validated['date'],
+        //         'due_date'     => $validated['due_date'] ?? $validated['date'],
+        //         'reference_no' => $refNo,
+        //         'contact_id'   => $validated['contact_id'],
+        //         // UBAH BARIS INI:
+        //         'status'       => 'Menunggu Persetujuan',
+        //         'notes'        => $validated['notes'] ?? '',
+        //         'total'        => 0,
+        //         'total_tax'    => 0,
+        //     ]);
+
+        //     $grandTotal = 0;
+        //     $grandTax = 0;
+
+        //     foreach ($validated['items'] as $item) {
+        //         // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
+        //         $dpp = $item['quantity'] * $item['price'];
+        //         $taxAmount = $dpp * ($item['tax_rate'] / 100);
+        //         $subTotal = $dpp + $taxAmount;
+
+        //         $grandTax += $taxAmount;
+        //         $grandTotal += $subTotal;
+
+        //         SaleItem::create([
+        //             'sale_id'     => $sale->id,
+        //             'product_sku' => $item['product_sku'],
+        //             'quantity'    => $item['quantity'],
+        //             'price'       => $item['price'],
+        //             'tax_rate'    => $item['tax_rate'],
+        //             'tax_amount'  => $taxAmount,
+        //             'sub_total'   => $subTotal,
+        //         ]);
+        //     }
+
+        //     $sale->update(['total' => $grandTotal, 'total_tax' => $grandTax]);
+
+        //     DB::commit();
+        //     return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat. Nilai Pajak telah dikalkulasi.');
+        // } catch (\Exception $e) {
+        //     DB::rollBack();
+        //     return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan.');
+        // }
+
+        try {
+            // Deteksi jenis tombol yang ditekan di formulir HTML
+            $action = $request->input('action', 'so');
+            $prefix = ($action === 'quotation') ? 'QT' : 'SO';
+            $status = ($action === 'quotation') ? 'Penawaran' : 'Menunggu Persetujuan';
+
+            $refNo = $this->generateDocNumber($prefix, $validated['date']);
 
             $sale = Sale::create([
                 'date'         => $validated['date'],
                 'due_date'     => $validated['due_date'] ?? $validated['date'],
                 'reference_no' => $refNo,
                 'contact_id'   => $validated['contact_id'],
-                // UBAH BARIS INI:
-                'status'       => 'Menunggu Persetujuan',
+                'status'       => $status, // 'Penawaran' atau 'Menunggu Persetujuan'
                 'notes'        => $validated['notes'] ?? '',
                 'total'        => 0,
                 'total_tax'    => 0,
@@ -1191,7 +1242,6 @@ class SaleController extends Controller
             $grandTax = 0;
 
             foreach ($validated['items'] as $item) {
-                // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
                 $dpp = $item['quantity'] * $item['price'];
                 $taxAmount = $dpp * ($item['tax_rate'] / 100);
                 $subTotal = $dpp + $taxAmount;
@@ -1213,10 +1263,11 @@ class SaleController extends Controller
             $sale->update(['total' => $grandTotal, 'total_tax' => $grandTax]);
 
             DB::commit();
-            return redirect()->route('sales.index')->with('success', 'Pesanan Penjualan berhasil dibuat. Nilai Pajak telah dikalkulasi.');
+            $msg = ($action === 'quotation') ? 'Draf Penawaran (Quotation)' : 'Pesanan Penjualan (SO)';
+            return redirect()->route('sales.index')->with('success', "Dokumen {$msg} berhasil dibuat dengan nomor: {$refNo}");
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan.');
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan dokumen.');
         }
     }
 
@@ -1692,5 +1743,37 @@ class SaleController extends Controller
         $totalPiutang = array_sum($agingData);
 
         return view('sales.receivable_aging', compact('agingData', 'details', 'totalPiutang'));
+    }
+
+    // --- FITUR BARU: QUOTATION ---
+    public function convertToSo($id)
+    {
+        $sale = Sale::findOrFail($id);
+
+        if ($sale->status !== 'Penawaran') {
+            return redirect()->back()->with('error', 'Akses Ditolak: Hanya dokumen draf Penawaran yang dapat diubah ke SO.');
+        }
+
+        // Generate nomor seri SO baru untuk menggantikan nomor QT
+        $refNo = $this->generateDocNumber('SO', Carbon::now()->toDateString());
+
+        $sale->update([
+            'status' => 'Menunggu Persetujuan',
+            'reference_no' => $refNo,
+            'notes' => trim($sale->notes . "\n[Sistem] Klien Setuju. Diubah dari Draf Penawaran ke SO pada " . Carbon::now()->format('d/m/Y'))
+        ]);
+
+        return redirect()->back()->with('success', 'Klien telah setuju! Penawaran berhasil diubah menjadi Pesanan Penjualan resmi (Menunggu Persetujuan Manajer).');
+    }
+
+    public function printQuotation($id)
+    {
+        $sale = Sale::with(['contact', 'items.product'])->findOrFail($id);
+
+        if ($sale->status !== 'Penawaran') {
+            return redirect()->back()->with('error', 'Dokumen ini bukan draf Penawaran Harga.');
+        }
+
+        return view('sales.print_quotation', compact('sale'));
     }
 }

@@ -1405,7 +1405,9 @@ $products = \App\Models\Product::all();
 
                             <!-- Kolom Status Berwarna -->
                             <td class="p-4 text-center">
-                                @if($so->status == 'Menunggu Persetujuan')
+                                @if($so->status == 'Penawaran')
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="file-text" class="w-3 h-3 inline mr-1"></i>Penawaran</span>
+                                @elseif($so->status == 'Menunggu Persetujuan')
                                     <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
                                 @elseif($so->status == 'Pesanan')
                                     <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
@@ -1421,9 +1423,29 @@ $products = \App\Models\Product::all();
                             <!-- Kolom Aksi Dinamis -->
                             <td class="p-4 text-center">
                                 <div class="flex justify-center items-center gap-2">
+                                    {{-- <button onclick="document.getElementById('detailModal_{{ $so->id }}').classList.remove('hidden')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200" title="Lihat Detail Barang">
+                                        <i data-feather="eye" class="w-4 h-4"></i>
+                                    </button> --}}
+
                                     <button onclick="document.getElementById('detailModal_{{ $so->id }}').classList.remove('hidden')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200" title="Lihat Detail Barang">
                                         <i data-feather="eye" class="w-4 h-4"></i>
                                     </button>
+
+                                    <!-- TOMBOL KHUSUS STATUS PENAWARAN -->
+                                    @if($so->status == 'Penawaran')
+                                        <a href="{{ route('sales.printQuotation', $so->id) }}" target="_blank" class="text-slate-500 hover:text-slate-800 hover:bg-slate-100 p-2 rounded-lg transition-colors border border-slate-200 shadow-sm" title="Cetak Surat Penawaran Harga (PDF)">
+                                            <i data-feather="printer" class="w-4 h-4"></i>
+                                        </a>
+
+                                        @if(\App\Models\CompanySetting::canAction('C', 'Penjualan') || \App\Models\CompanySetting::canAction('U', 'Penjualan'))
+                                        <form action="{{ route('sales.convertToSo', $so->id) }}" method="POST" onsubmit="return confirm('Klien telah menyetujui harga ini? Dokumen akan diubah permanen menjadi Pesanan Penjualan (SO). Lanjutkan?');">
+                                            @csrf
+                                            <button type="submit" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200" title="Klien Setuju? Ubah ke Pesanan (SO)">
+                                                <i data-feather="arrow-right-circle" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                    @endif
 
                                     <!-- Tombol Setuju/Tolak (Khusus Direktur/Admin dan Status Menunggu) -->
                                     {{-- @if($so->status == 'Menunggu Persetujuan' && in_array(Auth::user()->role, ['Admin', 'Direktur']))
@@ -1581,9 +1603,17 @@ $products = \App\Models\Product::all();
                         </div>
                     </div>
 
-                    <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+                    {{-- <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
                         <button type="button" onclick="document.getElementById('soModal').classList.add('hidden')" class="px-5 py-2.5 text-slate-600 font-bold">Batal</button>
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold">Simpan Pesanan (SO)</button>
+                    </div> --}}
+
+                    <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+                        <button type="button" onclick="document.getElementById('soModal').classList.add('hidden')" class="px-5 py-2.5 text-slate-600 font-bold">Batal</button>
+
+                        <!-- TOMBOL OPSI: QUOTATION ATAU SO LANGSUNG -->
+                        <button type="submit" name="action" value="quotation" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm">Simpan Draf Penawaran</button>
+                        <button type="submit" name="action" value="so" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-sm">Simpan Pesanan (SO)</button>
                     </div>
                 </form>
             </div>

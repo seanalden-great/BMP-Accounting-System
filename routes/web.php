@@ -220,6 +220,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales/{id}/return', [SaleController::class, 'processReturn'])->name('sales.return');
     // --- FITUR BARU: LAPORAN UMUR PIUTANG (AR AGING) ---
     Route::get('/sales/receivable-aging', [App\Http\Controllers\SaleController::class, 'receivableAging'])->name('sales.aging');
+    // --- FITUR BARU: QUOTATION (SURAT PENAWARAN HARGA) ---
+    Route::post('/sales/{id}/convert-to-so', [App\Http\Controllers\SaleController::class, 'convertToSo'])->name('sales.convertToSo');
+    Route::get('/sales/{id}/quotation', [App\Http\Controllers\SaleController::class, 'printQuotation'])->name('sales.printQuotation');
     // RUTE EKSPOR ASET TETAP (Wajib ditaruh di atas resource fixed-assets)
     Route::get('/fixed-assets/export', [FixedAssetController::class, 'export'])->name('fixed-assets.export');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
