@@ -216,6 +216,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales/{id}/delivery-note', [SaleController::class, 'printDeliveryNote'])->name('sales.deliveryNote');
     // --- FITUR BARU: RETUR PENJUALAN (CREDIT NOTE) ---
     Route::post('/sales/{id}/return', [SaleController::class, 'processReturn'])->name('sales.return');
+    // --- FITUR BARU: LAPORAN UMUR PIUTANG (AR AGING) ---
+    Route::get('/sales/receivable-aging', [App\Http\Controllers\SaleController::class, 'receivableAging'])->name('sales.aging');
     // RUTE EKSPOR ASET TETAP (Wajib ditaruh di atas resource fixed-assets)
     Route::get('/fixed-assets/export', [FixedAssetController::class, 'export'])->name('fixed-assets.export');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
