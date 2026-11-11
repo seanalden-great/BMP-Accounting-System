@@ -2149,12 +2149,34 @@
                         </div>
                     </div>
 
-                    <div>
+                    {{-- <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Total Nominal Pengeluaran</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">Rp</span>
                             <input type="text" name="amount" required oninput="formatRibuan(this)" placeholder="0"
                                 class="format-ribuan w-full pl-10 pr-4 py-3 border-2 border-slate-300 rounded-lg font-bold text-lg outline-none focus:border-orange-500">
+                        </div>
+                    </div> --}}
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Total Nominal (DPP)</label>
+                            <input type="text" name="amount" id="inpAmount" required oninput="formatRibuan(this)" placeholder="0"
+                                class="format-ribuan w-full border border-slate-300 rounded-lg p-2.5 text-center font-bold outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1" title="Pajak Pertambahan Nilai">
+                                <i data-feather="plus" class="w-3 h-3 inline text-emerald-600"></i> PPN (Masukan)
+                            </label>
+                            <input type="text" name="ppn_amount" id="inpPpn" oninput="formatRibuan(this)" placeholder="0"
+                                class="format-ribuan w-full border border-slate-300 rounded-lg p-2.5 text-center font-bold text-emerald-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1" title="Pajak Penghasilan (Potongan)">
+                                <i data-feather="minus" class="w-3 h-3 inline text-rose-600"></i> PPh (Potongan)
+                            </label>
+                            <input type="text" name="pph_amount" id="inpPph" oninput="formatRibuan(this)" placeholder="0"
+                                class="format-ribuan w-full border border-slate-300 rounded-lg p-2.5 text-center font-bold text-rose-700 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200">
                         </div>
                     </div>
 
@@ -2260,9 +2282,22 @@
             form.payment_code.value = data.payment_code;
 
             // PERBAIKAN: Gunakan parseInt/Math.floor untuk membuang desimal .00 dari Database
+            // let rawAmount = Math.floor(data.amount) || 0;
+            // form.amount.value = rawAmount;
+            // formatRibuan(form.amount); // Sekarang tidak akan nambah 2 digit nol lagi
+
             let rawAmount = Math.floor(data.amount) || 0;
-            form.amount.value = rawAmount;
-            formatRibuan(form.amount); // Sekarang tidak akan nambah 2 digit nol lagi
+            document.getElementById('inpAmount').value = rawAmount;
+            formatRibuan(document.getElementById('inpAmount'));
+
+            // TAMBAHAN BARU UNTUK PAJAK
+            let rawPpn = Math.floor(data.ppn_amount) || 0;
+            document.getElementById('inpPpn').value = rawPpn > 0 ? rawPpn : '';
+            formatRibuan(document.getElementById('inpPpn'));
+
+            let rawPph = Math.floor(data.pph_amount) || 0;
+            document.getElementById('inpPph').value = rawPph > 0 ? rawPph : '';
+            formatRibuan(document.getElementById('inpPph'));
 
             form.description.value = data.description;
 

@@ -235,7 +235,7 @@
     <div style="font-weight: bold; margin-bottom: 5px;">Keperluan :</div>
 
     <table>
-        <tbody>
+        {{-- <tbody>
             @php $i = 1; @endphp
             @foreach($expenses as $exp)
             <tr>
@@ -243,6 +243,43 @@
                 <td class="col-desc">{{ $exp->description }}</td>
                 <td class="col-curr">Rp</td>
                 <td class="col-amount">{{ number_format($exp->amount, 0, ',', '.') }}</td>
+            </tr>
+            @endforeach
+
+            <!-- Baris Kosong Pemisah Total -->
+            <tr><td colspan="4" style="height: 15px;"></td></tr>
+
+            <tr class="total-row">
+                <td colspan="2"></td>
+                <td class="total-curr-box">Rp</td>
+                <td class="total-amount-box">{{ number_format($total, 0, ',', '.') }}</td>
+            </tr>
+        </tbody> --}}
+
+        <tbody>
+            @php $i = 1; @endphp
+            @foreach($expenses as $exp)
+            @php
+                // Hitung Netto yang dibayar
+                $netPaid = $exp->amount + $exp->ppn_amount - $exp->pph_amount;
+            @endphp
+            <tr>
+                <td class="col-no">{{ $i++ }}</td>
+                <td class="col-desc">
+                    {{ $exp->description }}
+
+                    <!-- Munculkan rincian jika ada unsur PPN atau PPh -->
+                    @if($exp->ppn_amount > 0 || $exp->pph_amount > 0)
+                        <div style="font-size: 11px; color: #555; margin-top: 3px; font-weight: normal;">
+                            (DPP: Rp {{ number_format($exp->amount, 0, ',', '.') }}
+                            @if($exp->ppn_amount > 0) | <span style="color:#059669;">+ PPN: Rp {{ number_format($exp->ppn_amount, 0, ',', '.') }}</span> @endif
+                            @if($exp->pph_amount > 0) | <span style="color:#e11d48;">- PPh: Rp {{ number_format($exp->pph_amount, 0, ',', '.') }}</span> @endif
+                            )
+                        </div>
+                    @endif
+                </td>
+                <td class="col-curr">Rp</td>
+                <td class="col-amount">{{ number_format($netPaid, 0, ',', '.') }}</td>
             </tr>
             @endforeach
 
