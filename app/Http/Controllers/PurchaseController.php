@@ -1266,4 +1266,74 @@ class PurchaseController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses retur: ' . $e->getMessage());
         }
     }
+
+    // ==========================================================
+    // FITUR EMAS: LAPORAN UMUR HUTANG (ACCOUNT PAYABLE AGING)
+    // ==========================================================
+    public function payableAging()
+    {
+        // Ambil pesanan berstatus 'Pengiriman' (Barang sudah diterima di gudang, muncul hutang, tapi belum ditagih/dibayar lunas)
+        $unpaidPurchases = Purchase::with('contact')
+            ->where('status', 'Pengiriman')
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        $now = Carbon::now()->startOfDay();
+
+        // 'Ember' penampung data (Aging Buckets)
+        $agingData = [
+            'belum_jatuh_tempo' => 0,
+            '1_30_hari' => 0,
+            '31_60_hari' => 0,
+            '61_90_hari' => 0,
+            'lebih_90_hari' => 0,
+        ];
+
+        $details = [];
+
+        foreach ($unpaidPurchases as $purchase) {
+            $dueDate = Carbon::parse($purchase->due_date)->startOfDay();
+
+            // Hitung selisih hari
+            $diff = $dueDate->diffInDays($now, false);
+
+            $category = '';
+            $daysOverdue = 0;
+
+            if ($diff <= 0) {
+                $category = 'belum_jatuh_tempo';
+                $agingData['belum_jatuh_tempo'] += $purchase->total;
+            } else {
+                $daysOverdue = intval($diff);
+                if ($daysOverdue <= 30) {
+                    $category = '1_30_hari';
+                    $agingData['1_30_hari'] += $purchase->total;
+                } elseif ($daysOverdue <= 60) {
+                    $category = '31_60_hari';
+                    $agingData['31_60_hari'] += $purchase->total;
+                } elseif ($daysOverdue <= 90) {
+                    $category = '61_90_hari';
+                    $agingData['61_90_hari'] += $purchase->total;
+                } else {
+                    $category = 'lebih_90_hari';
+                    $agingData['lebih_90_hari'] += $purchase->total;
+                }
+            }
+
+            $details[] = [
+                'id' => $purchase->id,
+                'reference_no' => $purchase->reference_no ?: 'PO #'.$purchase->id,
+                'supplier' => $purchase->contact->name,
+                'phone' => $purchase->contact->phone,
+                'due_date' => $purchase->due_date,
+                'total' => $purchase->total,
+                'category' => $category,
+                'days_overdue' => $daysOverdue
+            ];
+        }
+
+        $totalHutang = array_sum($agingData);
+
+        return view('purchases.payable_aging', compact('agingData', 'details', 'totalHutang'));
+    }
 }

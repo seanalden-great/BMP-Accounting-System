@@ -201,6 +201,8 @@ Route::middleware('auth')->group(function () {
     Route::post('purchases/{id}/reject', [PurchaseController::class, 'reject'])->name('purchases.reject');
     // --- FITUR BARU: RETUR PEMBELIAN (DEBIT NOTE) ---
     Route::post('/purchases/{id}/return', [PurchaseController::class, 'processReturn'])->name('purchases.return');
+    // --- FITUR BARU: LAPORAN UMUR HUTANG (AP AGING) ---
+    Route::get('/purchases/payable-aging', [PurchaseController::class, 'payableAging'])->name('purchases.aging');
     Route::resource('sales', SaleController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');

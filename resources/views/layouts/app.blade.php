@@ -857,6 +857,7 @@
                     <a href="{{ route('purchases.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pesanan Pembelian</a>
                     <a href="{{ route('purchases.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Penerimaan Pembelian</a>
                     <a href="{{ route('purchases.bills') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Tagihan Pembelian</a>
+                    <a href="{{ route('purchases.aging') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-orange-400 mt-1 border-t border-slate-700/50 pt-2"><i data-feather="pie-chart" class="w-3 h-3 inline mr-1"></i> Umur Hutang (AP)</a>
                 </div>
             </div>
             @endif
