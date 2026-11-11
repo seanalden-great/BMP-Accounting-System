@@ -882,27 +882,81 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
 
-        try {
-            $refNo = $this->generateDocNumber('PO', $validated['date']);
+        // try {
+        //     $refNo = $this->generateDocNumber('PO', $validated['date']);
 
-            // $purchase = Purchase::create([
-            //     'date'         => $validated['date'],
-            //     'due_date'     => $validated['due_date'] ?? $validated['date'],
-            //     'reference_no' => $refNo,
-            //     'contact_id'   => $validated['contact_id'],
-            //     'status'       => 'Pesanan',
-            //     'notes'        => $validated['notes'] ?? '',
-            //     'total'        => 0,
-            //     'total_tax'    => 0, // Inisialisasi awal
-            // ]);
+        //     // $purchase = Purchase::create([
+        //     //     'date'         => $validated['date'],
+        //     //     'due_date'     => $validated['due_date'] ?? $validated['date'],
+        //     //     'reference_no' => $refNo,
+        //     //     'contact_id'   => $validated['contact_id'],
+        //     //     'status'       => 'Pesanan',
+        //     //     'notes'        => $validated['notes'] ?? '',
+        //     //     'total'        => 0,
+        //     //     'total_tax'    => 0, // Inisialisasi awal
+        //     // ]);
+
+        //     $purchase = Purchase::create([
+        //         'date'         => $validated['date'],
+        //         'due_date'     => $validated['due_date'] ?? $validated['date'],
+        //         'reference_no' => $refNo,
+        //         'contact_id'   => $validated['contact_id'],
+        //         // UBAH BARIS INI:
+        //         'status'       => 'Menunggu Persetujuan',
+        //         'notes'        => $validated['notes'] ?? '',
+        //         'total'        => 0,
+        //         'total_tax'    => 0,
+        //     ]);
+
+        //     $grandTotal = 0;
+        //     $grandTax = 0;
+
+        //     foreach ($validated['items'] as $item) {
+        //         // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
+        //         $dpp = $item['quantity'] * $item['price'];
+        //         $taxAmount = $dpp * ($item['tax_rate'] / 100);
+        //         $subTotal = $dpp + $taxAmount;
+
+        //         $grandTax += $taxAmount;
+        //         $grandTotal += $subTotal;
+
+        //         PurchaseItem::create([
+        //             'purchase_id' => $purchase->id,
+        //             'product_sku' => $item['product_sku'],
+        //             'quantity'    => $item['quantity'],
+        //             'price'       => $item['price'],
+        //             'tax_rate'    => $item['tax_rate'],
+        //             'tax_amount'  => $taxAmount,
+        //             'sub_total'   => $subTotal,
+        //         ]);
+        //     }
+
+        //     $purchase->update([
+        //         'total' => $grandTotal,
+        //         'total_tax' => $grandTax
+        //     ]);
+
+        //     DB::commit();
+        //     return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+        // } catch (\Exception $e) {
+        //     DB::rollBack();
+        //     return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+        // }
+
+        try {
+            // Deteksi jenis tombol yang ditekan (Draf RFQ atau PO Langsung)
+            $action = $request->input('action', 'po');
+            $prefix = ($action === 'quotation') ? 'RFQ' : 'PO'; // RFQ = Request For Quotation
+            $status = ($action === 'quotation') ? 'Penawaran' : 'Menunggu Persetujuan';
+
+            $refNo = $this->generateDocNumber($prefix, $validated['date']);
 
             $purchase = Purchase::create([
                 'date'         => $validated['date'],
                 'due_date'     => $validated['due_date'] ?? $validated['date'],
                 'reference_no' => $refNo,
                 'contact_id'   => $validated['contact_id'],
-                // UBAH BARIS INI:
-                'status'       => 'Menunggu Persetujuan',
+                'status'       => $status, // 'Penawaran' atau 'Menunggu Persetujuan'
                 'notes'        => $validated['notes'] ?? '',
                 'total'        => 0,
                 'total_tax'    => 0,
@@ -912,7 +966,6 @@ class PurchaseController extends Controller
             $grandTax = 0;
 
             foreach ($validated['items'] as $item) {
-                // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
                 $dpp = $item['quantity'] * $item['price'];
                 $taxAmount = $dpp * ($item['tax_rate'] / 100);
                 $subTotal = $dpp + $taxAmount;
@@ -937,10 +990,11 @@ class PurchaseController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+            $msg = ($action === 'quotation') ? 'Draf Permintaan (RFQ)' : 'Pesanan Pembelian (PO)';
+            return redirect()->route('purchases.index')->with('success', "Dokumen {$msg} berhasil dibuat dengan nomor: {$refNo}");
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan dokumen pembelian.');
         }
     }
 
@@ -1335,5 +1389,37 @@ class PurchaseController extends Controller
         $totalHutang = array_sum($agingData);
 
         return view('purchases.payable_aging', compact('agingData', 'details', 'totalHutang'));
+    }
+
+    // --- FITUR BARU: QUOTATION (RFQ) ---
+    public function convertToPo($id)
+    {
+        $purchase = Purchase::findOrFail($id);
+
+        if ($purchase->status !== 'Penawaran') {
+            return redirect()->back()->with('error', 'Akses Ditolak: Hanya dokumen draf Penawaran yang dapat diubah ke PO.');
+        }
+
+        // Generate nomor seri PO baru menggantikan nomor RFQ lama
+        $refNo = $this->generateDocNumber('PO', Carbon::now()->toDateString());
+
+        $purchase->update([
+            'status' => 'Menunggu Persetujuan',
+            'reference_no' => $refNo,
+            'notes' => trim($purchase->notes . "\n[Sistem] Harga disepakati Supplier. Diubah dari Draf Penawaran (RFQ) ke PO pada " . Carbon::now()->format('d/m/Y'))
+        ]);
+
+        return redirect()->back()->with('success', 'Penawaran disepakati! Draf berhasil diubah menjadi Pesanan Pembelian resmi (Menunggu Persetujuan Manajer).');
+    }
+
+    public function printQuotation($id)
+    {
+        $purchase = Purchase::with(['contact', 'items.product'])->findOrFail($id);
+
+        if ($purchase->status !== 'Penawaran') {
+            return redirect()->back()->with('error', 'Dokumen ini bukan draf Penawaran.');
+        }
+
+        return view('purchases.print_quotation', compact('purchase'));
     }
 }

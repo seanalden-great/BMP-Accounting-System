@@ -203,6 +203,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/purchases/{id}/return', [PurchaseController::class, 'processReturn'])->name('purchases.return');
     // --- FITUR BARU: LAPORAN UMUR HUTANG (AP AGING) ---
     Route::get('/purchases/payable-aging', [PurchaseController::class, 'payableAging'])->name('purchases.aging');
+    // --- FITUR BARU: REQUEST FOR QUOTATION (DRAF PO) ---
+    Route::post('/purchases/{id}/convert-to-po', [App\Http\Controllers\PurchaseController::class, 'convertToPo'])->name('purchases.convertToPo');
+    Route::get('/purchases/{id}/quotation', [App\Http\Controllers\PurchaseController::class, 'printQuotation'])->name('purchases.printQuotation');
     Route::resource('sales', SaleController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
