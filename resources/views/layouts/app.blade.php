@@ -813,6 +813,21 @@
             </a>
             @endif
 
+            {{-- @if($hasAccess('Penjualan'))
+            <div class="space-y-1">
+                <button onclick="document.getElementById('sub-sales').classList.toggle('hidden')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <div class="flex items-center gap-3"><i data-feather="shopping-bag" class="w-4 h-4"></i> <span class="text-sm">Penjualan</span></div>
+                    <i data-feather="chevron-down" class="w-3 h-3 text-slate-400"></i>
+                </button>
+                <div id="sub-sales" class="hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                    <a href="{{ route('sales.overview') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400"><i data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i> Overview Analitik</a>
+                    <a href="{{ route('sales.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pesanan Penjualan</a>
+                    <a href="{{ route('sales.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pengiriman Penjualan</a>
+                    <a href="{{ route('sales.invoices') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Tagihan Penjualan</a>
+                </div>
+            </div>
+            @endif --}}
+
             @if($hasAccess('Penjualan'))
             <div class="space-y-1">
                 <button onclick="document.getElementById('sub-sales').classList.toggle('hidden')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
@@ -824,6 +839,9 @@
                     <a href="{{ route('sales.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pesanan Penjualan</a>
                     <a href="{{ route('sales.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Pengiriman Penjualan</a>
                     <a href="{{ route('sales.invoices') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">Tagihan Penjualan</a>
+
+                    <!-- MENU BARU: LAPORAN UMUR PIUTANG -->
+                    <a href="{{ route('sales.aging') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-rose-400 mt-1 border-t border-slate-700/50 pt-2"><i data-feather="pie-chart" class="w-3 h-3 inline mr-1"></i> Umur Piutang (AR)</a>
                 </div>
             </div>
             @endif
