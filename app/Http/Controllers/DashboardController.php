@@ -283,16 +283,31 @@ class DashboardController extends Controller
         //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
         // ));
 
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+
+        //     // Variabel Baru Notifikasi:
+        //     'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
+        //     'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
+
+        //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
+        // ));
+
         return view('dashboard', compact(
             'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
             'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
             'chartLabels', 'chartInflows', 'chartOutflows',
 
-            // Variabel Baru Notifikasi:
+            // Variabel Notifikasi:
             'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
             'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
 
-            'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
+            'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni',
+
+            // TAMBAHKAN INI: Agar form Quick Pay bisa memilih bank
+            'bankAccounts'
         ));
     }
 }

@@ -476,7 +476,8 @@
                     <h4 class="font-bold text-yellow-800 text-lg">Perhatian! Terdapat {{ $totalUpcoming }} Tagihan Mendekati
                         Jatuh Tempo</h4>
                     <p class="text-sm text-yellow-700 mt-1 font-medium">Batas waktu pelunasan kurang dari 7 hari ke depan.
-                        <b>Klik di sini</b> untuk bersiap.</p>
+                        <b>Klik di sini</b> untuk bersiap.
+                    </p>
                 </div>
             </div>
         @endif
@@ -880,7 +881,7 @@
                                 label: function(context) {
                                     // Jika tidak ada pengeluaran, ubah teks tooltipnya
                                     if (pmbBulanIni === 0 && byaBulanIni === 0)
-                                    return ' Belum ada data transaksi';
+                                        return ' Belum ada data transaksi';
 
                                     let value = context.raw || 0;
                                     return ' ' + context.label + ': Rp ' + new Intl.NumberFormat(
@@ -959,8 +960,11 @@
             </div>
             <div class="overflow-y-auto custom-scrollbar p-0 bg-slate-50 flex-1">
                 @foreach ($poOverdue as $po)
-                    <a href="{{ route('purchases.bills') }}"
-                        class="block p-5 border-b border-slate-200 bg-white hover:bg-red-50/30 transition-colors group">
+                    {{-- <a href="{{ route('purchases.bills') }}"
+                        class="block p-5 border-b border-slate-200 bg-white hover:bg-red-50/30 transition-colors group"> --}}
+                    <button type="button"
+                        onclick="openQuickPay('po', {{ $po->id }}, '{{ $po->reference_no ?: 'PO #' . $po->id }}', {{ $po->total }}, false)"
+                        class="w-full text-left block p-5 border-b border-slate-200 bg-white hover:bg-red-50 transition-colors group">
                         <div class="flex justify-between items-center">
                             <div>
                                 <span
@@ -980,11 +984,12 @@
                                     Bayar &rarr;</p>
                             </div>
                         </div>
-                    </a>
+                    </button>
                 @endforeach
                 @foreach ($soOverdue as $so)
-                    <a href="{{ route('sales.invoices') }}"
-                        class="block p-5 border-b border-slate-200 bg-white hover:bg-blue-50/30 transition-colors group">
+                    {{-- <a href="{{ route('sales.invoices') }}"
+                        class="block p-5 border-b border-slate-200 bg-white hover:bg-blue-50/30 transition-colors group"> --}}
+                    <button type="button" onclick="openQuickPay('so', {{ $so->id }}, '{{ $so->reference_no ?: 'SO #'.$so->id }}', {{ $so->total }}, true)" class="w-full text-left block p-5 border-b border-slate-200 bg-white hover:bg-blue-50 transition-colors group">
                         <div class="flex justify-between items-center">
                             <div>
                                 <span
@@ -1004,7 +1009,7 @@
                                     Tagih &rarr;</p>
                             </div>
                         </div>
-                    </a>
+                    </button>
                 @endforeach
             </div>
         </div>
@@ -1025,8 +1030,11 @@
             </div>
             <div class="overflow-y-auto custom-scrollbar p-0 bg-slate-50 flex-1">
                 @foreach ($poToday as $po)
-                    <a href="{{ route('purchases.bills') }}"
-                        class="block p-5 border-b border-slate-200 bg-white hover:bg-orange-50/30 transition-colors group">
+                    {{-- <a href="{{ route('purchases.bills') }}"
+                        class="block p-5 border-b border-slate-200 bg-white hover:bg-orange-50/30 transition-colors group"> --}}
+                    <button type="button"
+                        onclick="openQuickPay('po', {{ $po->id }}, '{{ $po->reference_no ?: 'PO #' . $po->id }}', {{ $po->total }}, false)"
+                        class="w-full text-left block p-5 border-b border-slate-200 bg-white hover:bg-red-50 transition-colors group">
                         <div class="flex justify-between items-center">
                             <div>
                                 <span
@@ -1044,7 +1052,7 @@
                                     Bayar &rarr;</p>
                             </div>
                         </div>
-                    </a>
+                    </button>
                 @endforeach
                 @foreach ($soToday as $so)
                     <a href="{{ route('sales.invoices') }}"
@@ -1086,8 +1094,9 @@
             </div>
             <div class="overflow-y-auto custom-scrollbar p-0 bg-slate-50 flex-1">
                 @foreach ($poUpcoming as $po)
-                    <a href="{{ route('purchases.bills') }}"
-                        class="block p-5 border-b border-slate-200 bg-white hover:bg-yellow-50/30 transition-colors group">
+                    {{-- <a href="{{ route('purchases.bills') }}"
+                        class="block p-5 border-b border-slate-200 bg-white hover:bg-yellow-50/30 transition-colors group"> --}}
+                    <button type="button" onclick="openQuickPay('po', {{ $po->id }}, '{{ $po->reference_no ?: 'PO #'.$po->id }}', {{ $po->total }}, false)" class="w-full text-left block p-5 border-b border-slate-200 bg-white hover:bg-red-50 transition-colors group">
                         <div class="flex justify-between items-center">
                             <div>
                                 <span
@@ -1108,7 +1117,7 @@
                                     Lihat Tagihan &rarr;</p>
                             </div>
                         </div>
-                    </a>
+                    </button>
                 @endforeach
                 @foreach ($soUpcoming as $so)
                     <a href="{{ route('sales.invoices') }}"
@@ -1137,4 +1146,84 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL 4: QUICK PAY (PELUNASAN CEPAT)           -->
+    <!-- ============================================== -->
+    <div id="quickPayModal"
+        class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-all">
+        <div
+            class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl overflow-hidden flex flex-col border-t-4 border-blue-600">
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="qpTitle" class="text-lg font-bold text-slate-800">Proses Pelunasan Cepat</h3>
+                <button onclick="document.getElementById('quickPayModal').classList.add('hidden')"
+                    class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 rounded-full p-1 transition-colors">
+                    <i data-feather="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form action="#" method="POST" id="quickPayForm">
+                @csrf
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg mb-5 text-center">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Tagihan</p>
+                    <p id="qpAmount" class="text-2xl font-black text-slate-800"></p>
+                    <p class="text-sm font-medium text-slate-600 mt-1">Ref: <b id="qpRef" class="text-blue-700"></b>
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Pilih Rekening Transaksi</label>
+                        <select name="payment_account" required
+                            class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 shadow-sm">
+                            <option value="" disabled selected>-- Pilih Kas atau Bank --</option>
+                            @foreach ($bankAccounts as $bank)
+                                <option value="{{ $bank->code }}">[{{ $bank->code }}] {{ $bank->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Tanggal Pelunasan</label>
+                        <input type="date" name="due_date" required value="{{ date('Y-m-d') }}"
+                            class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium shadow-sm">
+                    </div>
+                </div>
+
+                <div
+                    class="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 font-medium text-center">
+                    Transaksi ini akan memotong saldo tagihan dan langsung dicatat ke Jurnal Buku Besar Bank terpilih.
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('quickPayModal').classList.add('hidden')"
+                        class="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors">Batal</button>
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors shadow-md">Lunasi
+                        Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Skrip Pengendali Quick Pay -->
+    <script>
+        function openQuickPay(type, id, ref, amount, isSales) {
+            // Sembunyikan 3 modal peringatan yang ada di belakangnya agar rapi
+            document.getElementById('modalOverdue').classList.add('hidden');
+            document.getElementById('modalToday').classList.add('hidden');
+            document.getElementById('modalUpcoming').classList.add('hidden');
+
+            // Sesuaikan warna dan judul berdasarkan jenis transaksi
+            let title = isSales ? 'Terima Pembayaran Piutang' : 'Bayar Hutang Pemasok';
+            let actionUrl = isSales ? `/sales/${id}/invoice` : `/purchases/${id}/bill`;
+
+            document.getElementById('qpTitle').innerText = title;
+            document.getElementById('qpRef').innerText = ref;
+            document.getElementById('qpAmount').innerText = 'Rp ' + parseInt(amount, 10).toLocaleString('id-ID');
+
+            document.getElementById('quickPayForm').action = actionUrl;
+            document.getElementById('quickPayModal').classList.remove('hidden');
+        }
+    </script>
 @endsection
