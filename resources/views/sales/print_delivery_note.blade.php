@@ -197,7 +197,7 @@
         Catatan: Surat Jalan ini merupakan bukti sah penyerahan fisik barang. Barang yang sudah dibeli dan diterima dengan baik tidak dapat ditukar atau dikembalikan. Risiko kerusakan/kehilangan setelah serah terima menjadi tanggung jawab pembeli sepenuhnya.
     </div>
 
-    <div class="signatures">
+    {{-- <div class="signatures">
         <div class="sign-box">
             <p style="margin: 0;">Penerima / Pelanggan,</p>
             <div class="sign-line">( Tanda Tangan & Cap )</div>
@@ -205,6 +205,22 @@
         <div class="sign-box">
             <p style="margin: 0;">Pengirim / Supir,</p>
             <div class="sign-line">( Nama Terang )</div>
+        </div>
+        <div class="sign-box">
+            <p style="margin: 0;">Hormat Kami,</p>
+            <div class="sign-line">PT. Berlian Mandiri Perkasa</div>
+        </div>
+    </div> --}}
+
+    <div class="signatures">
+        <div class="sign-box">
+            <p style="margin: 0;">Penerima / Pelanggan,</p>
+            <div class="sign-line">( Tanda Tangan & Cap )</div>
+        </div>
+        <div class="sign-box">
+            <p style="margin: 0;">Pengirim / Supir,</p>
+            <!-- PERBAIKAN: Menyatukan isian Nama Supir dan Nopol Kendaraan -->
+            <div class="sign-line">( Nama Terang / Nomor Polisi )</div>
         </div>
         <div class="sign-box">
             <p style="margin: 0;">Hormat Kami,</p>
