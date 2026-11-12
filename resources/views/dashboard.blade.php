@@ -797,7 +797,8 @@
                             <p class="text-sm font-semibold text-slate-700 leading-snug">{{ $act->description }}</p>
                             <div class="flex gap-3 mt-1.5 items-center">
                                 <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold font-mono">{{ $act->reference_no }}</span>
-                                <span class="text-[10px] font-medium text-slate-400 flex items-center gap-1"><i data-feather="clock" class="w-3 h-3"></i> {{ \Carbon\Carbon::parse($act->created_at)->diffForHumans() }}</span>
+                                {{-- <span class="text-[10px] font-medium text-slate-400 flex items-center gap-1"><i data-feather="clock" class="w-3 h-3"></i> {{ \Carbon\Carbon::parse($act->created_at)->diffForHumans() }}</span> --}}
+                                <span class="text-[10px] font-medium text-slate-400 flex items-center gap-1"><i data-feather="calendar" class="w-3 h-3"></i> {{ \Carbon\Carbon::parse($act->date)->translatedFormat('d M Y') }}</span>
                             </div>
                         </div>
                     </div>

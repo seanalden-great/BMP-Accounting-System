@@ -322,7 +322,8 @@ class DashboardController extends Controller
             ->get();
 
         // 10. AKTIVITAS JURNAL TERAKHIR (LIVE FEED)
-        $recentActivities = \App\Models\Journal::orderBy('created_at', 'desc')->take(6)->get();
+        // $recentActivities = \App\Models\Journal::orderBy('created_at', 'desc')->take(6)->get();
+        $recentActivities = \App\Models\Journal::orderBy('id', 'desc')->take(6)->get();
 
         return view('dashboard', compact(
             'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
