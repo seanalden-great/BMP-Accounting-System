@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6 pb-10">
     <!-- HEADER KEMBALI -->
-    <div class="flex items-center gap-4 border-b border-slate-200 pb-4">
+    {{-- <div class="flex items-center gap-4 border-b border-slate-200 pb-4">
         <a href="{{ route('products.index') }}" class="text-slate-400 hover:text-blue-600 bg-white p-2 rounded-lg shadow-sm border border-slate-200 transition-colors">
             <i data-feather="arrow-left" class="w-5 h-5"></i>
         </a>
@@ -12,6 +12,37 @@
                 <i data-feather="box" class="text-blue-600 w-6 h-6"></i> Detail Kartu Stok: {{ $product->name }}
             </h1>
             <p class="text-slate-500 text-sm mt-0.5">SKU: <span class="font-mono font-bold">{{ $product->sku }}</span> | Kategori: {{ $product->category }}</p>
+        </div>
+    </div> --}}
+
+    <!-- HEADER KARTU STOK & TOMBOL EKSPOR -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('products.index') }}" class="text-slate-400 hover:text-blue-600 bg-white p-2 rounded-lg shadow-sm border border-slate-200 transition-colors">
+                <i data-feather="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                    <i data-feather="box" class="text-blue-600 w-6 h-6"></i> Detail Kartu Stok: {{ $product->name }}
+                </h1>
+                <p class="text-slate-500 text-sm mt-0.5">SKU: <span class="font-mono font-bold">{{ $product->sku }}</span> | Kategori: {{ $product->category }}</p>
+            </div>
+        </div>
+
+        <!-- TOMBOL EKSPOR BUKU BESAR BARANG -->
+        <div class="relative group z-20">
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2">
+                <i data-feather="printer" class="w-4 h-4"></i> Ekspor Kartu Stok
+            </button>
+            <div class="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all overflow-hidden">
+                <div class="px-3 py-2 bg-slate-50 border-b font-bold text-xs text-slate-400 uppercase">Pilih Format Cetak</div>
+                <a href="{{ route('products.exportLedger', ['id' => $product->id, 'format' => 'pdf']) }}" target="_blank" class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border-b">
+                    <i data-feather="file-text" class="w-4 h-4 inline mr-2 text-indigo-500"></i> Cetak Dokumen (PDF)
+                </a>
+                <a href="{{ route('products.exportLedger', ['id' => $product->id, 'format' => 'csv']) }}" class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
+                    <i data-feather="download" class="w-4 h-4 inline mr-2 text-emerald-500"></i> Unduh Excel (CSV)
+                </a>
+            </div>
         </div>
     </div>
 

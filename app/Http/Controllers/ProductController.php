@@ -354,4 +354,116 @@ class ProductController extends Controller
         // 4. PDF EXPORT (Cetak Layar HTML)
         return view('products.export_print', compact('products', 'reportName'));
     }
+
+    // ==========================================================
+    // FITUR EMAS: EKSPOR BUKU BESAR BARANG (BIN CARD)
+    // ==========================================================
+    public function exportLedger(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $format = $request->query('format', 'csv');
+
+        // 1. Ambil Riwayat Pembelian (Masuk)
+        $purchases = \App\Models\PurchaseItem::with('purchase.contact')
+            ->where('product_sku', $product->sku)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'date' => \Carbon\Carbon::parse($item->purchase->date ?? $item->created_at)->startOfDay(),
+                    'type' => 'Barang Masuk (PO)',
+                    'ref' => $item->purchase->reference_no ?? '-',
+                    'contact' => $item->purchase->contact->name ?? '-',
+                    'qty_in' => $item->quantity,
+                    'qty_out' => 0,
+                    'price' => $item->price
+                ];
+            });
+
+        // 2. Ambil Riwayat Penjualan (Keluar)
+        $sales = \App\Models\SaleItem::with('sale.contact')
+            ->where('product_sku', $product->sku)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'date' => \Carbon\Carbon::parse($item->sale->date ?? $item->created_at)->startOfDay(),
+                    'type' => 'Barang Keluar (SO)',
+                    'ref' => $item->sale->reference_no ?? '-',
+                    'contact' => $item->sale->contact->name ?? '-',
+                    'qty_in' => 0,
+                    'qty_out' => $item->quantity,
+                    'price' => $item->price
+                ];
+            });
+
+        // 3. Ambil Riwayat Penyesuaian (Stock Opname)
+        $adjustments = \App\Models\StockAdjustment::with('warehouse')
+            ->where('product_sku', $product->sku)
+            ->get()
+            ->map(function ($item) {
+                $isAdd = $item->type == 'Penambahan';
+                return [
+                    'date' => \Carbon\Carbon::parse($item->date ?? $item->created_at)->startOfDay(),
+                    'type' => 'Stock Opname',
+                    'ref' => 'ADJ-' . str_pad($item->id, 4, '0', STR_PAD_LEFT),
+                    'contact' => $item->warehouse->name ?? 'Gudang',
+                    'qty_in' => $isAdd ? $item->quantity : 0,
+                    'qty_out' => !$isAdd ? $item->quantity : 0,
+                    'price' => 0
+                ];
+            });
+
+        // Gabungkan, urutkan berdasarkan tanggal, lalu hitung Saldo Akhir Berjalan secara matematis
+        $movements = collect()->merge($purchases)->merge($sales)->merge($adjustments)->sortBy('date')->values();
+
+        $runningBalance = 0;
+        $history = [];
+        foreach ($movements as $m) {
+            $runningBalance += $m['qty_in'] - $m['qty_out'];
+            $m['balance'] = $runningBalance;
+            $history[] = $m;
+        }
+
+        $reportTitle = "KARTU STOK (BIN CARD) - " . strtoupper($product->name);
+        $dateExport = \Carbon\Carbon::now()->translatedFormat('d F Y H:i');
+
+        // FORMAT EXCEL (CSV)
+        if ($format === 'csv') {
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=Kartu_Stok_{$product->sku}.csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function () use ($product, $history, $reportTitle, $dateExport) {
+                $file = fopen('php://output', 'w');
+
+                fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
+                fputcsv($file, [$reportTitle]);
+                fputcsv($file, ['SKU: ' . $product->sku, 'Kategori: ' . ($product->category ?? '-')]);
+                fputcsv($file, ['Diekspor pada: ' . $dateExport]);
+                fputcsv($file, []);
+                fputcsv($file, ['Tanggal', 'No. Referensi', 'Keterangan', 'Kontak / Gudang', 'Masuk (Qty)', 'Keluar (Qty)', 'Saldo Sisa', 'Harga Ref (Rp)']);
+
+                foreach ($history as $row) {
+                    fputcsv($file, [
+                        $row['date']->format('d/m/Y'),
+                        $row['ref'],
+                        $row['type'],
+                        $row['contact'],
+                        $row['qty_in'],
+                        $row['qty_out'],
+                        $row['balance'],
+                        $row['price']
+                    ]);
+                }
+                fclose($file);
+            };
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // FORMAT CETAK HTML / PDF LAYAR
+        return view('products.print_ledger', compact('product', 'history', 'reportTitle', 'dateExport'));
+    }
 }

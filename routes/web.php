@@ -182,6 +182,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/export', [App\Http\Controllers\ProductController::class, 'export'])->name('products.export');
     // Resource Routes Standar
     Route::resource('products', ProductController::class)->except(['create']);
+    // --- FITUR BARU: EKSPOR KARTU STOK (BIN CARD) ---
+    Route::get('/products/{id}/export-ledger', [ProductController::class, 'exportLedger'])->name('products.exportLedger');
     Route::resource('categories', CategoryController::class)->except(['create', 'show']);
     Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
     Route::resource('contacts', ContactController::class)->except(['create', 'show']);
