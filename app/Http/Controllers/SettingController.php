@@ -8,6 +8,18 @@ use Illuminate\Http\Request;
 class SettingController extends Controller
 {
     // Menampilkan Halaman Pengaturan (GET /settings)
+    // public function index()
+    // {
+    //     // Selalu ambil record ID 1. Jika tidak ada, buatkan otomatis.
+    //     $setting = CompanySetting::firstOrCreate(
+    //         ['id' => 1],
+    //         ['name' => 'PT Berlianmandiri Perkasa', 'tax_rate' => 11.0]
+    //     );
+
+    //     return view('settings.index', compact('setting'));
+    // }
+
+    // Menampilkan Halaman Pengaturan (GET /settings)
     public function index()
     {
         // Selalu ambil record ID 1. Jika tidak ada, buatkan otomatis.
@@ -16,7 +28,22 @@ class SettingController extends Controller
             ['name' => 'PT Berlianmandiri Perkasa', 'tax_rate' => 11.0]
         );
 
-        return view('settings.index', compact('setting'));
+        // --- TAMBAHAN: Tarik data statistik untuk dasbor mini pengaturan ---
+        $totalUsers = \App\Models\User::count();
+        $adminCount = \App\Models\User::whereIn('role', ['Admin', 'Direktur'])->count();
+        $staffCount = $totalUsers - $adminCount;
+
+        $dbSize = 0;
+        try {
+            // Coba ambil ukuran database (Hanya jalan di MySQL/MariaDB)
+            $dbName = env('DB_DATABASE');
+            $sizeResult = \Illuminate\Support\Facades\DB::select("SELECT SUM(data_length + index_length) / 1024 / 1024 AS size FROM information_schema.tables WHERE table_schema = '$dbName'");
+            $dbSize = round($sizeResult[0]->size ?? 0, 2);
+        } catch (\Exception $e) {
+            $dbSize = 'N/A'; // Abaikan jika gagal (misal pakai SQLite)
+        }
+
+        return view('settings.index', compact('setting', 'totalUsers', 'adminCount', 'staffCount', 'dbSize'));
     }
 
     // Memperbarui Pengaturan (PUT /settings)
