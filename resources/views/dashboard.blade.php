@@ -491,6 +491,29 @@
             </div>
         </div>
 
+        <!-- AKSES CEPAT (QUICK ACTIONS) -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-2">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Jalan Pintas Operasional</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <a href="{{ route('sales.index') }}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-indigo-100 shadow-sm hover:shadow">
+                    <i data-feather="shopping-bag" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Buat Penjualan (SO)</span>
+                </a>
+                <a href="{{ route('purchases.index') }}" class="bg-orange-50 hover:bg-orange-100 text-orange-700 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-orange-100 shadow-sm hover:shadow">
+                    <i data-feather="shopping-cart" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Buat Pembelian (PO)</span>
+                </a>
+                <a href="{{ route('expenses.index') }}" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-emerald-100 shadow-sm hover:shadow">
+                    <i data-feather="file-text" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Catat Biaya (KBD)</span>
+                </a>
+                <a href="{{ route('inventory.index') }}" class="bg-teal-50 hover:bg-teal-100 text-teal-700 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-teal-100 shadow-sm hover:shadow">
+                    <i data-feather="archive" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Stok & Mutasi Gudang</span>
+                </a>
+            </div>
+        </div>
+
         <!-- Kartu Ringkasan Atas -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -719,6 +742,71 @@
                 <p class="text-center text-xs text-slate-400 mt-4">Persentase sebaran likuiditas perusahaan di berbagai
                     rekening</p>
             </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- BAGIAN BAWAH 2: AKTIVITAS & PRODUK TERLARIS    -->
+        <!-- ============================================== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+
+            <!-- Top 5 Produk Terlaris -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                        <i data-feather="award" class="w-4 h-4 text-amber-500"></i> 5 Produk Terlaris (Bulan Ini)
+                    </h3>
+                </div>
+                <div class="p-0 flex-1">
+                    @forelse($topProducts as $idx => $tp)
+                    <div class="p-3 px-4 border-b border-slate-50 hover:bg-slate-50 flex items-center gap-3">
+                        <div class="w-6 h-6 rounded bg-gradient-to-br from-amber-200 to-amber-400 text-amber-900 flex items-center justify-center font-black text-xs shrink-0 shadow-sm">{{ $idx + 1 }}</div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="font-semibold text-slate-700 text-xs truncate">{{ $tp->product->name ?? $tp->product_sku }}</p>
+                            <p class="text-[10px] text-slate-400 font-mono mt-0.5">SKU: {{ $tp->product_sku }}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="font-black text-slate-800 text-sm">{{ number_format($tp->total_qty, 0, ',', '.') }}</p>
+                            <p class="text-[9px] text-slate-400 uppercase font-bold">Terjual</p>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-8 flex flex-col items-center justify-center text-center">
+                        <i data-feather="package" class="w-8 h-8 text-slate-200 mb-2"></i>
+                        <p class="text-xs text-slate-400 font-medium">Belum ada data penjualan<br>di bulan ini.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Aktivitas Transaksi Terakhir (Log / Live Feed) -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                        <i data-feather="list" class="w-4 h-4 text-slate-600"></i> Riwayat Aktivitas Jurnal Terakhir
+                    </h3>
+                    <a href="{{ route('journals.index') }}" class="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors">Lihat Buku Besar &rarr;</a>
+                </div>
+                <div class="p-0 flex-1 relative">
+                    <!-- Garis Vertikal Timeline -->
+                    <div class="absolute left-[27px] top-0 bottom-0 w-0.5 bg-slate-100"></div>
+
+                    @forelse($recentActivities as $act)
+                    <div class="p-3 px-4 hover:bg-slate-50 flex gap-4 items-start relative z-10">
+                        <div class="mt-1 w-3 h-3 rounded-full bg-blue-500 shrink-0 border-2 border-white shadow-sm ring-2 ring-blue-100"></div>
+                        <div class="flex-1 pb-2 {{ !$loop->last ? 'border-b border-slate-50' : '' }}">
+                            <p class="text-sm font-semibold text-slate-700 leading-snug">{{ $act->description }}</p>
+                            <div class="flex gap-3 mt-1.5 items-center">
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold font-mono">{{ $act->reference_no }}</span>
+                                <span class="text-[10px] font-medium text-slate-400 flex items-center gap-1"><i data-feather="clock" class="w-3 h-3"></i> {{ \Carbon\Carbon::parse($act->created_at)->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-6 text-center text-xs text-slate-400">Belum ada aktivitas jurnal tercatat.</div>
+                    @endforelse
+                </div>
+            </div>
+
         </div>
     </div>
 

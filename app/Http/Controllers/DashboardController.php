@@ -295,6 +295,35 @@ class DashboardController extends Controller
         //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
         // ));
 
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+
+        //     // Variabel Notifikasi:
+        //     'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
+        //     'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
+
+        //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni',
+
+        //     // TAMBAHKAN INI: Agar form Quick Pay bisa memilih bank
+        //     'bankAccounts'
+        // ));
+
+        // 9. TOP 5 PRODUK TERLARIS BULAN INI
+        $topProducts = \App\Models\SaleItem::select('product_sku', DB::raw('SUM(quantity) as total_qty'))
+            ->whereHas('sale', function($q) use ($currentMonth, $currentYear) {
+                $q->whereMonth('date', $currentMonth)->whereYear('date', $currentYear);
+            })
+            ->groupBy('product_sku')
+            ->orderBy('total_qty', 'desc')
+            ->take(5)
+            ->with('product')
+            ->get();
+
+        // 10. AKTIVITAS JURNAL TERAKHIR (LIVE FEED)
+        $recentActivities = \App\Models\Journal::orderBy('created_at', 'desc')->take(6)->get();
+
         return view('dashboard', compact(
             'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
             'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
@@ -306,8 +335,10 @@ class DashboardController extends Controller
 
             'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni',
 
-            // TAMBAHKAN INI: Agar form Quick Pay bisa memilih bank
-            'bankAccounts'
+            'bankAccounts',
+
+            // TAMBAHAN ELEMEN BARU DASBOR:
+            'topProducts', 'recentActivities'
         ));
     }
 }
