@@ -25,5 +25,14 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') !== 'local') {
             URL::forceScheme('https');
         }
+
+        // --- FITUR BARU: PENYADAP AKTIVITAS LOGIN ---
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            \App\Models\LoginActivity::create([
+                'user_id'    => $event->user->id,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        });
     }
 }

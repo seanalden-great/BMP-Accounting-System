@@ -10,10 +10,24 @@ use App\Models\User;
 class ProfileController extends Controller
 {
     // Menampilkan Halaman Profil
+    // public function index()
+    // {
+    //     $user = Auth::user();
+    //     return view('profile.index', compact('user'));
+    // }
+
+    // Menampilkan Halaman Profil
     public function index()
     {
         $user = Auth::user();
-        return view('profile.index', compact('user'));
+
+        // Ambil 5 riwayat login terakhir dari user ini
+        $loginLogs = \App\Models\LoginActivity::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('profile.index', compact('user', 'loginLogs'));
     }
 
     // Memproses Pembaruan Data Profil
@@ -30,7 +44,7 @@ class ProfileController extends Controller
             'email'     => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'phone'     => 'nullable|string|max:50',
             // Jika password diisi, harus minimal 6 karakter dan konfirmasi (password_confirmation) harus cocok
-            'password'  => 'nullable|string|min:6|confirmed', 
+            'password'  => 'nullable|string|min:6|confirmed',
         ]);
 
         // Menyimpan data teks
@@ -39,6 +53,10 @@ class ProfileController extends Controller
         $user->username  = $validated['username'];
         $user->email     = $validated['email'] ?? $user->email;
         $user->phone     = $validated['phone'] ?? $user->phone;
+
+        // --- FITUR BARU: SIMPAN PREFERENSI NOTIFIKASI EMAIL ---
+        // Jika sakelar (toggle) menyala, nilainya 1. Jika dimatikan, nilainya 0.
+        $user->email_notifications = $request->has('email_notifications') ? 1 : 0;
 
         // Jika user mengetikkan password baru, maka kita enkripsi dan simpan
         if (!empty($validated['password'])) {
