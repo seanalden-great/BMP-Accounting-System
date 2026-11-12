@@ -236,6 +236,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/journals/export', [JournalController::class, 'export'])->name('journals.export');
 
+    // --- FITUR BARU: REKONSILIASI BANK ---
+    Route::get('/journals/reconciliation', [JournalController::class, 'reconciliation'])->name('journals.reconciliation');
+    Route::post('/journals/reconciliation/save', [JournalController::class, 'saveReconciliation'])->name('journals.reconciliation.save');
+    Route::post('/journals/reconciliation/adjust', [JournalController::class, 'reconciliationAdjust'])->name('journals.reconciliation.adjust');
+
     // Rute Manajemen Gudang
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
     Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');

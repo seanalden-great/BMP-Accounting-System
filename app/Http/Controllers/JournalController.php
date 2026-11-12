@@ -668,4 +668,135 @@ class JournalController extends Controller
         // FORMAT 2: CETAK DOKUMEN HTML / PDF
         return view('journals.export_print', compact('journals', 'bank', 'saldoAwal', 'reportName', 'startDate', 'endDate'));
     }
+
+    // ==========================================================
+    // FITUR EMAS: REKONSILIASI BANK (Pencocokan Rekening Koran)
+    // ==========================================================
+    public function reconciliation(Request $request)
+    {
+        // Ambil daftar Rekening Kas & Bank (awalan 10 atau 11)
+        $banks = Account::where(function($query) {
+            $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%');
+        })->where('is_header', false)->get();
+
+        $selectedBank = $request->query('account_code');
+        $selectedMonth = $request->query('month', date('Y-m'));
+
+        $entries = collect();
+        $systemBalance = 0;
+        $beginningReconciled = 0;
+
+        if ($selectedBank) {
+            $year = substr($selectedMonth, 0, 4);
+            $month = substr($selectedMonth, 5, 2);
+
+            $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfDay();
+            $endOfMonth = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+            // 1. Ambil transaksi khusus di bulan yang dipilih
+            $entries = JournalEntry::with('journal')
+                ->where('account_code', $selectedBank)
+                ->whereHas('journal', function($q) use ($year, $month) {
+                    $q->whereYear('date', $year)->whereMonth('date', $month);
+                })
+                ->get();
+
+            // 2. Hitung total saldo sistem (seharusnya) sampai akhir bulan pilihan
+            $systemBalance = JournalEntry::where('account_code', $selectedBank)
+                ->whereHas('journal', function($q) use ($endOfMonth) {
+                    $q->whereDate('date', '<=', $endOfMonth);
+                })
+                ->selectRaw('SUM(debit) - SUM(credit) as balance')
+                ->value('balance') ?? 0;
+
+            // 3. Hitung saldo yang sudah COCOK (reconciled) HINGGA BULAN LALU sebagai Saldo Awal Pencocokan
+            $beginningReconciled = JournalEntry::where('account_code', $selectedBank)
+                ->where('is_reconciled', 1)
+                ->whereHas('journal', function($q) use ($startOfMonth) {
+                    $q->whereDate('date', '<', $startOfMonth);
+                })
+                ->selectRaw('SUM(debit) - SUM(credit) as balance')
+                ->value('balance') ?? 0;
+        }
+
+        // Akun untuk Penyesuaian Cepat (Admin Bank / Bunga)
+        $expenseAccounts = Account::where('code', 'LIKE', '7%')->orWhere('code', 'LIKE', '8%')->where('is_header', false)->get();
+        $incomeAccounts = Account::where('code', 'LIKE', '4%')->orWhere('code', 'LIKE', '9%')->where('is_header', false)->get();
+
+        return view('journals.reconciliation', compact('banks', 'selectedBank', 'selectedMonth', 'entries', 'systemBalance', 'beginningReconciled', 'expenseAccounts', 'incomeAccounts'));
+    }
+
+    public function saveReconciliation(Request $request)
+    {
+        $validated = $request->validate([
+            'account_code' => 'required|exists:accounts,code',
+            'month'        => 'required', // Format YYYY-MM
+            'entry_ids'    => 'nullable|array',
+        ]);
+
+        $year = substr($validated['month'], 0, 4);
+        $month = substr($validated['month'], 5, 2);
+
+        DB::beginTransaction();
+        try {
+            // 1. Reset (Un-check) semua status rekonsiliasi di bulan ini terlebih dahulu
+            $entriesInMonth = JournalEntry::where('account_code', $validated['account_code'])
+                ->whereHas('journal', function($q) use ($year, $month) {
+                    $q->whereYear('date', $year)->whereMonth('date', $month);
+                })->pluck('id');
+
+            JournalEntry::whereIn('id', $entriesInMonth)->update(['is_reconciled' => 0]);
+
+            // 2. Centang kembali (Reconcile) khusus ID yang dikirim dari form
+            if (!empty($validated['entry_ids'])) {
+                JournalEntry::whereIn('id', $validated['entry_ids'])->update(['is_reconciled' => 1]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Hebat! Data Rekonsiliasi Bank bulan ini berhasil dicocokkan dan disimpan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menyimpan rekonsiliasi: ' . $e->getMessage());
+        }
+    }
+
+    public function reconciliationAdjust(Request $request)
+    {
+        $validated = $request->validate([
+            'date'             => 'required|date',
+            'bank_code'        => 'required|exists:accounts,code',
+            'adj_account_code' => 'required|exists:accounts,code',
+            'type'             => 'required|in:in,out',
+            'amount'           => 'required|numeric|min:1',
+            'description'      => 'required|string'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $jCode = "ADJ-BNK-" . Carbon::parse($validated['date'])->format('YmdHis');
+            $journal = Journal::create([
+                'date'         => $validated['date'],
+                'description'  => "[Rekonsiliasi] " . $validated['description'],
+                'reference_no' => $jCode
+            ]);
+
+            // Transaksi dari penyesuaian otomatis berstatus "is_reconciled = 1" agar langsung cocok
+            if ($validated['type'] === 'in') {
+                // Bank Bertambah (Pendapatan Bunga)
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['bank_code'], 'debit' => $validated['amount'], 'credit' => 0, 'is_reconciled' => 1]);
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['adj_account_code'], 'debit' => 0, 'credit' => $validated['amount']]);
+            } else {
+                // Bank Berkurang (Biaya Admin)
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['adj_account_code'], 'debit' => $validated['amount'], 'credit' => 0]);
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['bank_code'], 'debit' => 0, 'credit' => $validated['amount'], 'is_reconciled' => 1]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Jurnal Penyesuaian berhasil ditambahkan dan otomatis terekonsiliasi.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menambah penyesuaian: ' . $e->getMessage());
+        }
+    }
+
 }
