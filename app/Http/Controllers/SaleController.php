@@ -1258,6 +1258,12 @@ class SaleController extends Controller
                     'tax_amount'  => $taxAmount,
                     'sub_total'   => $subTotal,
                 ]);
+
+                // --- TAMBAHAN BARU: UPDATE HARGA JUAL MASTER PRODUK ---
+                // Memaksa harga di Master Produk berubah mengikuti harga jual transaksi terakhir ini
+                Product::where('sku', $item['product_sku'])->update([
+                    'sell_price' => $item['price']
+                ]);
             }
 
             $sale->update(['total' => $grandTotal, 'total_tax' => $grandTax]);
