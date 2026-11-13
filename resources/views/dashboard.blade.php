@@ -1952,7 +1952,7 @@
                         </div>
                     </button>
                 @endforeach
-                @foreach ($soUpcoming as$so)
+                @foreach ($soUpcoming as $so)
                     <button type="button" onclick="openQuickPay('so', {{ $so->id }}, '{{$so->reference_no ?: 'SO #'.$so->id }}', {{$so->total }}, true)" class="w-full text-left block p-5 border-b border-slate-200 bg-white hover:bg-blue-50 transition-colors group">
                         <div class="flex justify-between items-center">
                             <div>
@@ -2009,7 +2009,7 @@
                         <select name="payment_account" required
                             class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 shadow-sm">
                             <option value="" disabled selected>-- Pilih Kas atau Bank --</option>
-                            @foreach ($bankAccounts as$bank)
+                            @foreach ($bankAccounts as $bank)
                                 <option value="{{ $bank->code }}">[{{ $bank->code }}] {{$bank->name }}</option>
                             @endforeach
                         </select>
