@@ -86,7 +86,7 @@
 </div>
 @endsection --}}
 
-<!-- resources/views/sales/invoice.blade.php -->
+{{-- <!-- resources/views/sales/invoice.blade.php -->
 @extends('layouts.app')
 
 @section('content')
@@ -231,4 +231,4 @@
         </div>
     </div>
 </div>
-@endsection
+@endsection --}}
