@@ -266,7 +266,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit.index');
 
-    // Untuk Kalender
+    // =========================================================
+    // ROUTE BARU: ICS CALENDAR FEED (GOOGLE CALENDAR SYNC)
+    // =========================================================
     Route::get('/calendar/feed.ics', function () {
         $sales = \App\Models\Sale::whereNotNull('due_date')->whereIn('status', ['Pesanan', 'Pengiriman'])->get();
         $purchases = \App\Models\Purchase::whereNotNull('due_date')->whereIn('status', ['Pesanan', 'Pengiriman'])->get();
@@ -288,5 +290,5 @@ Route::middleware('auth')->group(function () {
         $ical .= "END:VCALENDAR";
 
         return response($ical)->header('Content-Type', 'text/calendar; charset=utf-8');
-    });
+    })->name('calendar.feed');
 });
