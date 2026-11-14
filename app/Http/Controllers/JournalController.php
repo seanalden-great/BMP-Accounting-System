@@ -799,4 +799,64 @@ class JournalController extends Controller
         }
     }
 
+    // ==========================================================
+    // FITUR BARU: BUKU BESAR (GENERAL LEDGER)
+    // ==========================================================
+    public function ledger(Request $request)
+    {
+        // 1. Ambil daftar semua akun aktif (bukan header) untuk dropdown
+        $accounts = \App\Models\Account::where('is_header', false)->orderBy('code', 'asc')->get();
+
+        // 2. Tangkap filter dari input user (Default: Bulan ini)
+        $selectedAccountCode = $request->input('account_code');
+        $startDate = $request->input('start_date', \Carbon\Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', \Carbon\Carbon::now()->endOfMonth()->toDateString());
+
+        $entries = collect();
+        $beginningBalance = 0;
+        $selectedAccount = null;
+
+        // 3. Jika user sudah memilih Akun, lakukan kalkulasi
+        if ($selectedAccountCode) {
+            $selectedAccount = \App\Models\Account::where('code', $selectedAccountCode)->first();
+
+            if ($selectedAccount) {
+                // A. HITUNG SALDO AWAL (Semua transaksi SEBELUM start_date)
+                $prevEntries = \App\Models\JournalEntry::where('account_code', $selectedAccountCode)
+                    ->whereHas('journal', function($q) use ($startDate) {
+                        $q->whereDate('date', '<', $startDate);
+                    })
+                    ->get();
+
+                $prevDebit = $prevEntries->sum('debit');
+                $prevKredit = $prevEntries->sum('credit');
+
+                // Logika Saldo Normal Akuntansi
+                if ($selectedAccount->normal_balance == 'K') {
+                    $beginningBalance = $prevKredit - $prevDebit;
+                } else {
+                    $beginningBalance = $prevDebit - $prevKredit;
+                }
+
+                // B. AMBIL MUTASI PERIODE BERJALAN (Antara start_date & end_date)
+                $entries = \App\Models\JournalEntry::with('journal')
+                    ->where('account_code', $selectedAccountCode)
+                    ->whereHas('journal', function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('date', [$startDate, $endDate]);
+                    })
+                    ->get()
+                    // Urutkan berdasarkan tanggal jurnal dan ID jurnal
+                    ->sortBy(function($entry) {
+                        return $entry->journal->date . '-' . str_pad($entry->journal->id, 10, '0', STR_PAD_LEFT);
+                    })
+                    ->values(); // Reset array index
+            }
+        }
+
+        return view('journals.ledger', compact(
+            'accounts', 'selectedAccountCode', 'startDate', 'endDate',
+            'entries', 'beginningBalance', 'selectedAccount'
+        ));
+    }
+
 }

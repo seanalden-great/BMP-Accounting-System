@@ -123,6 +123,7 @@ use Illuminate\Support\Facades\Route;
 | Rute Terbuka (Public)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -242,6 +243,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/journals/reconciliation', [JournalController::class, 'reconciliation'])->name('journals.reconciliation');
     Route::post('/journals/reconciliation/save', [JournalController::class, 'saveReconciliation'])->name('journals.reconciliation.save');
     Route::post('/journals/reconciliation/adjust', [JournalController::class, 'reconciliationAdjust'])->name('journals.reconciliation.adjust');
+    // Halaman Buku Besar (General Ledger)
+    Route::get('/ledger', [JournalController::class, 'ledger'])->name('journals.ledger');
 
     // Rute Manajemen Gudang
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
