@@ -265,4 +265,28 @@ Route::middleware('auth')->group(function () {
     Route::get('/payroll/slip/{id}/{employee_id}', [PayrollController::class, 'printSlip'])->name('payroll.printSlip');
 
     Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit.index');
+
+    // Untuk Kalender
+    Route::get('/calendar/feed.ics', function () {
+        $sales = \App\Models\Sale::whereNotNull('due_date')->whereIn('status', ['Pesanan', 'Pengiriman'])->get();
+        $purchases = \App\Models\Purchase::whereNotNull('due_date')->whereIn('status', ['Pesanan', 'Pengiriman'])->get();
+
+        $ical = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//PT Berlian Mandiri Perkasa//ERP System//ID\r\n";
+
+        foreach ($sales as $sale) {
+            $date = \Carbon\Carbon::parse($sale->due_date)->format('Ymd');
+            $nominal = number_format($sale->total, 0, ',', '.');
+            $ical .= "BEGIN:VEVENT\r\nUID:SO-{$sale->id}@berlianmandiri.com\r\nDTSTAMP:{$date}T000000Z\r\nDTSTART;VALUE=DATE:{$date}\r\nSUMMARY:💰 PIUTANG CAIR: {$sale->contact->name}\r\nDESCRIPTION:Tagihan piutang dari Pelanggan: {$sale->contact->name}. Nominal: Rp {$nominal}. No Ref: {$sale->reference_no}\r\nEND:VEVENT\r\n";
+        }
+
+        foreach ($purchases as $po) {
+            $date = \Carbon\Carbon::parse($po->due_date)->format('Ymd');
+            $nominal = number_format($po->total, 0, ',', '.');
+            $ical .= "BEGIN:VEVENT\r\nUID:PO-{$po->id}@berlianmandiri.com\r\nDTSTAMP:{$date}T000000Z\r\nDTSTART;VALUE=DATE:{$date}\r\nSUMMARY:💸 JATUH TEMPO HUTANG: {$po->contact->name}\r\nDESCRIPTION:Tagihan hutang kepada Pemasok: {$po->contact->name}. Nominal: Rp {$nominal}. No Ref: {$po->reference_no}\r\nEND:VEVENT\r\n";
+        }
+
+        $ical .= "END:VCALENDAR";
+
+        return response($ical)->header('Content-Type', 'text/calendar; charset=utf-8');
+    });
 });
