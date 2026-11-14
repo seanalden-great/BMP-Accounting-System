@@ -55,6 +55,24 @@
                 </div>
             </div>
 
+            <!-- Bagian Preferensi Sistem & Notifikasi -->
+            <h3 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4 mt-8">Preferensi Sistem</h3>
+
+            <div class="bg-white border border-slate-200 p-5 rounded-lg mb-8 shadow-sm flex items-center justify-between hover:border-blue-300 transition-colors">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i data-feather="mail" class="w-4 h-4 text-blue-600"></i> Terima Notifikasi Email
+                    </h4>
+                    <p class="text-xs text-slate-500 mt-1 max-w-lg">Izinkan sistem ERP mengirimkan pengingat (seperti tagihan jatuh tempo, butuh persetujuan, atau peringatan keamanan) langsung ke kotak masuk email Anda.</p>
+                </div>
+
+                <!-- Tombol Sakelar (Toggle Switch) -->
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input type="checkbox" name="email_notifications" value="1" class="sr-only peer" {{ (isset($user->email_notifications) ? $user->email_notifications : 1) ? 'checked' : '' }}>
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
             <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
                 <p class="text-sm text-yellow-800 font-semibold mb-3 flex items-center gap-2">
                     <i data-feather="alert-circle" class="w-4 h-4"></i> Ganti Kata Sandi (Kosongkan jika tidak ingin mengubah sandi)
@@ -79,6 +97,61 @@
                     </ul>
                 </div>
             @endif
+
+            <!-- ============================================== -->
+            <!-- FITUR BARU: RIWAYAT AKTIVITAS LOGIN TERAKHIR   -->
+            <!-- ============================================== -->
+            <h3 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4 mt-10 flex items-center gap-2">
+                <i data-feather="activity" class="w-5 h-5 text-slate-500"></i> Aktivitas Login Anda Terakhir
+            </h3>
+
+            <div class="bg-white border border-slate-200 rounded-lg overflow-hidden mb-4 shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Waktu & Tanggal</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Alamat IP (Jaringan)</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Perangkat & Browser</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($loginLogs as $log)
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-4 text-sm font-semibold text-slate-700 whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($log->created_at)->translatedFormat('d M Y, H:i') }} WIB
+                                </td>
+                                <td class="p-4 text-sm font-mono text-slate-600 bg-slate-50/50">
+                                    {{ $log->ip_address }}
+                                </td>
+                                <td class="p-4 text-xs text-slate-500 max-w-xs" title="{{ $log->user_agent }}">
+                                    <div class="flex items-center gap-2">
+                                        <!-- Cek apakah login dari HP atau PC -->
+                                        @if(str_contains(strtolower($log->user_agent), 'mobile') || str_contains(strtolower($log->user_agent), 'android') || str_contains(strtolower($log->user_agent), 'iphone'))
+                                            <i data-feather="smartphone" class="w-4 h-4 text-blue-500 shrink-0"></i>
+                                        @else
+                                            <i data-feather="monitor" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                        @endif
+                                        <span class="truncate">{{ $log->user_agent ?: 'Perangkat Tidak Dikenal' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="p-6 text-center text-sm text-slate-500 font-medium bg-slate-50/50">
+                                    Mulai sesi berikutnya, aktivitas masuk Anda akan terekam di sini demi keamanan.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-400 italic mb-8 flex gap-1.5 items-start">
+                <i data-feather="info" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-500"></i>
+                <span>Sistem secara otomatis mendeteksi jaringan dan perangkat. Jika Anda melihat Alamat IP atau Perangkat asing yang mencurigakan di tabel ini, segera ganti kata sandi Anda pada kolom di atas!</span>
+            </p>
 
             <div class="flex justify-end border-t border-slate-100 pt-6">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2">

@@ -58,7 +58,7 @@
 //                 'full_name' => $validated['full_name'],
 //                 'role'      => $validated['role'],
 //                 // Jika ingin menambah permissions nanti, bisa disisipkan di sini
-//                 'permissions' => '', 
+//                 'permissions' => '',
 //             ]);
 
 //             return redirect()->route('login')->with('success', 'Akun berhasil didaftarkan! Silakan Login.');
@@ -73,7 +73,7 @@
 //         Auth::logout();
 //         $request->session()->invalidate();
 //         $request->session()->regenerateToken();
-        
+
 //         return redirect()->route('login');
 //     }
 // }
@@ -112,7 +112,7 @@ class AuthController extends Controller
 
         $credentials = [
             $loginField => $validated['username'],
-            'password'  => $validated['password'],
+            'password' => $validated['password'],
         ];
 
         // Ambil status centang "Ingat saya" (remember_token)
@@ -120,6 +120,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+
             return redirect()->intended('/');
         }
 
@@ -133,20 +134,21 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:100',
-            'username'  => 'required|string|max:50|unique:users,username',
-            'email'     => 'nullable|email|max:255|unique:users,email',
-            'password'  => 'required|string|min:6',
-            'role'      => 'required|in:Admin,Manager,Staff',
+            'username' => 'required|string|max:50|unique:users,username',
+            'email' => 'nullable|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6',
+            // 'role'      => 'required|in:Admin,Manager,Staff',
+            'role' => 'required|in:Admin,Gudang,Developer,Direktur',
         ]);
 
         try {
             User::create([
-                'name'        => $validated['full_name'], // Kolom standar Laravel
-                'full_name'   => $validated['full_name'], // Kolom eksisting ERP
-                'username'    => $validated['username'],
-                'email'       => $validated['email'] ?? null,
-                'password'    => Hash::make($validated['password']),
-                'role'        => $validated['role'],
+                'name' => $validated['full_name'], // Kolom standar Laravel
+                'full_name' => $validated['full_name'], // Kolom eksisting ERP
+                'username' => $validated['username'],
+                'email' => $validated['email'] ?? null,
+                'password' => Hash::make($validated['password']),
+                'role' => $validated['role'],
                 'permissions' => '',
             ]);
 
@@ -162,7 +164,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
         return redirect()->route('login');
     }
 }

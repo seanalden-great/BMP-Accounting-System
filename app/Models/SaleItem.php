@@ -13,7 +13,9 @@ class SaleItem extends Model
         'product_sku',
         'quantity',
         'price',
-        'sub_total'
+        'sub_total',
+        'tax_rate',
+        'tax_amount'
     ];
 
     public function sale()

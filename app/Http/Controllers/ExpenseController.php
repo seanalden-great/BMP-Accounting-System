@@ -436,12 +436,136 @@ class ExpenseController extends Controller
 
         $contacts = Contact::orderBy('name', 'asc')->get();
         $expenseAccounts = Account::where('code', 'LIKE', '7%')->where('is_header', false)->get();
-        $paymentAccounts = Account::where(function($query) {
+        $paymentAccounts = Account::where(function ($query) {
             $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%');
         })->where('is_header', false)->get();
 
         return view('expenses.index', compact('expenses', 'contacts', 'expenseAccounts', 'paymentAccounts', 'startDate', 'endDate'));
     }
+
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'date'         => 'required|date',
+    //         'reference_no' => 'nullable|string|max:50',
+    //         'contact_id'   => 'nullable|exists:contacts,id',
+    //         'account_code' => 'required|exists:accounts,code',
+    //         'payment_code' => 'required|exists:accounts,code',
+    //         'amount'       => 'required|numeric|min:1',
+    //         'description'  => 'required|string',
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $expense = Expense::create([
+    //             'date'         => $validated['date'],
+    //             'reference_no' => $validated['reference_no'] ?? '',
+    //             'contact_id'   => $validated['contact_id'] ?? null,
+    //             'account_code' => $validated['account_code'],
+    //             'payment_code' => $validated['payment_code'],
+    //             'amount'       => $validated['amount'],
+    //             'description'  => $validated['description'],
+    //         ]);
+
+    //         $jDesc = "Biaya: " . $validated['description'];
+    //         if (!empty($validated['reference_no'])) {
+    //             $jDesc .= " (Ref: " . $validated['reference_no'] . ")";
+    //         }
+
+    //         $journalCode = "EXP-" . Carbon::now()->format('Ymd') . "-" . $expense->id;
+
+    //         $journal = Journal::create([
+    //             'date'         => $validated['date'],
+    //             'description'  => $jDesc,
+    //             'reference_no' => $journalCode,
+    //         ]);
+
+    //         JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['account_code'], 'debit' => $validated['amount'], 'credit' => 0]);
+    //         JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['payment_code'], 'debit' => 0, 'credit' => $validated['amount']]);
+
+    //         DB::commit();
+    //         return redirect()->route('expenses.index')->with('success', 'Biaya berhasil dicatat beserta Jurnalnya!');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->withInput()->with('error', 'Gagal mencatat pengeluaran biaya: ' . $e->getMessage());
+    //     }
+    // }
+
+    // // FUNGSI BARU: UPDATE (EDIT) DATA BIAYA BESERTA JURNALNYA
+    // public function update(Request $request, $id)
+    // {
+    //     $validated = $request->validate([
+    //         'date'         => 'required|date',
+    //         'reference_no' => 'nullable|string|max:50',
+    //         'contact_id'   => 'nullable|exists:contacts,id',
+    //         'account_code' => 'required|exists:accounts,code',
+    //         'payment_code' => 'required|exists:accounts,code',
+    //         'amount'       => 'required|numeric|min:1',
+    //         'description'  => 'required|string',
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $expense = Expense::findOrFail($id);
+
+    //         // Catat tanggal lama untuk mencari Jurnal Aslinya nanti
+    //         $oldDate = Carbon::parse($expense->date)->format('Ymd');
+
+    //         // 1. Update Data Induk Biaya
+    //         $expense->update([
+    //             'date'         => $validated['date'],
+    //             'reference_no' => $validated['reference_no'] ?? '',
+    //             'contact_id'   => $validated['contact_id'] ?? null,
+    //             'account_code' => $validated['account_code'],
+    //             'payment_code' => $validated['payment_code'],
+    //             'amount'       => $validated['amount'],
+    //             'description'  => $validated['description'],
+    //         ]);
+
+    //         // 2. Format Ulang Deskripsi Jurnal
+    //         $jDesc = "Biaya: " . $validated['description'];
+    //         if (!empty($validated['reference_no'])) {
+    //             $jDesc .= " (Ref: " . $validated['reference_no'] . ")";
+    //         }
+
+    //         // 3. Cari dan Ganti Jurnal Lama dengan yang Baru
+    //         $journalCode = "EXP-" . $oldDate . "-" . $expense->id;
+    //         $journal = Journal::where('reference_no', $journalCode)->first();
+
+    //         if ($journal) {
+    //             // Update Induk Jurnal
+    //             $journal->update([
+    //                 'date' => $validated['date'],
+    //                 'description' => $jDesc,
+    //             ]);
+
+    //             // Hapus entry lama lalu buat entry baru
+    //             JournalEntry::where('journal_id', $journal->id)->delete();
+
+    //             JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['account_code'], 'debit' => $validated['amount'], 'credit' => 0]);
+    //             JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['payment_code'], 'debit' => 0, 'credit' => $validated['amount']]);
+    //         }
+
+    //         DB::commit();
+    //         return redirect()->route('expenses.index')->with('success', 'Catatan biaya dan jurnal akuntansinya berhasil diperbarui.');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->withInput()->with('error', 'Gagal memperbarui catatan biaya.');
+    //     }
+    // }
+
+    // public function destroy($id)
+    // {
+    //     try {
+    //         $expense = Expense::findOrFail($id);
+    //         $expense->delete();
+    //         return redirect()->route('expenses.index')->with('success', 'Catatan biaya berhasil dihapus.');
+    //     } catch (\Exception $e) {
+    //         return redirect()->back()->with('error', 'Gagal menghapus catatan biaya.');
+    //     }
+    // }
 
     public function store(Request $request)
     {
@@ -452,12 +576,18 @@ class ExpenseController extends Controller
             'account_code' => 'required|exists:accounts,code',
             'payment_code' => 'required|exists:accounts,code',
             'amount'       => 'required|numeric|min:1',
+            'ppn_amount'   => 'nullable|numeric|min:0', // Validasi baru
+            'pph_amount'   => 'nullable|numeric|min:0', // Validasi baru
             'description'  => 'required|string',
         ]);
 
         DB::beginTransaction();
 
         try {
+            $ppn = $validated['ppn_amount'] ?? 0;
+            $pph = $validated['pph_amount'] ?? 0;
+            $netAmount = $validated['amount'] + $ppn - $pph; // Uang yang benar-benar keluar dari Bank
+
             $expense = Expense::create([
                 'date'         => $validated['date'],
                 'reference_no' => $validated['reference_no'] ?? '',
@@ -465,6 +595,8 @@ class ExpenseController extends Controller
                 'account_code' => $validated['account_code'],
                 'payment_code' => $validated['payment_code'],
                 'amount'       => $validated['amount'],
+                'ppn_amount'   => $ppn,
+                'pph_amount'   => $pph,
                 'description'  => $validated['description'],
             ]);
 
@@ -474,32 +606,104 @@ class ExpenseController extends Controller
             }
 
             $journalCode = "EXP-" . Carbon::now()->format('Ymd') . "-" . $expense->id;
-
             $journal = Journal::create([
                 'date'         => $validated['date'],
                 'description'  => $jDesc,
                 'reference_no' => $journalCode,
             ]);
 
+            // Jurnal Beban (Debit)
             JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['account_code'], 'debit' => $validated['amount'], 'credit' => 0]);
-            JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['payment_code'], 'debit' => 0, 'credit' => $validated['amount']]);
+
+            // Jurnal PPN Masukan (Debit) jika ada
+            if ($ppn > 0) {
+                // Mencari akun PPN Masukan (awalan 1), jika tidak ada, gabung ke beban
+                $ppnAcc = Account::where('name', 'LIKE', '%PPN Masukan%')->first() ?? Account::where('code', $validated['account_code'])->first();
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $ppnAcc->code, 'debit' => $ppn, 'credit' => 0]);
+            }
+
+            // Jurnal Hutang PPh (Kredit) jika ada
+            if ($pph > 0) {
+                // Mencari akun Hutang PPh (awalan 2), jika tidak ada, gabung ke bank
+                $pphAcc = Account::where('name', 'LIKE', '%PPh%')->where('code', 'LIKE', '2%')->first() ?? Account::where('code', $validated['payment_code'])->first();
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $pphAcc->code, 'debit' => 0, 'credit' => $pph]);
+            }
+
+            // Jurnal Kas/Bank (Kredit Sebesar Netto)
+            JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['payment_code'], 'debit' => 0, 'credit' => $netAmount]);
 
             DB::commit();
-            return redirect()->route('expenses.index')->with('success', 'Biaya berhasil dicatat beserta Jurnalnya!');
+            return redirect()->route('expenses.index')->with('success', 'Biaya dan Pajaknya berhasil dicatat beserta Jurnalnya!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', 'Gagal mencatat pengeluaran biaya: ' . $e->getMessage());
         }
     }
 
-    public function destroy($id)
+    public function update(Request $request, $id)
     {
+        $validated = $request->validate([
+            'date'         => 'required|date',
+            'reference_no' => 'nullable|string|max:50',
+            'contact_id'   => 'nullable|exists:contacts,id',
+            'account_code' => 'required|exists:accounts,code',
+            'payment_code' => 'required|exists:accounts,code',
+            'amount'       => 'required|numeric|min:1',
+            'ppn_amount'   => 'nullable|numeric|min:0',
+            'pph_amount'   => 'nullable|numeric|min:0',
+            'description'  => 'required|string',
+        ]);
+
+        DB::beginTransaction();
         try {
             $expense = Expense::findOrFail($id);
-            $expense->delete();
-            return redirect()->route('expenses.index')->with('success', 'Catatan biaya berhasil dihapus.');
+            $oldDate = Carbon::parse($expense->date)->format('Ymd');
+
+            $ppn = $validated['ppn_amount'] ?? 0;
+            $pph = $validated['pph_amount'] ?? 0;
+            $netAmount = $validated['amount'] + $ppn - $pph;
+
+            $expense->update([
+                'date'         => $validated['date'],
+                'reference_no' => $validated['reference_no'] ?? '',
+                'contact_id'   => $validated['contact_id'] ?? null,
+                'account_code' => $validated['account_code'],
+                'payment_code' => $validated['payment_code'],
+                'amount'       => $validated['amount'],
+                'ppn_amount'   => $ppn,
+                'pph_amount'   => $pph,
+                'description'  => $validated['description'],
+            ]);
+
+            $jDesc = "Biaya: " . $validated['description'];
+            if (!empty($validated['reference_no'])) {
+                $jDesc .= " (Ref: " . $validated['reference_no'] . ")";
+            }
+
+            $journalCode = "EXP-" . $oldDate . "-" . $expense->id;
+            $journal = Journal::where('reference_no', $journalCode)->first();
+
+            if ($journal) {
+                $journal->update(['date' => $validated['date'], 'description' => $jDesc]);
+                JournalEntry::where('journal_id', $journal->id)->delete();
+
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['account_code'], 'debit' => $validated['amount'], 'credit' => 0]);
+                if ($ppn > 0) {
+                    $ppnAcc = Account::where('name', 'LIKE', '%PPN Masukan%')->first() ?? Account::where('code', $validated['account_code'])->first();
+                    JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $ppnAcc->code, 'debit' => $ppn, 'credit' => 0]);
+                }
+                if ($pph > 0) {
+                    $pphAcc = Account::where('name', 'LIKE', '%PPh%')->where('code', 'LIKE', '2%')->first() ?? Account::where('code', $validated['payment_code'])->first();
+                    JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $pphAcc->code, 'debit' => 0, 'credit' => $pph]);
+                }
+                JournalEntry::create(['journal_id' => $journal->id, 'account_code' => $validated['payment_code'], 'debit' => 0, 'credit' => $netAmount]);
+            }
+
+            DB::commit();
+            return redirect()->route('expenses.index')->with('success', 'Catatan biaya dan jurnal akuntansinya berhasil diperbarui.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus catatan biaya.');
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui catatan biaya.');
         }
     }
 
@@ -510,14 +714,14 @@ class ExpenseController extends Controller
         $month = $now->month;
         $year = $now->year;
 
-        $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+        $romanMonths = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
         $romanMonth = $romanMonths[$month];
 
         $existingKbdCount = Expense::whereYear('date', $year)
-                                ->whereMonth('date', $month)
-                                ->whereNotNull('kbd_no')
-                                ->distinct('kbd_no')
-                                ->count('kbd_no');
+            ->whereMonth('date', $month)
+            ->whereNotNull('kbd_no')
+            ->distinct('kbd_no')
+            ->count('kbd_no');
 
         $nextSeq = $existingKbdCount + 1;
         $seqStr = str_pad($nextSeq, 3, '0', STR_PAD_LEFT);
@@ -525,16 +729,152 @@ class ExpenseController extends Controller
         return "{$seqStr}/KBD-BMP/{$romanMonth}/{$year}";
     }
 
+    // public function exportKbd(Request $request)
+    // {
+    //     $ids = explode(',', $request->query('ids'));
+    //     $format = $request->query('format');
+
+    //     $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
+
+    //     if ($expenses->isEmpty()) {
+    //         return redirect()->back()->with('error', 'Pilih minimal 1 pengeluaran untuk dicetak.');
+    //     }
+
+    //     $kbdNo = $expenses->first()->kbd_no;
+    //     if (!$kbdNo) {
+    //         $kbdNo = $this->generateKbdNumber();
+    //         Expense::whereIn('id', $ids)->update(['kbd_no' => $kbdNo]);
+    //         $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
+    //     }
+
+    //     $total = $expenses->sum('amount');
+    //     $creatorName = Auth::user()->full_name ?? (Auth::user()->name ?? 'Nita');
+    //     Carbon::setLocale('id');
+    //     $dateStr = Carbon::now()->translatedFormat('d F Y');
+
+    //     if ($format === 'csv') {
+    //         $headers = [
+    //             "Content-type"        => "text/csv",
+    //             "Content-Disposition" => "attachment; filename=KBD_{$kbdNo}.csv",
+    //             "Pragma"              => "no-cache",
+    //             "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+    //             "Expires"             => "0"
+    //         ];
+
+    //         $callback = function() use ($expenses, $kbdNo, $total, $dateStr, $creatorName) {
+    //             $file = fopen('php://output', 'w');
+    //             fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
+    //             fputcsv($file, ['ANGGARAN DANA']);
+    //             fputcsv($file, ['No. ' . $kbdNo]);
+    //             fputcsv($file, []);
+    //             fputcsv($file, ['Keperluan :']);
+
+    //             $i = 1;
+    //             foreach ($expenses as $exp) {
+    //                 fputcsv($file, [$i++, $exp->description, 'Rp', $exp->amount]);
+    //             }
+
+    //             fputcsv($file, []);
+    //             fputcsv($file, ['', 'TOTAL', 'Rp', $total]);
+    //             fputcsv($file, []);
+
+    //             fputcsv($file, ['Surabaya, ' . $dateStr]);
+    //             fputcsv($file, ['Dibuat Oleh', 'Mengetahui', 'Menyetujui']);
+    //             fputcsv($file, []);
+    //             fputcsv($file, []);
+    //             fputcsv($file, [$creatorName, 'Melisa', 'HARIJANTO']);
+    //             fclose($file);
+    //         };
+
+    //         return response()->stream($callback, 200, $headers);
+    //     }
+
+    //     return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName'));
+    // }
+
+    // public function exportKbd(Request $request)
+    // {
+    //     $ids = explode(',', $request->query('ids'));
+    //     $format = $request->query('format'); // 'print' atau 'csv'
+    //     $type = $request->query('type', 'internal'); // 'internal' atau 'pajak'
+
+    //     $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
+
+    //     if ($expenses->isEmpty()) {
+    //         return redirect()->back()->with('error', 'Pilih minimal 1 pengeluaran untuk dicetak.');
+    //     }
+
+    //     // Cek apakah item yang dipilih sudah pernah di-print KBD sebelumnya (punya nomor).
+    //     $kbdNo = $expenses->first()->kbd_no;
+    //     if (!$kbdNo) {
+    //         $kbdNo = $this->generateKbdNumber();
+    //         Expense::whereIn('id', $ids)->update(['kbd_no' => $kbdNo]);
+    //         $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
+    //     }
+
+    //     $total = $expenses->sum('amount');
+
+    //     $creatorName = Auth::user()->full_name ?? (Auth::user()->name ?? 'Nita');
+    //     Carbon::setLocale('id');
+    //     $dateStr = Carbon::now()->translatedFormat('d F Y');
+
+    //     // Tentukan Judul Berdasarkan Tipe
+    //     $reportTitle = $type === 'pajak' ? 'ANGGARAN DANA (PAJAK)' : 'ANGGARAN DANA (INTERNAL)';
+
+    //     // FORMAT 1: Ekspor ke CSV / Excel / Spreadsheet
+    //     if ($format === 'csv') {
+    //         $headers = [
+    //             "Content-type"        => "text/csv",
+    //             "Content-Disposition" => "attachment; filename=KBD_{$type}_{$kbdNo}.csv",
+    //             "Pragma"              => "no-cache",
+    //             "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+    //             "Expires"             => "0"
+    //         ];
+
+    //         $callback = function() use ($expenses, $kbdNo, $total, $dateStr, $creatorName, $reportTitle) {
+    //             $file = fopen('php://output', 'w');
+    //             // Tulis Header
+    //             fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
+    //             fputcsv($file, [$reportTitle]);
+    //             fputcsv($file, ['No. ' . $kbdNo]);
+    //             fputcsv($file, []);
+    //             fputcsv($file, ['Keperluan :']);
+
+    //             // Tulis Item
+    //             $i = 1;
+    //             foreach ($expenses as $exp) {
+    //                 fputcsv($file, [$i++, $exp->description, 'Rp', $exp->amount]);
+    //             }
+
+    //             fputcsv($file, []);
+    //             fputcsv($file, ['', 'TOTAL', 'Rp', $total]);
+    //             fputcsv($file, []);
+
+    //             // Tulis Footer Tanda Tangan
+    //             fputcsv($file, ['Surabaya, ' . $dateStr]);
+    //             fputcsv($file, ['Dibuat Oleh', 'Mengetahui', 'Menyetujui']);
+    //             fputcsv($file, []);
+    //             fputcsv($file, []);
+    //             fputcsv($file, [$creatorName, 'Melisa', 'HARIJANTO']);
+    //             fclose($file);
+    //         };
+
+    //         return response()->stream($callback, 200, $headers);
+    //     }
+
+    //     // FORMAT 2: Cetak Layar HTML (Untuk Print PDF)
+    //     return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName', 'reportTitle'));
+    // }
+
+    // (Cari & Timpa fungsi exportKbd di bawah)
     public function exportKbd(Request $request)
     {
         $ids = explode(',', $request->query('ids'));
         $format = $request->query('format');
+        $type = $request->query('type', 'internal');
 
         $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
-
-        if ($expenses->isEmpty()) {
-            return redirect()->back()->with('error', 'Pilih minimal 1 pengeluaran untuk dicetak.');
-        }
+        if ($expenses->isEmpty()) return redirect()->back()->with('error', 'Pilih minimal 1 pengeluaran.');
 
         $kbdNo = $expenses->first()->kbd_no;
         if (!$kbdNo) {
@@ -543,28 +883,35 @@ class ExpenseController extends Controller
             $expenses = Expense::whereIn('id', $ids)->orderBy('date', 'asc')->get();
         }
 
-        $total = $expenses->sum('amount');
+        // Hitung Grand Total dari Netto (DPP + PPN - PPh)
+        $total = $expenses->sum(function ($exp) {
+            return $exp->amount + $exp->ppn_amount - $exp->pph_amount;
+        });
+
         $creatorName = Auth::user()->full_name ?? (Auth::user()->name ?? 'Nita');
         Carbon::setLocale('id');
         $dateStr = Carbon::now()->translatedFormat('d F Y');
+        $reportTitle = $type === 'pajak' ? 'ANGGARAN DANA (PAJAK)' : 'ANGGARAN DANA (INTERNAL)';
 
         if ($format === 'csv') {
             $headers = [
                 "Content-type"        => "text/csv",
-                "Content-Disposition" => "attachment; filename=KBD_{$kbdNo}.csv",
+                "Content-Disposition" => "attachment; filename=KBD_{$type}_{$kbdNo}.csv",
                 "Pragma"              => "no-cache",
                 "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
                 "Expires"             => "0"
             ];
 
-            $callback = function() use ($expenses, $kbdNo, $total, $dateStr, $creatorName) {
+            $callback = function () use ($expenses, $kbdNo, $total, $dateStr, $creatorName, $reportTitle) {
                 $file = fopen('php://output', 'w');
+                // Tulis Header
                 fputcsv($file, ['PT. BERLIAN MANDIRI PERKASA']);
-                fputcsv($file, ['ANGGARAN DANA']);
+                fputcsv($file, [$reportTitle]);
                 fputcsv($file, ['No. ' . $kbdNo]);
                 fputcsv($file, []);
                 fputcsv($file, ['Keperluan :']);
 
+                // Tulis Item
                 $i = 1;
                 foreach ($expenses as $exp) {
                     fputcsv($file, [$i++, $exp->description, 'Rp', $exp->amount]);
@@ -574,6 +921,7 @@ class ExpenseController extends Controller
                 fputcsv($file, ['', 'TOTAL', 'Rp', $total]);
                 fputcsv($file, []);
 
+                // Tulis Footer Tanda Tangan
                 fputcsv($file, ['Surabaya, ' . $dateStr]);
                 fputcsv($file, ['Dibuat Oleh', 'Mengetahui', 'Menyetujui']);
                 fputcsv($file, []);
@@ -585,6 +933,6 @@ class ExpenseController extends Controller
             return response()->stream($callback, 200, $headers);
         }
 
-        return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName'));
+        return view('expenses.kbd_print', compact('expenses', 'kbdNo', 'total', 'dateStr', 'creatorName', 'reportTitle'));
     }
 }

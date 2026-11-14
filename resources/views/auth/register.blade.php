@@ -15,10 +15,10 @@
             <h1 class="text-2xl font-bold text-orange-400">PT Berlian Mandiri Perkasa</h1>
             <p class="text-slate-400 mt-2 text-sm">Pendaftaran Akun Baru</p>
         </div>
-        
+
         <div class="p-8">
             <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Lengkapi Data Anda</h2>
-            
+
             @if($errors->any())
                 <div class="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-5 text-center font-medium border border-red-200">
                     {{ $errors->first() }}
@@ -27,7 +27,7 @@
 
             <form action="{{ route('register') }}" method="POST" class="space-y-4">
                 @csrf
-                
+
                 <!-- Field Nama Lengkap -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label>
@@ -35,9 +35,9 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="credit-card" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="text" 
-                            name="full_name" 
+                        <input
+                            type="text"
+                            name="full_name"
                             required
                             value="{{ old('full_name') }}"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -53,9 +53,9 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="user" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="text" 
-                            name="username" 
+                        <input
+                            type="text"
+                            name="username"
                             required
                             value="{{ old('username') }}"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -71,10 +71,10 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="lock" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="password" 
-                            name="password" 
-                            required 
+                        <input
+                            type="password"
+                            name="password"
+                            required
                             minlength="6"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                             placeholder="Minimal 6 karakter"
@@ -89,7 +89,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="briefcase" class="w-4 h-4"></i>
                         </div>
-                        <select 
+                        <select
                             name="role"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none"
                         >
@@ -100,8 +100,8 @@
                     </div>
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors mt-4 shadow-md"
                 >
                     Daftarkan Akun
@@ -109,7 +109,7 @@
             </form>
 
             <div class="mt-6 text-center text-sm text-slate-600">
-                Sudah memiliki akun? 
+                Sudah memiliki akun?
                 <a href="{{ route('login') }}" class="text-blue-600 font-bold hover:underline hover:text-blue-700 transition-colors">
                     Login di sini
                 </a>
@@ -139,10 +139,10 @@
             <h1 class="text-2xl font-bold text-orange-400">PT Berlian Mandiri Perkasa</h1>
             <p class="text-slate-400 mt-2 text-sm">Pendaftaran Akun Baru</p>
         </div>
-        
+
         <div class="p-8">
             <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Lengkapi Data Anda</h2>
-            
+
             @if(session('error'))
                 <div class="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-5 text-center font-medium border border-red-200">
                     {{ session('error') }}
@@ -157,7 +157,7 @@
 
             <form action="{{ route('register') }}" method="POST" class="space-y-4">
                 @csrf
-                
+
                 <!-- Field Nama Lengkap (Mengisi `full_name` & `name`) -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label>
@@ -165,9 +165,9 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="credit-card" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="text" 
-                            name="full_name" 
+                        <input
+                            type="text"
+                            name="full_name"
                             required
                             value="{{ old('full_name') }}"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -183,9 +183,9 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="user" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="text" 
-                            name="username" 
+                        <input
+                            type="text"
+                            name="username"
                             required
                             value="{{ old('username') }}"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -201,9 +201,9 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="mail" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="email" 
-                            name="email" 
+                        <input
+                            type="email"
+                            name="email"
                             value="{{ old('email') }}"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                             placeholder="nama@perusahaan.com"
@@ -218,10 +218,10 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="lock" class="w-4 h-4"></i>
                         </div>
-                        <input 
-                            type="password" 
-                            name="password" 
-                            required 
+                        <input
+                            type="password"
+                            name="password"
+                            required
                             minlength="6"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                             placeholder="Minimal 6 karakter"
@@ -236,19 +236,28 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i data-feather="briefcase" class="w-4 h-4"></i>
                         </div>
-                        <select 
+                        {{-- <select
                             name="role"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none"
                         >
                             <option value="Staff" {{ old('role') == 'Staff' ? 'selected' : '' }}>Staff (Akses Standar)</option>
                             <option value="Manager" {{ old('role') == 'Manager' ? 'selected' : '' }}>Manager (Persetujuan Data)</option>
                             <option value="Admin" {{ old('role') == 'Admin' ? 'selected' : '' }}>Admin (Akses Penuh)</option>
+                        </select> --}}
+                        <select
+                            name="role"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none"
+                        >
+                            <option value="Admin" {{ old('role') == 'Admin' ? 'selected' : '' }}>Admin (Pengelola Transaksi & Keuangan)</option>
+                            <option value="Gudang" {{ old('role') == 'Gudang' ? 'selected' : '' }}>Gudang (Pengelola Stok & Inventori)</option>
+                            <option value="Developer" {{ old('role') == 'Developer' ? 'selected' : '' }}>Developer (Pengelola Sistem IT)</option>
+                            <option value="Direktur" {{ old('role') == 'Direktur' ? 'selected' : '' }}>Direktur (Pemantau & Laporan Penuh)</option>
                         </select>
                     </div>
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors mt-4 shadow-md"
                 >
                     Daftarkan Akun
@@ -256,7 +265,7 @@
             </form>
 
             <div class="mt-6 text-center text-sm text-slate-600">
-                Sudah memiliki akun? 
+                Sudah memiliki akun?
                 <a href="{{ route('login') }}" class="text-blue-600 font-bold hover:underline hover:text-blue-700 transition-colors">
                     Login di sini
                 </a>

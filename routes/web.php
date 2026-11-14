@@ -32,7 +32,6 @@
 //     Route::post('/register', [AuthController::class, 'register']);
 // });
 
-
 // /*
 // |--------------------------------------------------------------------------
 // | Rute Terproteksi (Hanya Bisa Diakses Setelah Login)
@@ -99,24 +98,25 @@
 //     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 // });
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SettingController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\FaqController;
-use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\JournalController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FaqController;
+use App\Http\Controllers\FixedAssetController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\WarehouseController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,11 +145,24 @@ Route::middleware('auth')->group(function () {
 
     // Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::get('/settings/roles', [SettingController::class, 'rolePermissions'])->name('settings.roles');
+    Route::put('/settings/roles', [SettingController::class, 'updateRolePermissions'])->name('settings.updateRoles');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+    // --- FITUR BARU: MANAJEMEN PENGGUNA ---
+    Route::get('/settings/users', [SettingController::class, 'users'])->name('settings.users');
+    Route::put('/settings/users/{id}', [SettingController::class, 'updateUser'])->name('settings.updateUser');
+    Route::delete('/settings/users/{id}', [SettingController::class, 'deleteUser'])->name('settings.deleteUser');
 
     // Inventori / Stok
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock'])->name('inventory.adjust');
+    // --- FITUR BARU: MUTASI ANTAR GUDANG ---
+    Route::post('/inventory/transfer', [InventoryController::class, 'transferStock'])->name('inventory.transfer');
+
+    // TAMBAHKAN DUA RUTE INI UNTUK UPDATE DAN DELETE
+    Route::put('/inventory/{id}', [InventoryController::class, 'update'])->name('inventory.update');
+    Route::delete('/inventory/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
 
     // Kas & Bank dan Laporan
     Route::get('/journals', [JournalController::class, 'index'])->name('journals.index');
@@ -167,21 +180,71 @@ Route::middleware('auth')->group(function () {
     // Aset Tetap Khusus
     Route::post('fixed-assets/{id}/depreciate', [FixedAssetController::class, 'depreciate'])->name('fixed-assets.depreciate');
 
+    Route::get('/products/export', [App\Http\Controllers\ProductController::class, 'export'])->name('products.export');
     // Resource Routes Standar
-    Route::resource('products', ProductController::class)->except(['create', 'show']);
+    Route::resource('products', ProductController::class)->except(['create']);
+    // --- FITUR BARU: EKSPOR KARTU STOK (BIN CARD) ---
+    Route::get('/products/{id}/export-ledger', [ProductController::class, 'exportLedger'])->name('products.exportLedger');
     Route::resource('categories', CategoryController::class)->except(['create', 'show']);
+    Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
     Route::resource('contacts', ContactController::class)->except(['create', 'show']);
     Route::resource('faqs', FaqController::class)->except(['create', 'show']);
+    Route::get('/accounts/export', [AccountController::class, 'export'])->name('accounts.export');
     Route::resource('accounts', AccountController::class)->except(['create', 'show', 'edit']);
     Route::resource('purchases', PurchaseController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('purchases/deliveries', [PurchaseController::class, 'showDeliveries'])->name('purchases.deliveries');
     Route::get('purchases/bills', [PurchaseController::class, 'showBills'])->name('purchases.bills');
+    Route::get('/purchases/overview', [PurchaseController::class, 'overview'])->name('purchases.overview');
+    // Transaksi Pembelian Khusus
+    Route::post('purchases/{id}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
+    Route::post('purchases/{id}/bill', [PurchaseController::class, 'bill'])->name('purchases.bill');
+
+    // TAMBAHKAN DUA BARIS INI UNTUK SISTEM APPROVAL
+    Route::post('purchases/{id}/approve', [PurchaseController::class, 'approve'])->name('purchases.approve');
+    Route::post('purchases/{id}/reject', [PurchaseController::class, 'reject'])->name('purchases.reject');
+    // --- FITUR BARU: RETUR PEMBELIAN (DEBIT NOTE) ---
+    Route::post('/purchases/{id}/return', [PurchaseController::class, 'processReturn'])->name('purchases.return');
+    // --- FITUR BARU: LAPORAN UMUR HUTANG (AP AGING) ---
+    Route::get('/purchases/payable-aging', [PurchaseController::class, 'payableAging'])->name('purchases.aging');
+    // --- FITUR BARU: REQUEST FOR QUOTATION (DRAF PO) ---
+    Route::post('/purchases/{id}/convert-to-po', [App\Http\Controllers\PurchaseController::class, 'convertToPo'])->name('purchases.convertToPo');
+    Route::get('/purchases/{id}/quotation', [App\Http\Controllers\PurchaseController::class, 'printQuotation'])->name('purchases.printQuotation');
     Route::resource('sales', SaleController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
     Route::get('sales/deliveries', [SaleController::class, 'showDeliveries'])->name('sales.deliveries');
     Route::get('sales/invoices', [SaleController::class, 'showInvoices'])->name('sales.invoices');
+    Route::get('/sales/overview', [SaleController::class, 'overview'])->name('sales.overview');
+    Route::get('/sales/efaktur', [SaleController::class, 'exportEfaktur'])->name('sales.efaktur');
+    // Transaksi Penjualan Khusus
+    Route::post('sales/{id}/deliver', [SaleController::class, 'deliver'])->name('sales.deliver');
+    Route::post('sales/{id}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
+
+    // TAMBAHKAN DUA BARIS INI UNTUK SISTEM APPROVAL PENJUALAN
+    Route::post('sales/{id}/approve', [SaleController::class, 'approve'])->name('sales.approve');
+    Route::post('sales/{id}/reject', [SaleController::class, 'reject'])->name('sales.reject');
+    Route::get('/sales/{id}/delivery-note', [SaleController::class, 'printDeliveryNote'])->name('sales.deliveryNote');
+    // --- FITUR BARU: RETUR PENJUALAN (CREDIT NOTE) ---
+    Route::post('/sales/{id}/return', [SaleController::class, 'processReturn'])->name('sales.return');
+    // --- FITUR BARU: LAPORAN UMUR PIUTANG (AR AGING) ---
+    Route::get('/sales/receivable-aging', [App\Http\Controllers\SaleController::class, 'receivableAging'])->name('sales.aging');
+    // --- FITUR BARU: QUOTATION (SURAT PENAWARAN HARGA) ---
+    Route::post('/sales/{id}/convert-to-so', [App\Http\Controllers\SaleController::class, 'convertToSo'])->name('sales.convertToSo');
+    Route::get('/sales/{id}/quotation', [App\Http\Controllers\SaleController::class, 'printQuotation'])->name('sales.printQuotation');
+    // RUTE EKSPOR ASET TETAP (Wajib ditaruh di atas resource fixed-assets)
+    Route::get('/fixed-assets/export', [FixedAssetController::class, 'export'])->name('fixed-assets.export');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
-    Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
+    Route::resource('fixed-assets', FixedAssetController::class)->except(['create', 'show', 'edit', 'update', 'destroy']);
+    // Route::resource('expenses', ExpenseController::class)->except(['create', 'show', 'edit', 'update']);
+    Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
     Route::get('/expenses/export-kbd', [ExpenseController::class, 'exportKbd'])->name('expenses.exportKbd');
+
+    Route::get('/journals/export', [JournalController::class, 'export'])->name('journals.export');
+
+    // --- FITUR BARU: REKONSILIASI BANK ---
+    Route::get('/journals/reconciliation', [JournalController::class, 'reconciliation'])->name('journals.reconciliation');
+    Route::post('/journals/reconciliation/save', [JournalController::class, 'saveReconciliation'])->name('journals.reconciliation.save');
+    Route::post('/journals/reconciliation/adjust', [JournalController::class, 'reconciliationAdjust'])->name('journals.reconciliation.adjust');
+    // Halaman Buku Besar (General Ledger)
+    Route::get('/ledger', [JournalController::class, 'ledger'])->name('journals.ledger');
 
     // Rute Manajemen Gudang
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
@@ -193,27 +256,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Untuk Kalender
-    Route::get('/calendar/feed.ics', function () {
-        $sales = \App\Models\Sale::whereNotNull('due_date')->whereIn('status', ['Pesanan', 'Pengiriman'])->get();
-        $purchases = \App\Models\Purchase::whereNotNull('due_date')->whereIn('status', ['Pesanan', 'Pengiriman'])->get();
+    Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+    Route::post('/payroll/employee', [PayrollController::class, 'storeEmployee'])->name('payroll.storeEmployee');
+    // 3 RUTE BARU YANG HARUS DITAMBAHKAN:
+    Route::put('/payroll/employee/{id}', [PayrollController::class, 'updateEmployee'])->name('payroll.updateEmployee');
+    Route::delete('/payroll/employee/{id}', [PayrollController::class, 'destroyEmployee'])->name('payroll.destroyEmployee');
+    Route::post('/payroll/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
+    Route::get('/payroll/slip/{id}/{employee_id}', [PayrollController::class, 'printSlip'])->name('payroll.printSlip');
 
-        $ical = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//PT Berlian Mandiri Perkasa//ERP System//ID\r\n";
-
-        foreach ($sales as $sale) {
-            $date = \Carbon\Carbon::parse($sale->due_date)->format('Ymd');
-            $nominal = number_format($sale->total, 0, ',', '.');
-            $ical .= "BEGIN:VEVENT\r\nUID:SO-{$sale->id}@berlianmandiri.com\r\nDTSTAMP:{$date}T000000Z\r\nDTSTART;VALUE=DATE:{$date}\r\nSUMMARY:💰 PIUTANG CAIR: {$sale->contact->name}\r\nDESCRIPTION:Tagihan piutang dari Pelanggan: {$sale->contact->name}. Nominal: Rp {$nominal}. No Ref: {$sale->reference_no}\r\nEND:VEVENT\r\n";
-        }
-
-        foreach ($purchases as $po) {
-            $date = \Carbon\Carbon::parse($po->due_date)->format('Ymd');
-            $nominal = number_format($po->total, 0, ',', '.');
-            $ical .= "BEGIN:VEVENT\r\nUID:PO-{$po->id}@berlianmandiri.com\r\nDTSTAMP:{$date}T000000Z\r\nDTSTART;VALUE=DATE:{$date}\r\nSUMMARY:💸 JATUH TEMPO HUTANG: {$po->contact->name}\r\nDESCRIPTION:Tagihan hutang kepada Pemasok: {$po->contact->name}. Nominal: Rp {$nominal}. No Ref: {$po->reference_no}\r\nEND:VEVENT\r\n";
-        }
-
-        $ical .= "END:VCALENDAR";
-
-        return response($ical)->header('Content-Type', 'text/calendar; charset=utf-8');
-    });
+    Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit.index');
 });

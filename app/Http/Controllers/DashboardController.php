@@ -132,14 +132,38 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
 
         // --- SISTEM PERINGATAN DINI (H-7 JATUH TEMPO) ---
-        $sevenDays = Carbon::now()->addDays(7)->toDateString();
-        // Cari Pembelian (Hutang) yang belum lunas (Pesanan/Pengiriman)
-        $poAlerts = Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        // $sevenDays = Carbon::now()->addDays(7)->toDateString();
+        // // Cari Pembelian (Hutang) yang belum lunas (Pesanan/Pengiriman)
+        // $poAlerts = Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        //     ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
+        // // Cari Penjualan (Piutang) yang belum lunas
+        // $soAlerts = Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        //     ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
+        // $totalAlerts = $poAlerts->count() + $soAlerts->count();
+
+        // --- SISTEM PERINGATAN DINI (KLASIFIKASI 3 LEVEL) ---
+        $today = Carbon::today()->toDateString();
+        $sevenDays = Carbon::today()->addDays(7)->toDateString();
+
+        // Tarik semua tagihan mentah yang belum lunas (H-7 hingga masa lampau)
+        $poAlertsRaw = Purchase::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
             ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
-        // Cari Penjualan (Piutang) yang belum lunas
-        $soAlerts = Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
+        $soAlertsRaw = Sale::with('contact')->whereIn('status', ['Pesanan', 'Pengiriman'])
             ->whereDate('due_date', '<=', $sevenDays)->orderBy('due_date', 'asc')->get();
-        $totalAlerts = $poAlerts->count() + $soAlerts->count();
+
+        // Filter klasifikasi menggunakan Laravel Collections (Tanpa membebani Database berulang kali)
+        $poOverdue = $poAlertsRaw->filter(function($item) use ($today) { return $item->due_date < $today; });
+        $poToday   = $poAlertsRaw->filter(function($item) use ($today) { return $item->due_date == $today; });
+        $poUpcoming= $poAlertsRaw->filter(function($item) use ($today) { return $item->due_date > $today; });
+
+        $soOverdue = $soAlertsRaw->filter(function($item) use ($today) { return $item->due_date < $today; });
+        $soToday   = $soAlertsRaw->filter(function($item) use ($today) { return $item->due_date == $today; });
+        $soUpcoming= $soAlertsRaw->filter(function($item) use ($today) { return $item->due_date > $today; });
+
+        $totalOverdue = $poOverdue->count() + $soOverdue->count();
+        $totalToday   = $poToday->count() + $soToday->count();
+        $totalUpcoming= $poUpcoming->count() + $soUpcoming->count();
+        $totalAlerts  = $totalOverdue + $totalToday + $totalUpcoming;
 
         // 1. TOTAL PENDAPATAN
         $pendapatanBulanIni = Sale::whereIn('status', ['Pengiriman', 'Tagihan'])
@@ -188,12 +212,26 @@ class DashboardController extends Controller
             }
         }
 
-        // 5. RINCIAN PIUTANG
-        $piutangList = Sale::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // // 5. RINCIAN PIUTANG
+        // $piutangList = Sale::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // $totalPiutang = $piutangList->sum('total');
+
+        // // 6. RINCIAN HUTANG
+        // $hutangList = Purchase::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // $totalHutang = $hutangList->sum('total');
+
+        // 5. RINCIAN PIUTANG (Diurutkan dari Jatuh Tempo Paling Dekat)
+        $piutangList = Sale::with('contact')
+            ->where('status', 'Pengiriman')
+            ->orderBy('due_date', 'asc')
+            ->get();
         $totalPiutang = $piutangList->sum('total');
 
-        // 6. RINCIAN HUTANG
-        $hutangList = Purchase::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'asc')->get();
+        // 6. RINCIAN HUTANG (Diurutkan dari Jatuh Tempo Paling Dekat)
+        $hutangList = Purchase::with('contact')
+            ->where('status', 'Pengiriman')
+            ->orderBy('due_date', 'asc')
+            ->get();
         $totalHutang = $hutangList->sum('total');
 
         // 7. GRAFIK ARUS KAS
@@ -219,11 +257,89 @@ class DashboardController extends Controller
             $chartOutflows[] = $outflow;
         }
 
+        // 8. DATA TAMBAHAN (STATISTIK MASTER & OPERASIONAL)
+        $totalProduk = \App\Models\Product::count();
+        $totalKategori = \App\Models\Category::count();
+        $totalPelanggan = \App\Models\Contact::where('type', 'Customer')->count();
+        $totalPemasok = \App\Models\Contact::where('type', 'Supplier')->count();
+
+        $totalSO = Sale::count();
+        $totalPO = Purchase::count();
+        $totalExpense = Expense::count();
+
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+        //     'poAlerts', 'soAlerts', 'totalAlerts' // <-- Meneruskan data alert ke view
+        // ));
+
+        // Pastikan variabel baru tersebut dimasukkan ke dalam compact()
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+        //     'poAlerts', 'soAlerts', 'totalAlerts',
+        //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
+        // ));
+
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+
+        //     // Variabel Baru Notifikasi:
+        //     'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
+        //     'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
+
+        //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni'
+        // ));
+
+        // return view('dashboard', compact(
+        //     'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
+        //     'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
+        //     'chartLabels', 'chartInflows', 'chartOutflows',
+
+        //     // Variabel Notifikasi:
+        //     'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
+        //     'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
+
+        //     'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni',
+
+        //     // TAMBAHKAN INI: Agar form Quick Pay bisa memilih bank
+        //     'bankAccounts'
+        // ));
+
+        // 9. TOP 5 PRODUK TERLARIS BULAN INI
+        $topProducts = \App\Models\SaleItem::select('product_sku', DB::raw('SUM(quantity) as total_qty'))
+            ->whereHas('sale', function($q) use ($currentMonth, $currentYear) {
+                $q->whereMonth('date', $currentMonth)->whereYear('date', $currentYear);
+            })
+            ->groupBy('product_sku')
+            ->orderBy('total_qty', 'desc')
+            ->take(5)
+            ->with('product')
+            ->get();
+
+        // 10. AKTIVITAS JURNAL TERAKHIR (LIVE FEED)
+        // $recentActivities = \App\Models\Journal::orderBy('created_at', 'desc')->take(6)->get();
+        $recentActivities = \App\Models\Journal::orderBy('id', 'desc')->take(6)->get();
+
         return view('dashboard', compact(
             'pendapatanBulanIni', 'pengeluaranBulanIni', 'labaBersih', 'totalKasBank',
             'rekeningDetails', 'piutangList', 'totalPiutang', 'hutangList', 'totalHutang',
             'chartLabels', 'chartInflows', 'chartOutflows',
-            'poAlerts', 'soAlerts', 'totalAlerts' // <-- Meneruskan data alert ke view
+
+            // Variabel Notifikasi:
+            'poOverdue', 'poToday', 'poUpcoming', 'soOverdue', 'soToday', 'soUpcoming',
+            'totalOverdue', 'totalToday', 'totalUpcoming', 'totalAlerts',
+
+            'totalProduk', 'totalKategori', 'totalPelanggan', 'totalPemasok', 'totalSO', 'totalPO', 'totalExpense', 'pembelianBulanIni', 'biayaBulanIni',
+
+            'bankAccounts',
+
+            // TAMBAHAN ELEMEN BARU DASBOR:
+            'topProducts', 'recentActivities'
         ));
     }
 }
