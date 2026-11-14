@@ -667,6 +667,763 @@
 //     }
 // }
 
+// namespace App\Http\Controllers;
+
+// use App\Models\Purchase;
+// use App\Models\PurchaseItem;
+// use App\Models\Product;
+// use App\Models\ProductStock;
+// use App\Models\Warehouse;
+// use App\Models\Account;
+// use App\Models\Journal;
+// use App\Models\JournalEntry;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\DB;
+// use Carbon\Carbon;
+
+// class PurchaseController extends Controller
+// {
+//     // Fungsi bantuan (Helper) untuk Auto-Generate Nomor PO dan PI (Reset tiap bulan)
+//     private function generateDocNumber($type, $dateString)
+//     {
+//         $date = Carbon::parse($dateString);
+//         $month = $date->month;
+//         $year = $date->year;
+
+//         // Konversi angka bulan ke Romawi
+//         $romanMonths = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+//         $romanMonth = $romanMonths[$month];
+
+//         // Cari data terakhir di bulan dan tahun yang sama (mencocokkan pola string)
+//         $suffix = "/{$type}/BMP/{$romanMonth}/{$year}";
+
+//         if ($type === 'PO') {
+//             $latestDoc = Purchase::whereYear('date', $year)
+//                 ->whereMonth('date', $month)
+//                 ->where('reference_no', 'LIKE', '%'.$suffix)
+//                 ->orderBy('id', 'desc')
+//                 ->first();
+//             $latestRef = $latestDoc ? $latestDoc->reference_no : null;
+//         } else {
+//             // Untuk PI (Tagihan), kita mencarinya di tabel Jurnal
+//             $latestDoc = Journal::whereYear('date', $year)
+//                 ->whereMonth('date', $month)
+//                 ->where('reference_no', 'LIKE', '%'.$suffix)
+//                 ->orderBy('id', 'desc')
+//                 ->first();
+//             $latestRef = $latestDoc ? $latestDoc->reference_no : null;
+//         }
+
+//         $nextSeq = 1;
+//         if ($latestRef) {
+//             $parts = explode('/', $latestRef);
+//             if (isset($parts[0]) && is_numeric($parts[0])) {
+//                 $nextSeq = intval($parts[0]) + 1;
+//             }
+//         }
+
+//         // Format angka 3 digit (contoh: 001, 002, 010, 100)
+//         $seqStr = str_pad($nextSeq, 3, '0', STR_PAD_LEFT);
+
+//         return "{$seqStr}{$suffix}";
+//     }
+
+//     // public function index(Request $request)
+//     // {
+//     //     $query = Purchase::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
+
+//     //     if ($request->has('status') && $request->status != '') {
+//     //         $query->where('status', $request->status);
+//     //     }
+
+//     //     $purchases = $query->get();
+//     //     return view('purchases.index', compact('purchases'));
+//     // }
+
+//     // public function store(Request $request)
+//     // {
+//     //     $validated = $request->validate([
+//     //         'date'         => 'required|date',
+//     //         'due_date'     => 'nullable|date',
+//     //         'reference_no' => 'nullable|string|max:50',
+//     //         'contact_id'   => 'required|exists:contacts,id',
+//     //         'notes'        => 'nullable|string',
+//     //         'items'        => 'required|array|min:1',
+//     //         'items.*.product_sku' => 'required|exists:products,sku',
+//     //         'items.*.quantity'    => 'required|integer|min:1',
+//     //         'items.*.price'       => 'required|numeric|min:0',
+//     //     ]);
+
+//     //     DB::beginTransaction();
+
+//     //     try {
+//     //         // Jika referensi kosong, generate kode PO otomatis
+//     //         $refNo = $validated['reference_no'] ?: $this->generateDocNumber('PO', $validated['date']);
+
+//     //         $purchase = Purchase::create([
+//     //             'date'         => $validated['date'],
+//     //             'due_date'     => $validated['due_date'] ?? $validated['date'],
+//     //             'reference_no' => $refNo,
+//     //             'contact_id'   => $validated['contact_id'],
+//     //             'status'       => 'Pesanan',
+//     //             'notes'        => $validated['notes'] ?? '',
+//     //             'total'        => 0,
+//     //         ]);
+
+//     //         $grandTotal = 0;
+
+//     //         foreach ($validated['items'] as $item) {
+//     //             $subTotal = $item['quantity'] * $item['price'];
+//     //             $grandTotal += $subTotal;
+
+//     //             PurchaseItem::create([
+//     //                 'purchase_id' => $purchase->id,
+//     //                 'product_sku' => $item['product_sku'],
+//     //                 'quantity'    => $item['quantity'],
+//     //                 'price'       => $item['price'],
+//     //                 'sub_total'   => $subTotal,
+//     //             ]);
+//     //         }
+
+//     //         $purchase->update(['total' => $grandTotal]);
+
+//     //         DB::commit();
+//     //         return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+//     //     } catch (\Exception $e) {
+//     //         DB::rollBack();
+//     //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+//     //     }
+//     // }
+
+//     public function index(Request $request)
+//     {
+//         $query = Purchase::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
+
+//         if ($request->has('status') && $request->status != '') {
+//             $query->where('status', $request->status);
+//         }
+
+//         $purchases = $query->get();
+
+//         // Kalkulasi nomor PO selanjutnya untuk preview di form Modal
+//         $nextDocNumber = $this->generateDocNumber('PO', Carbon::now()->toDateString());
+
+//         return view('purchases.index', compact('purchases', 'nextDocNumber'));
+//     }
+
+//     // public function store(Request $request)
+//     // {
+//     //     $validated = $request->validate([
+//     //         'date'         => 'required|date',
+//     //         'due_date'     => 'nullable|date',
+//     //         // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
+//     //         'contact_id'   => 'required|exists:contacts,id',
+//     //         'notes'        => 'nullable|string',
+//     //         'items'        => 'required|array|min:1',
+//     //         'items.*.product_sku' => 'required|exists:products,sku',
+//     //         'items.*.quantity'    => 'required|integer|min:1',
+//     //         'items.*.price'       => 'required|numeric|min:0',
+//     //     ]);
+
+//     //     DB::beginTransaction();
+
+//     //     try {
+//     //         // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
+//     //         $refNo = $this->generateDocNumber('PO', $validated['date']);
+
+//     //         $purchase = Purchase::create([
+//     //             'date'         => $validated['date'],
+//     //             'due_date'     => $validated['due_date'] ?? $validated['date'],
+//     //             'reference_no' => $refNo,
+//     //             'contact_id'   => $validated['contact_id'],
+//     //             'status'       => 'Pesanan',
+//     //             'notes'        => $validated['notes'] ?? '',
+//     //             'total'        => 0,
+//     //         ]);
+
+//     //         $grandTotal = 0;
+
+//     //         foreach ($validated['items'] as $item) {
+//     //             $subTotal = $item['quantity'] * $item['price'];
+//     //             $grandTotal += $subTotal;
+
+//     //             PurchaseItem::create([
+//     //                 'purchase_id' => $purchase->id,
+//     //                 'product_sku' => $item['product_sku'],
+//     //                 'quantity'    => $item['quantity'],
+//     //                 'price'       => $item['price'],
+//     //                 'sub_total'   => $subTotal,
+//     //             ]);
+//     //         }
+
+//     //         $purchase->update(['total' => $grandTotal]);
+
+//     //         DB::commit();
+//     //         return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+//     //     } catch (\Exception $e) {
+//     //         DB::rollBack();
+//     //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+//     //     }
+//     // }
+
+//     public function store(Request $request)
+//     {
+//         $validated = $request->validate([
+//             'date'         => 'required|date',
+//             'due_date'     => 'nullable|date',
+//             'contact_id'   => 'required|exists:contacts,id',
+//             'notes'        => 'nullable|string',
+//             'items'        => 'required|array|min:1',
+//             'items.*.product_sku' => 'required|exists:products,sku',
+//             'items.*.quantity'    => 'required|integer|min:1',
+//             'items.*.price'       => 'required|numeric|min:0',
+//             'items.*.tax_rate'    => 'required|integer|in:0,11,12', // Validasi input pajak
+//         ]);
+
+//         DB::beginTransaction();
+
+//         // try {
+//         //     $refNo = $this->generateDocNumber('PO', $validated['date']);
+
+//         //     // $purchase = Purchase::create([
+//         //     //     'date'         => $validated['date'],
+//         //     //     'due_date'     => $validated['due_date'] ?? $validated['date'],
+//         //     //     'reference_no' => $refNo,
+//         //     //     'contact_id'   => $validated['contact_id'],
+//         //     //     'status'       => 'Pesanan',
+//         //     //     'notes'        => $validated['notes'] ?? '',
+//         //     //     'total'        => 0,
+//         //     //     'total_tax'    => 0, // Inisialisasi awal
+//         //     // ]);
+
+//         //     $purchase = Purchase::create([
+//         //         'date'         => $validated['date'],
+//         //         'due_date'     => $validated['due_date'] ?? $validated['date'],
+//         //         'reference_no' => $refNo,
+//         //         'contact_id'   => $validated['contact_id'],
+//         //         // UBAH BARIS INI:
+//         //         'status'       => 'Menunggu Persetujuan',
+//         //         'notes'        => $validated['notes'] ?? '',
+//         //         'total'        => 0,
+//         //         'total_tax'    => 0,
+//         //     ]);
+
+//         //     $grandTotal = 0;
+//         //     $grandTax = 0;
+
+//         //     foreach ($validated['items'] as $item) {
+//         //         // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
+//         //         $dpp = $item['quantity'] * $item['price'];
+//         //         $taxAmount = $dpp * ($item['tax_rate'] / 100);
+//         //         $subTotal = $dpp + $taxAmount;
+
+//         //         $grandTax += $taxAmount;
+//         //         $grandTotal += $subTotal;
+
+//         //         PurchaseItem::create([
+//         //             'purchase_id' => $purchase->id,
+//         //             'product_sku' => $item['product_sku'],
+//         //             'quantity'    => $item['quantity'],
+//         //             'price'       => $item['price'],
+//         //             'tax_rate'    => $item['tax_rate'],
+//         //             'tax_amount'  => $taxAmount,
+//         //             'sub_total'   => $subTotal,
+//         //         ]);
+//         //     }
+
+//         //     $purchase->update([
+//         //         'total' => $grandTotal,
+//         //         'total_tax' => $grandTax
+//         //     ]);
+
+//         //     DB::commit();
+//         //     return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
+//         // } catch (\Exception $e) {
+//         //     DB::rollBack();
+//         //     return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
+//         // }
+
+//         try {
+//             // Deteksi jenis tombol yang ditekan (Draf RFQ atau PO Langsung)
+//             $action = $request->input('action', 'po');
+//             $prefix = ($action === 'quotation') ? 'RFQ' : 'PO'; // RFQ = Request For Quotation
+//             $status = ($action === 'quotation') ? 'Penawaran' : 'Menunggu Persetujuan';
+
+//             $refNo = $this->generateDocNumber($prefix, $validated['date']);
+
+//             $purchase = Purchase::create([
+//                 'date'         => $validated['date'],
+//                 'due_date'     => $validated['due_date'] ?? $validated['date'],
+//                 'reference_no' => $refNo,
+//                 'contact_id'   => $validated['contact_id'],
+//                 'status'       => $status, // 'Penawaran' atau 'Menunggu Persetujuan'
+//                 'notes'        => $validated['notes'] ?? '',
+//                 'total'        => 0,
+//                 'total_tax'    => 0,
+//             ]);
+
+//             $grandTotal = 0;
+//             $grandTax = 0;
+
+//             foreach ($validated['items'] as $item) {
+//                 $dpp = $item['quantity'] * $item['price'];
+//                 $taxAmount = $dpp * ($item['tax_rate'] / 100);
+//                 $subTotal = $dpp + $taxAmount;
+
+//                 $grandTax += $taxAmount;
+//                 $grandTotal += $subTotal;
+
+//                 PurchaseItem::create([
+//                     'purchase_id' => $purchase->id,
+//                     'product_sku' => $item['product_sku'],
+//                     'quantity'    => $item['quantity'],
+//                     'price'       => $item['price'],
+//                     'tax_rate'    => $item['tax_rate'],
+//                     'tax_amount'  => $taxAmount,
+//                     'sub_total'   => $subTotal,
+//                 ]);
+//             }
+
+//             $purchase->update([
+//                 'total' => $grandTotal,
+//                 'total_tax' => $grandTax
+//             ]);
+
+//             DB::commit();
+//             $msg = ($action === 'quotation') ? 'Draf Permintaan (RFQ)' : 'Pesanan Pembelian (PO)';
+//             return redirect()->route('purchases.index')->with('success', "Dokumen {$msg} berhasil dibuat dengan nomor: {$refNo}");
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan dokumen pembelian.');
+//         }
+//     }
+
+//     public function receive(Request $request, $id)
+//     {
+//         $validated = $request->validate([
+//             'warehouse_id' => 'required|exists:warehouses,id',
+//         ]);
+
+//         DB::beginTransaction();
+
+//         try {
+//             $purchase = Purchase::with('items')->findOrFail($id);
+//             $warehouse = Warehouse::findOrFail($validated['warehouse_id']);
+
+//             if ($purchase->status != 'Pesanan') {
+//                 return redirect()->back()->with('error', 'Pesanan ini sudah diproses atau dibatalkan');
+//             }
+
+//             foreach ($purchase->items as $item) {
+//                 $product = Product::where('sku', $item->product_sku)->lockForUpdate()->first();
+
+//                 $globalStock = ProductStock::where('product_sku', $item->product_sku)->sum('quantity');
+
+//                 $oldTotalValue = $globalStock * $product->hpp;
+//                 $newIncomingValue = $item->quantity * $item->price;
+//                 $newTotalStock = $globalStock + $item->quantity;
+//                 $newHPP = $newTotalStock > 0 ? ($oldTotalValue + $newIncomingValue) / $newTotalStock : 0;
+
+//                 $product->update([
+//                     'hpp'       => $newHPP,
+//                     'buy_price' => $item->price,
+//                 ]);
+
+//                 $stockRecord = ProductStock::firstOrCreate(
+//                     ['warehouse_id' => $warehouse->id, 'product_sku' => $item->product_sku],
+//                     ['quantity' => 0]
+//                 );
+//                 $stockRecord->quantity += $item->quantity;
+//                 $stockRecord->save();
+//             }
+
+//             $inventoryAccount = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+//             $payableAccount = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
+
+//             if (!$inventoryAccount || !$payableAccount) {
+//                 DB::rollBack();
+//                 return redirect()->back()->with('error', 'Akun Persediaan (13) atau Akun Hutang Usaha (awalan 3) belum ditemukan di CoA!');
+//             }
+
+//             $newNotes = trim($purchase->notes . "\n[Masuk Gudang] Diterima dan disimpan di: " . $warehouse->name);
+//             $purchase->update([
+//                 'status' => 'Pengiriman',
+//                 'notes'  => $newNotes
+//             ]);
+
+//             $journalCode = "RCV-P-" . Carbon::now()->format('Ymd') . "-" . $purchase->id;
+//             $journal = Journal::create([
+//                 'date'         => Carbon::now(),
+//                 'description'  => "Penerimaan Barang PO #" . $purchase->id . " (Gudang: ".$warehouse->name.")",
+//                 'reference_no' => $journalCode,
+//             ]);
+
+//             JournalEntry::create([
+//                 'journal_id'   => $journal->id,
+//                 'account_code' => $inventoryAccount->code,
+//                 'debit'        => $purchase->total,
+//                 'credit'       => 0
+//             ]);
+//             JournalEntry::create([
+//                 'journal_id'   => $journal->id,
+//                 'account_code' => $payableAccount->code,
+//                 'debit'        => 0,
+//                 'credit'       => $purchase->total
+//             ]);
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Barang diterima di ' . $warehouse->name . '! Stok, HPP, dan Jurnal Hutang Usaha berhasil dicatat.');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal memproses penerimaan barang');
+//         }
+//     }
+
+//     public function bill(Request $request, $id)
+//     {
+//         $validated = $request->validate([
+//             'due_date'        => 'required|date',
+//             'payment_account' => 'required|exists:accounts,code',
+//         ]);
+
+//         DB::beginTransaction();
+
+//         try {
+//             $purchase = Purchase::findOrFail($id);
+
+//             if ($purchase->status != 'Pengiriman') {
+//                 return redirect()->back()->with('error', 'Hanya dokumen berstatus Pengiriman yang dapat dilunasi');
+//             }
+
+//             $payableAccount = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
+//             $bankAccount = Account::where('code', $validated['payment_account'])->where('is_header', false)->first();
+
+//             if (!$payableAccount || !$bankAccount) {
+//                 DB::rollBack();
+//                 return redirect()->back()->with('error', 'Akun Hutang Usaha (awalan 3) atau Akun Bank tidak valid di sistem');
+//             }
+
+//             // Generate Kode Tagihan Pembelian (PI) Otomatis
+//             $journalCode = $this->generateDocNumber('PI', $validated['due_date']);
+
+//             $purchase->update([
+//                 'status'               => 'Tagihan',
+//                 'due_date'             => $validated['due_date'],
+//                 'payment_account_code' => $validated['payment_account'],
+//                 // Opsional: Tempelkan kode PI ke notes agar lebih informatif
+//                 'notes'                => trim($purchase->notes . "\n[Lunas] Tagihan dibayar dengan nomor: " . $journalCode)
+//             ]);
+
+//             $journal = Journal::create([
+//                 'date'         => $validated['due_date'],
+//                 'description'  => "Pelunasan Hutang PO #" . $purchase->id . " (Ref: " . $purchase->reference_no . ")",
+//                 'reference_no' => $journalCode,
+//             ]);
+
+//             JournalEntry::create([
+//                 'journal_id'   => $journal->id,
+//                 'account_code' => $payableAccount->code,
+//                 'debit'        => $purchase->total,
+//                 'credit'       => 0
+//             ]);
+//             JournalEntry::create([
+//                 'journal_id'   => $journal->id,
+//                 'account_code' => $bankAccount->code,
+//                 'debit'        => 0,
+//                 'credit'       => $purchase->total
+//             ]);
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Tagihan Pembelian lunas dengan nomor ' . $journalCode . '. Saldo Hutang telah ditutup dari Bank.');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal membuat tagihan & jurnal');
+//         }
+//     }
+
+//     public function showDeliveries()
+//     {
+//         $deliveries = Purchase::with('contact')->where('status', 'Pengiriman')->orderBy('date', 'desc')->get();
+//         $pendingOrders = Purchase::with(['contact', 'items.product'])->where('status', 'Pesanan')->get();
+//         $warehouses = Warehouse::orderBy('name', 'asc')->get();
+
+//         return view('purchases.delivery', compact('deliveries', 'pendingOrders', 'warehouses'));
+//     }
+
+//     public function showBills()
+//     {
+//         $bills = Purchase::with(['contact', 'paymentAccount'])->where('status', 'Tagihan')->orderBy('date', 'desc')->get();
+//         $readyDeliveries = Purchase::with(['contact', 'items.product'])->where('status', 'Pengiriman')->get();
+//         $banks = Account::where(function($query) { $query->where('code', 'LIKE', '10%')->orWhere('code', 'LIKE', '11%'); })->where('is_header', false)->get();
+//         return view('purchases.bill', compact('bills', 'readyDeliveries', 'banks'));
+//     }
+
+//     // FITUR ANALITIK: OVERVIEW PENJUALAN & PREDIKSI REGRESI LINEAR
+//     public function overview()
+//     {
+//         // 1. History & Detail Alur Stok
+//         $purchases = Purchase::with(['contact', 'items.product'])->orderBy('date', 'desc')->get();
+
+//         // 2. Daftar 5 Produk Terlaris
+//         $topProducts = PurchaseItem::select('product_sku', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(sub_total) as total_revenue'))
+//             ->groupBy('product_sku')
+//             ->orderBy('total_qty', 'desc')
+//             ->take(5)
+//             ->with('product')
+//             ->get();
+
+//         // 3. Mesin Analitik: Algoritma Linear Regression (Y = a + bX)
+//         $predictions = [];
+//         if ($topProducts->isNotEmpty()) {
+//             $topProductSku = $topProducts->first()->product_sku;
+//             $historicalData = [];
+
+//             // Ekstrak mundur data 6 bulan terakhir
+//             for ($i = 5; $i >= 0; $i--) {
+//                 $date = Carbon::now()->subMonths($i);
+//                 $qty = PurchaseItem::where('product_sku', $topProductSku)
+//                     ->whereHas('purchase', function($q) use ($date) {
+//                         $q->whereMonth('date', $date->month)->whereYear('date', $date->year);
+//                     })->sum('quantity');
+//                 $historicalData[] = ['month' => $date->translatedFormat('M Y'), 'qty' => $qty];
+//             }
+
+//             // Kalkulasi Matematika Regresi
+//             $n = count($historicalData);
+//             $sumX = 0; $sumY = 0; $sumXY = 0; $sumX2 = 0;
+//             foreach ($historicalData as $i => $data) {
+//                 $x = $i + 1; // Sumbu X (Waktu/Bulan)
+//                 $y = $data['qty']; // Sumbu Y (Volume)
+//                 $sumX += $x; $sumY += $y; $sumXY += ($x * $y); $sumX2 += ($x * $x);
+//             }
+
+//             $denominator = ($n * $sumX2) - ($sumX * $sumX);
+//             $b = $denominator != 0 ? (($n * $sumXY) - ($sumX * $sumY)) / $denominator : 0; // Slope (Kemiringan)
+//             $a = ($sumY - ($b * $sumX)) / $n; // Intercept
+
+//             $nextX = $n + 1;
+//             $predictionValue = max(0, round($a + ($b * $nextX))); // Mencegah nilai negatif
+
+//             $predictions = [
+//                 'product' => $topProducts->first()->product->name ?? $topProductSku,
+//                 'history' => $historicalData,
+//                 'next_month_prediction' => $predictionValue,
+//                 'trend' => $b > 0 ? 'Meningkat Tajam 📈' : ($b < 0 ? 'Menurun 📉' : 'Cenderung Stabil ➖')
+//             ];
+//         }
+
+//         return view('purchases.overview', compact('purchases', 'topProducts', 'predictions'));
+//     }
+
+//     // --- FITUR BARU: SISTEM PERSETUJUAN (MAKER-CHECKER) ---
+//     public function approve(Request $request, $id)
+//     {
+//         $purchase = Purchase::findOrFail($id);
+
+//         // 1. Cek hak akses (Hanya Direktur atau Admin yang boleh Approve)
+//         $userRole = auth()->user()->role;
+//         if (!in_array($userRole, ['Direktur', 'Admin'])) {
+//             return redirect()->back()->with('error', 'Akses Ditolak! Hanya Direktur atau Admin yang berhak menyetujui dokumen ini.');
+//         }
+
+//         if ($purchase->status !== 'Menunggu Persetujuan') {
+//             return redirect()->back()->with('error', 'Dokumen tidak dalam status Menunggu Persetujuan.');
+//         }
+
+//         // 2. Setujui dan lepaskan ke Gudang
+//         $purchase->update([
+//             'status' => 'Pesanan',
+//             'notes' => trim($purchase->notes . "\n[DISETUJUI] Oleh: " . auth()->user()->name . " (" . Carbon::now()->format('d/m/Y H:i') . ")")
+//         ]);
+
+//         return redirect()->back()->with('success', 'Pesanan Pembelian (PO) berhasil DISETUJUI dan diteruskan ke bagian Gudang.');
+//     }
+
+//     public function reject(Request $request, $id)
+//     {
+//         $purchase = Purchase::findOrFail($id);
+
+//         $userRole = auth()->user()->role;
+//         if (!in_array($userRole, ['Direktur', 'Admin'])) {
+//             return redirect()->back()->with('error', 'Akses Ditolak! Hanya Direktur atau Admin yang berhak menolak dokumen.');
+//         }
+
+//         $purchase->update([
+//             'status' => 'Ditolak',
+//             'notes' => trim($purchase->notes . "\n[DITOLAK] Oleh: " . auth()->user()->name . " (" . Carbon::now()->format('d/m/Y H:i') . ")")
+//         ]);
+
+//         return redirect()->back()->with('success', 'Pesanan Pembelian (PO) telah DITOLAK secara permanen.');
+//     }
+
+//     // --- FITUR BARU: RETUR PEMBELIAN (DEBIT NOTE) ---
+//     public function processReturn(Request $request, $id)
+//     {
+//         $validated = $request->validate([
+//             'warehouse_id' => 'required|exists:warehouses,id',
+//             'reason'       => 'required|string|max:255',
+//         ]);
+
+//         DB::beginTransaction();
+//         try {
+//             $purchase = Purchase::with('items')->findOrFail($id);
+
+//             // Validasi: Hanya pesanan yang sudah diterima yang bisa dikembalikan (Retur)
+//             if (!in_array($purchase->status, ['Pengiriman', 'Tagihan', 'Selesai'])) {
+//                 return redirect()->back()->with('error', 'Hanya pesanan yang sudah diterima di gudang yang dapat diproses retur.');
+//             }
+
+//             // 1. Tarik Keluar Stok Fisik dari Gudang (karena diretur ke supplier)
+//             foreach ($purchase->items as $item) {
+//                 $stock = ProductStock::where('warehouse_id', $validated['warehouse_id'])
+//                                      ->where('product_sku', $item->product_sku)->first();
+
+//                 if (!$stock || $stock->quantity < $item->quantity) {
+//                     return redirect()->back()->with('error', 'Gagal: Stok di gudang yang Anda pilih tidak mencukupi untuk diretur. Pastikan Anda memilih gudang lokasi awal penerimaan barang.');
+//                 }
+
+//                 $stock->quantity -= $item->quantity; // Kurangi stok
+//                 $stock->save();
+//             }
+
+//             // 2. Buat Dokumen & Jurnal Pembalikan (Debit Note)
+//             $now = Carbon::now();
+//             $retCode = $this->generateDocNumber('RET', $now->toDateString()); // Auto-generate No. Surat Retur
+
+//             $apAcc = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
+//             $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
+
+//             // Jurnal Pembalik: Mengurangi Hutang dan Mengurangi Persediaan
+//             $j1 = Journal::create([
+//                 'date'         => $now,
+//                 'description'  => "Retur Pembelian (Debit Note) PO #" . $purchase->id . " - " . $validated['reason'],
+//                 'reference_no' => $retCode,
+//             ]);
+
+//             // Debit: Hutang Usaha (Berkurang), Kredit: Persediaan (Berkurang)
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $apAcc->code, 'debit' => $purchase->total, 'credit' => 0]);
+//             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $invAcc->code, 'debit' => 0, 'credit' => $purchase->total]);
+
+//             // 3. Ubah status pesanan menjadi 'Diretur'
+//             $purchase->update([
+//                 'status' => 'Diretur',
+//                 'notes'  => trim($purchase->notes . "\n[RETUR] " . $validated['reason'] . " (Surat Jalan Retur: " . $retCode . ")")
+//             ]);
+
+//             // 4. Lacak aktivitas keamanan
+//             \App\Models\AuditLog::record('MENGEMBALIKAN', 'Pembelian', 'Memproses Retur Pembelian (Debit Note) ke Supplier untuk PO #' . $purchase->id);
+
+//             DB::commit();
+//             return redirect()->back()->with('success', 'Retur Pembelian (Debit Note) berhasil! Stok fisik telah dikeluarkan dari gudang dan Jurnal Pengurangan Hutang otomatis dibuat.');
+//         } catch (\Exception $e) {
+//             DB::rollBack();
+//             return redirect()->back()->with('error', 'Gagal memproses retur: ' . $e->getMessage());
+//         }
+//     }
+
+//     // ==========================================================
+//     // FITUR EMAS: LAPORAN UMUR HUTANG (ACCOUNT PAYABLE AGING)
+//     // ==========================================================
+//     public function payableAging()
+//     {
+//         // Ambil pesanan berstatus 'Pengiriman' (Barang sudah diterima di gudang, muncul hutang, tapi belum ditagih/dibayar lunas)
+//         $unpaidPurchases = Purchase::with('contact')
+//             ->where('status', 'Pengiriman')
+//             ->orderBy('due_date', 'asc')
+//             ->get();
+
+//         $now = Carbon::now()->startOfDay();
+
+//         // 'Ember' penampung data (Aging Buckets)
+//         $agingData = [
+//             'belum_jatuh_tempo' => 0,
+//             '1_30_hari' => 0,
+//             '31_60_hari' => 0,
+//             '61_90_hari' => 0,
+//             'lebih_90_hari' => 0,
+//         ];
+
+//         $details = [];
+
+//         foreach ($unpaidPurchases as $purchase) {
+//             $dueDate = Carbon::parse($purchase->due_date)->startOfDay();
+
+//             // Hitung selisih hari
+//             $diff = $dueDate->diffInDays($now, false);
+
+//             $category = '';
+//             $daysOverdue = 0;
+
+//             if ($diff <= 0) {
+//                 $category = 'belum_jatuh_tempo';
+//                 $agingData['belum_jatuh_tempo'] += $purchase->total;
+//             } else {
+//                 $daysOverdue = intval($diff);
+//                 if ($daysOverdue <= 30) {
+//                     $category = '1_30_hari';
+//                     $agingData['1_30_hari'] += $purchase->total;
+//                 } elseif ($daysOverdue <= 60) {
+//                     $category = '31_60_hari';
+//                     $agingData['31_60_hari'] += $purchase->total;
+//                 } elseif ($daysOverdue <= 90) {
+//                     $category = '61_90_hari';
+//                     $agingData['61_90_hari'] += $purchase->total;
+//                 } else {
+//                     $category = 'lebih_90_hari';
+//                     $agingData['lebih_90_hari'] += $purchase->total;
+//                 }
+//             }
+
+//             $details[] = [
+//                 'id' => $purchase->id,
+//                 'reference_no' => $purchase->reference_no ?: 'PO #'.$purchase->id,
+//                 'supplier' => $purchase->contact->name,
+//                 'phone' => $purchase->contact->phone,
+//                 'due_date' => $purchase->due_date,
+//                 'total' => $purchase->total,
+//                 'category' => $category,
+//                 'days_overdue' => $daysOverdue
+//             ];
+//         }
+
+//         $totalHutang = array_sum($agingData);
+
+//         return view('purchases.payable_aging', compact('agingData', 'details', 'totalHutang'));
+//     }
+
+//     // --- FITUR BARU: QUOTATION (RFQ) ---
+//     public function convertToPo($id)
+//     {
+//         $purchase = Purchase::findOrFail($id);
+
+//         if ($purchase->status !== 'Penawaran') {
+//             return redirect()->back()->with('error', 'Akses Ditolak: Hanya dokumen draf Penawaran yang dapat diubah ke PO.');
+//         }
+
+//         // Generate nomor seri PO baru menggantikan nomor RFQ lama
+//         $refNo = $this->generateDocNumber('PO', Carbon::now()->toDateString());
+
+//         $purchase->update([
+//             'status' => 'Menunggu Persetujuan',
+//             'reference_no' => $refNo,
+//             'notes' => trim($purchase->notes . "\n[Sistem] Harga disepakati Supplier. Diubah dari Draf Penawaran (RFQ) ke PO pada " . Carbon::now()->format('d/m/Y'))
+//         ]);
+
+//         return redirect()->back()->with('success', 'Penawaran disepakati! Draf berhasil diubah menjadi Pesanan Pembelian resmi (Menunggu Persetujuan Manajer).');
+//     }
+
+//     public function printQuotation($id)
+//     {
+//         $purchase = Purchase::with(['contact', 'items.product'])->findOrFail($id);
+
+//         if ($purchase->status !== 'Penawaran') {
+//             return redirect()->back()->with('error', 'Dokumen ini bukan draf Penawaran.');
+//         }
+
+//         return view('purchases.print_quotation', compact('purchase'));
+//     }
+// }
+
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
@@ -680,6 +1437,9 @@ use App\Models\JournalEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
+// WAJIB DITAMBAHKAN: Import class Spatie Google Calendar
+use Spatie\GoogleCalendar\Event;
 
 class PurchaseController extends Controller
 {
@@ -728,73 +1488,6 @@ class PurchaseController extends Controller
         return "{$seqStr}{$suffix}";
     }
 
-    // public function index(Request $request)
-    // {
-    //     $query = Purchase::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
-
-    //     if ($request->has('status') && $request->status != '') {
-    //         $query->where('status', $request->status);
-    //     }
-
-    //     $purchases = $query->get();
-    //     return view('purchases.index', compact('purchases'));
-    // }
-
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'date'         => 'required|date',
-    //         'due_date'     => 'nullable|date',
-    //         'reference_no' => 'nullable|string|max:50',
-    //         'contact_id'   => 'required|exists:contacts,id',
-    //         'notes'        => 'nullable|string',
-    //         'items'        => 'required|array|min:1',
-    //         'items.*.product_sku' => 'required|exists:products,sku',
-    //         'items.*.quantity'    => 'required|integer|min:1',
-    //         'items.*.price'       => 'required|numeric|min:0',
-    //     ]);
-
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // Jika referensi kosong, generate kode PO otomatis
-    //         $refNo = $validated['reference_no'] ?: $this->generateDocNumber('PO', $validated['date']);
-
-    //         $purchase = Purchase::create([
-    //             'date'         => $validated['date'],
-    //             'due_date'     => $validated['due_date'] ?? $validated['date'],
-    //             'reference_no' => $refNo,
-    //             'contact_id'   => $validated['contact_id'],
-    //             'status'       => 'Pesanan',
-    //             'notes'        => $validated['notes'] ?? '',
-    //             'total'        => 0,
-    //         ]);
-
-    //         $grandTotal = 0;
-
-    //         foreach ($validated['items'] as $item) {
-    //             $subTotal = $item['quantity'] * $item['price'];
-    //             $grandTotal += $subTotal;
-
-    //             PurchaseItem::create([
-    //                 'purchase_id' => $purchase->id,
-    //                 'product_sku' => $item['product_sku'],
-    //                 'quantity'    => $item['quantity'],
-    //                 'price'       => $item['price'],
-    //                 'sub_total'   => $subTotal,
-    //             ]);
-    //         }
-
-    //         $purchase->update(['total' => $grandTotal]);
-
-    //         DB::commit();
-    //         return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
-    //     }
-    // }
-
     public function index(Request $request)
     {
         $query = Purchase::with(['contact', 'items.product', 'paymentAccount'])->orderBy('date', 'desc')->orderBy('id', 'desc');
@@ -811,61 +1504,6 @@ class PurchaseController extends Controller
         return view('purchases.index', compact('purchases', 'nextDocNumber'));
     }
 
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'date'         => 'required|date',
-    //         'due_date'     => 'nullable|date',
-    //         // reference_no dihapus dari validasi form karena murni digenerate oleh sistem
-    //         'contact_id'   => 'required|exists:contacts,id',
-    //         'notes'        => 'nullable|string',
-    //         'items'        => 'required|array|min:1',
-    //         'items.*.product_sku' => 'required|exists:products,sku',
-    //         'items.*.quantity'    => 'required|integer|min:1',
-    //         'items.*.price'       => 'required|numeric|min:0',
-    //     ]);
-
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // PAKSA auto-generate di backend untuk mencegah duplikasi jika 2 user submit bersamaan
-    //         $refNo = $this->generateDocNumber('PO', $validated['date']);
-
-    //         $purchase = Purchase::create([
-    //             'date'         => $validated['date'],
-    //             'due_date'     => $validated['due_date'] ?? $validated['date'],
-    //             'reference_no' => $refNo,
-    //             'contact_id'   => $validated['contact_id'],
-    //             'status'       => 'Pesanan',
-    //             'notes'        => $validated['notes'] ?? '',
-    //             'total'        => 0,
-    //         ]);
-
-    //         $grandTotal = 0;
-
-    //         foreach ($validated['items'] as $item) {
-    //             $subTotal = $item['quantity'] * $item['price'];
-    //             $grandTotal += $subTotal;
-
-    //             PurchaseItem::create([
-    //                 'purchase_id' => $purchase->id,
-    //                 'product_sku' => $item['product_sku'],
-    //                 'quantity'    => $item['quantity'],
-    //                 'price'       => $item['price'],
-    //                 'sub_total'   => $subTotal,
-    //             ]);
-    //         }
-
-    //         $purchase->update(['total' => $grandTotal]);
-
-    //         DB::commit();
-    //         return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
-    //     }
-    // }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -881,67 +1519,6 @@ class PurchaseController extends Controller
         ]);
 
         DB::beginTransaction();
-
-        // try {
-        //     $refNo = $this->generateDocNumber('PO', $validated['date']);
-
-        //     // $purchase = Purchase::create([
-        //     //     'date'         => $validated['date'],
-        //     //     'due_date'     => $validated['due_date'] ?? $validated['date'],
-        //     //     'reference_no' => $refNo,
-        //     //     'contact_id'   => $validated['contact_id'],
-        //     //     'status'       => 'Pesanan',
-        //     //     'notes'        => $validated['notes'] ?? '',
-        //     //     'total'        => 0,
-        //     //     'total_tax'    => 0, // Inisialisasi awal
-        //     // ]);
-
-        //     $purchase = Purchase::create([
-        //         'date'         => $validated['date'],
-        //         'due_date'     => $validated['due_date'] ?? $validated['date'],
-        //         'reference_no' => $refNo,
-        //         'contact_id'   => $validated['contact_id'],
-        //         // UBAH BARIS INI:
-        //         'status'       => 'Menunggu Persetujuan',
-        //         'notes'        => $validated['notes'] ?? '',
-        //         'total'        => 0,
-        //         'total_tax'    => 0,
-        //     ]);
-
-        //     $grandTotal = 0;
-        //     $grandTax = 0;
-
-        //     foreach ($validated['items'] as $item) {
-        //         // Kalkulasi DPP (Dasar Pengenaan Pajak) dan PPN
-        //         $dpp = $item['quantity'] * $item['price'];
-        //         $taxAmount = $dpp * ($item['tax_rate'] / 100);
-        //         $subTotal = $dpp + $taxAmount;
-
-        //         $grandTax += $taxAmount;
-        //         $grandTotal += $subTotal;
-
-        //         PurchaseItem::create([
-        //             'purchase_id' => $purchase->id,
-        //             'product_sku' => $item['product_sku'],
-        //             'quantity'    => $item['quantity'],
-        //             'price'       => $item['price'],
-        //             'tax_rate'    => $item['tax_rate'],
-        //             'tax_amount'  => $taxAmount,
-        //             'sub_total'   => $subTotal,
-        //         ]);
-        //     }
-
-        //     $purchase->update([
-        //         'total' => $grandTotal,
-        //         'total_tax' => $grandTax
-        //     ]);
-
-        //     DB::commit();
-        //     return redirect()->route('purchases.index')->with('success', 'Pesanan Pembelian (PO) berhasil dibuat dengan nomor: ' . $refNo);
-        // } catch (\Exception $e) {
-        //     DB::rollBack();
-        //     return redirect()->back()->withInput()->with('error', 'Gagal menyimpan pesanan pembelian');
-        // }
 
         try {
             // Deteksi jenis tombol yang ditekan (Draf RFQ atau PO Langsung)
@@ -1158,13 +1735,10 @@ class PurchaseController extends Controller
         return view('purchases.bill', compact('bills', 'readyDeliveries', 'banks'));
     }
 
-    // FITUR ANALITIK: OVERVIEW PENJUALAN & PREDIKSI REGRESI LINEAR
     public function overview()
     {
-        // 1. History & Detail Alur Stok
         $purchases = Purchase::with(['contact', 'items.product'])->orderBy('date', 'desc')->get();
 
-        // 2. Daftar 5 Produk Terlaris
         $topProducts = PurchaseItem::select('product_sku', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(sub_total) as total_revenue'))
             ->groupBy('product_sku')
             ->orderBy('total_qty', 'desc')
@@ -1172,13 +1746,11 @@ class PurchaseController extends Controller
             ->with('product')
             ->get();
 
-        // 3. Mesin Analitik: Algoritma Linear Regression (Y = a + bX)
         $predictions = [];
         if ($topProducts->isNotEmpty()) {
             $topProductSku = $topProducts->first()->product_sku;
             $historicalData = [];
 
-            // Ekstrak mundur data 6 bulan terakhir
             for ($i = 5; $i >= 0; $i--) {
                 $date = Carbon::now()->subMonths($i);
                 $qty = PurchaseItem::where('product_sku', $topProductSku)
@@ -1188,21 +1760,20 @@ class PurchaseController extends Controller
                 $historicalData[] = ['month' => $date->translatedFormat('M Y'), 'qty' => $qty];
             }
 
-            // Kalkulasi Matematika Regresi
             $n = count($historicalData);
             $sumX = 0; $sumY = 0; $sumXY = 0; $sumX2 = 0;
             foreach ($historicalData as $i => $data) {
-                $x = $i + 1; // Sumbu X (Waktu/Bulan)
-                $y = $data['qty']; // Sumbu Y (Volume)
+                $x = $i + 1;
+                $y = $data['qty'];
                 $sumX += $x; $sumY += $y; $sumXY += ($x * $y); $sumX2 += ($x * $x);
             }
 
             $denominator = ($n * $sumX2) - ($sumX * $sumX);
-            $b = $denominator != 0 ? (($n * $sumXY) - ($sumX * $sumY)) / $denominator : 0; // Slope (Kemiringan)
-            $a = ($sumY - ($b * $sumX)) / $n; // Intercept
+            $b = $denominator != 0 ? (($n * $sumXY) - ($sumX * $sumY)) / $denominator : 0;
+            $a = ($sumY - ($b * $sumX)) / $n;
 
             $nextX = $n + 1;
-            $predictionValue = max(0, round($a + ($b * $nextX))); // Mencegah nilai negatif
+            $predictionValue = max(0, round($a + ($b * $nextX)));
 
             $predictions = [
                 'product' => $topProducts->first()->product->name ?? $topProductSku,
@@ -1215,12 +1786,14 @@ class PurchaseController extends Controller
         return view('purchases.overview', compact('purchases', 'topProducts', 'predictions'));
     }
 
-    // --- FITUR BARU: SISTEM PERSETUJUAN (MAKER-CHECKER) ---
+    // =========================================================================
+    // FITUR EMAS 1: SISTEM PERSETUJUAN (MAKER-CHECKER) & INTEGRASI GOOGLE CALENDAR
+    // =========================================================================
     public function approve(Request $request, $id)
     {
         $purchase = Purchase::findOrFail($id);
 
-        // 1. Cek hak akses (Hanya Direktur atau Admin yang boleh Approve)
+        // 1. Cek hak akses
         $userRole = auth()->user()->role;
         if (!in_array($userRole, ['Direktur', 'Admin'])) {
             return redirect()->back()->with('error', 'Akses Ditolak! Hanya Direktur atau Admin yang berhak menyetujui dokumen ini.');
@@ -1230,13 +1803,34 @@ class PurchaseController extends Controller
             return redirect()->back()->with('error', 'Dokumen tidak dalam status Menunggu Persetujuan.');
         }
 
-        // 2. Setujui dan lepaskan ke Gudang
+        // 2. Setujui PO
         $purchase->update([
             'status' => 'Pesanan',
             'notes' => trim($purchase->notes . "\n[DISETUJUI] Oleh: " . auth()->user()->name . " (" . Carbon::now()->format('d/m/Y H:i') . ")")
         ]);
 
-        return redirect()->back()->with('success', 'Pesanan Pembelian (PO) berhasil DISETUJUI dan diteruskan ke bagian Gudang.');
+        // 3. INTEGRASI GOOGLE CALENDAR
+        try {
+            if ($purchase->due_date) {
+                $event = new Event;
+                $event->name = "💸 JATUH TEMPO BAYAR: {$purchase->contact->name} (PO #{$purchase->id})";
+
+                // Menjadikan event seharian penuh (All-day event) di tanggal jatuh tempo
+                $event->startDate = Carbon::parse($purchase->due_date);
+                $event->endDate = Carbon::parse($purchase->due_date)->addDay(); // Google mensyaratkan +1 hari untuk all-day
+
+                $nominal = number_format($purchase->total, 0, ',', '.');
+                $event->description = "Tagihan Hutang Usaha kepada Pemasok: {$purchase->contact->name}.\nNominal: Rp {$nominal}\nNomor Referensi: {$purchase->reference_no}\n(Dibuat otomatis oleh Sistem ERP PT Berlian Mandiri Perkasa)";
+
+                $event->save(); // Menembak API ke server Google Calendar
+            }
+        } catch (\Exception $e) {
+            // Lakukan logging secara hening (silent) agar proses bisnis utama tidak terganggu
+            // meskipun server Google sedang bermasalah / API limit tercapai.
+            \Log::error('Google Calendar Sync Failed (Purchase): ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'PO berhasil disetujui & otomatis dijadwalkan di Google Calendar!');
     }
 
     public function reject(Request $request, $id)
@@ -1256,7 +1850,6 @@ class PurchaseController extends Controller
         return redirect()->back()->with('success', 'Pesanan Pembelian (PO) telah DITOLAK secara permanen.');
     }
 
-    // --- FITUR BARU: RETUR PEMBELIAN (DEBIT NOTE) ---
     public function processReturn(Request $request, $id)
     {
         $validated = $request->validate([
@@ -1268,12 +1861,10 @@ class PurchaseController extends Controller
         try {
             $purchase = Purchase::with('items')->findOrFail($id);
 
-            // Validasi: Hanya pesanan yang sudah diterima yang bisa dikembalikan (Retur)
             if (!in_array($purchase->status, ['Pengiriman', 'Tagihan', 'Selesai'])) {
                 return redirect()->back()->with('error', 'Hanya pesanan yang sudah diterima di gudang yang dapat diproses retur.');
             }
 
-            // 1. Tarik Keluar Stok Fisik dari Gudang (karena diretur ke supplier)
             foreach ($purchase->items as $item) {
                 $stock = ProductStock::where('warehouse_id', $validated['warehouse_id'])
                                      ->where('product_sku', $item->product_sku)->first();
@@ -1282,35 +1873,30 @@ class PurchaseController extends Controller
                     return redirect()->back()->with('error', 'Gagal: Stok di gudang yang Anda pilih tidak mencukupi untuk diretur. Pastikan Anda memilih gudang lokasi awal penerimaan barang.');
                 }
 
-                $stock->quantity -= $item->quantity; // Kurangi stok
+                $stock->quantity -= $item->quantity;
                 $stock->save();
             }
 
-            // 2. Buat Dokumen & Jurnal Pembalikan (Debit Note)
             $now = Carbon::now();
-            $retCode = $this->generateDocNumber('RET', $now->toDateString()); // Auto-generate No. Surat Retur
+            $retCode = $this->generateDocNumber('RET', $now->toDateString());
 
             $apAcc = Account::where('code', 'LIKE', '31%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '3%')->where('is_header', false)->first();
             $invAcc = Account::where('code', 'LIKE', '13%')->where('is_header', false)->first() ?? Account::where('code', 'LIKE', '16%')->where('is_header', false)->first();
 
-            // Jurnal Pembalik: Mengurangi Hutang dan Mengurangi Persediaan
             $j1 = Journal::create([
                 'date'         => $now,
                 'description'  => "Retur Pembelian (Debit Note) PO #" . $purchase->id . " - " . $validated['reason'],
                 'reference_no' => $retCode,
             ]);
 
-            // Debit: Hutang Usaha (Berkurang), Kredit: Persediaan (Berkurang)
             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $apAcc->code, 'debit' => $purchase->total, 'credit' => 0]);
             JournalEntry::create(['journal_id' => $j1->id, 'account_code' => $invAcc->code, 'debit' => 0, 'credit' => $purchase->total]);
 
-            // 3. Ubah status pesanan menjadi 'Diretur'
             $purchase->update([
                 'status' => 'Diretur',
                 'notes'  => trim($purchase->notes . "\n[RETUR] " . $validated['reason'] . " (Surat Jalan Retur: " . $retCode . ")")
             ]);
 
-            // 4. Lacak aktivitas keamanan
             \App\Models\AuditLog::record('MENGEMBALIKAN', 'Pembelian', 'Memproses Retur Pembelian (Debit Note) ke Supplier untuk PO #' . $purchase->id);
 
             DB::commit();
@@ -1321,12 +1907,8 @@ class PurchaseController extends Controller
         }
     }
 
-    // ==========================================================
-    // FITUR EMAS: LAPORAN UMUR HUTANG (ACCOUNT PAYABLE AGING)
-    // ==========================================================
     public function payableAging()
     {
-        // Ambil pesanan berstatus 'Pengiriman' (Barang sudah diterima di gudang, muncul hutang, tapi belum ditagih/dibayar lunas)
         $unpaidPurchases = Purchase::with('contact')
             ->where('status', 'Pengiriman')
             ->orderBy('due_date', 'asc')
@@ -1334,7 +1916,6 @@ class PurchaseController extends Controller
 
         $now = Carbon::now()->startOfDay();
 
-        // 'Ember' penampung data (Aging Buckets)
         $agingData = [
             'belum_jatuh_tempo' => 0,
             '1_30_hari' => 0,
@@ -1347,8 +1928,6 @@ class PurchaseController extends Controller
 
         foreach ($unpaidPurchases as $purchase) {
             $dueDate = Carbon::parse($purchase->due_date)->startOfDay();
-
-            // Hitung selisih hari
             $diff = $dueDate->diffInDays($now, false);
 
             $category = '';
@@ -1391,7 +1970,6 @@ class PurchaseController extends Controller
         return view('purchases.payable_aging', compact('agingData', 'details', 'totalHutang'));
     }
 
-    // --- FITUR BARU: QUOTATION (RFQ) ---
     public function convertToPo($id)
     {
         $purchase = Purchase::findOrFail($id);
@@ -1400,7 +1978,6 @@ class PurchaseController extends Controller
             return redirect()->back()->with('error', 'Akses Ditolak: Hanya dokumen draf Penawaran yang dapat diubah ke PO.');
         }
 
-        // Generate nomor seri PO baru menggantikan nomor RFQ lama
         $refNo = $this->generateDocNumber('PO', Carbon::now()->toDateString());
 
         $purchase->update([
