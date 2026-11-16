@@ -90,7 +90,7 @@
 </div>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
 <div class="space-y-6 pb-10 max-w-5xl mx-auto md:mx-0">
@@ -231,6 +231,155 @@
             <!-- Footer Simpan -->
             <div class="p-5 flex justify-end gap-3 bg-white">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg">
+                    <i data-feather="save" class="w-4 h-4"></i> Simpan Pengaturan Sistem
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6 pb-10 max-w-5xl mx-auto md:mx-0">
+
+    <!-- HEADER & PUSAT KENDALI -->
+    <div class="flex flex-col md:flex-row gap-6">
+        <!-- Teks Header -->
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                <i data-feather="settings" class="text-slate-600 dark:text-slate-400 w-8 h-8"></i> Pengaturan Sistem
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 mb-6 transition-colors">Kelola profil perusahaan, konfigurasi finansial, dan otoritas pengguna sistem ERP Anda.</p>
+
+            <!-- Dasbor Mini Statistik Sistem -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 transition-colors">
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg shrink-0 transition-colors">
+                        <i data-feather="users" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-0.5 transition-colors">Total Pengguna</p>
+                        <h4 class="text-xl font-black text-slate-800 dark:text-white leading-none transition-colors">
+                            {{ $totalUsers }} <span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 ml-1">Akun Terdaftar</span>
+                        </h4>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 transition-colors">
+                    <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0 transition-colors">
+                        <i data-feather="shield" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-0.5 transition-colors">Administrator</p>
+                        <h4 class="text-xl font-black text-slate-800 dark:text-white leading-none transition-colors">
+                            {{ $adminCount }} <span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 ml-1">Memiliki Akses Penuh</span>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Akses Cepat (Menu Navigasi Pengaturan) -->
+        <div class="w-full md:w-72 shrink-0 flex flex-col gap-3">
+            <a href="{{ route('settings.users') }}" class="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 p-4 rounded-xl shadow-sm flex justify-between items-center transition-all hover:shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg transition-colors"><i data-feather="users" class="w-4 h-4"></i></div>
+                    <div>
+                        <p class="font-bold text-slate-800 dark:text-white text-sm group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">Daftar Pengguna</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 transition-colors">Kelola {{ $totalUsers }} staf terdaftar</p>
+                    </div>
+                </div>
+                <i data-feather="chevron-right" class="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+
+            <a href="{{ route('settings.roles') }}" class="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500 p-4 rounded-xl shadow-sm flex justify-between items-center transition-all hover:shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg transition-colors"><i data-feather="lock" class="w-4 h-4"></i></div>
+                    <div>
+                        <p class="font-bold text-slate-800 dark:text-white text-sm group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">Matriks Hak Akses</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 transition-colors">Otorisasi Role (RBAC)</p>
+                    </div>
+                </div>
+                <i data-feather="chevron-right" class="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+
+            <div class="bg-slate-800 dark:bg-slate-900 p-4 rounded-xl shadow-sm flex justify-between items-center text-white transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-slate-700 dark:bg-slate-800 text-slate-300 rounded-lg transition-colors"><i data-feather="database" class="w-4 h-4"></i></div>
+                    <div>
+                        <p class="font-bold text-sm">Ukuran Database</p>
+                        <p class="text-[10px] text-slate-400">Server MySQL Aktif</p>
+                    </div>
+                </div>
+                <span class="font-black text-sm">{{ is_numeric($dbSize) ? $dbSize . ' MB' : $dbSize }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORM PENGATURAN UTAMA -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mt-2 transition-colors">
+        <form action="{{ route('settings.update') }}" method="POST" class="divide-y divide-slate-100 dark:divide-slate-700">
+            @csrf
+            @method('PUT')
+
+            <!-- Bagian Identitas Perusahaan -->
+            <div class="p-6 md:p-8">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
+                    <i data-feather="briefcase" class="w-5 h-5 text-slate-400 dark:text-slate-500"></i> Identitas & Kontak Perusahaan
+                </h3>
+
+                <div class="space-y-5 max-w-3xl">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 transition-colors">Nama Perusahaan (Akan tercetak di semua kop surat)</label>
+                        <input type="text" name="name" required value="{{ old('name', $setting->name) }}" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 font-bold text-slate-800 dark:text-white transition-colors">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 transition-colors">
+                                <i data-feather="phone" class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500"></i> Nomor Telepon Resmi
+                            </label>
+                            <input type="text" name="phone" value="{{ old('phone', $setting->phone) }}" placeholder="Cth: (021) 1234567" class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 transition-colors">
+                                <i data-feather="mail" class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500"></i> Email Utama
+                            </label>
+                            <input type="email" name="email" value="{{ old('email', $setting->email) }}" placeholder="admin@perusahaan.com" class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 transition-colors">
+                            <i data-feather="map-pin" class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500"></i> Alamat Lengkap
+                        </label>
+                        <textarea name="address" rows="3" placeholder="Masukkan alamat lengkap beserta kode pos..." class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-colors">{{ old('address', $setting->address) }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian Konfigurasi Finansial -->
+            <div class="p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2 transition-colors">
+                    <i data-feather="percent" class="w-5 h-5 text-slate-400 dark:text-slate-500"></i> Parameter Finansial Default
+                </h3>
+                <div class="max-w-sm bg-white dark:bg-slate-800 p-5 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm transition-colors">
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 transition-colors">Tarif PPN (Pajak Pertambahan Nilai)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-feather="pie-chart" class="w-4 h-4 text-slate-400 dark:text-slate-500"></i>
+                        </div>
+                        <input type="number" step="0.1" name="tax_rate" required value="{{ old('tax_rate', $setting->tax_rate) }}" class="w-full pl-12 pr-10 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-lg font-black text-lg text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400 dark:text-slate-500 text-lg">%</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-3 font-medium leading-relaxed transition-colors">Nilai ini akan dijadikan *default* saat tim Sales membuat penawaran atau tim Purchasing mencatat draf belanja. Sesuai aturan DJP terbaru.</p>
+                </div>
+            </div>
+
+            <!-- Footer Simpan -->
+            <div class="p-5 flex justify-end gap-3 bg-white dark:bg-slate-800 transition-colors">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg">
                     <i data-feather="save" class="w-4 h-4"></i> Simpan Pengaturan Sistem
                 </button>
             </div>
