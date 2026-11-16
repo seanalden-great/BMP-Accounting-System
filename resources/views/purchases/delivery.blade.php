@@ -363,7 +363,7 @@
     </script>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
     <div class="space-y-6 pb-10 relative">
@@ -558,6 +558,664 @@
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" onclick="closeReturnModal()" class="px-5 py-2.5 text-slate-600 font-bold transition-colors hover:bg-slate-100 rounded-lg">Batal</button>
                         <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors shadow-md flex items-center gap-2">
+                            <i data-feather="corner-up-right" class="w-4 h-4"></i> Keluarkan & Retur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENGENDALI JAVASCRIPT & SWEETALERT2 -->
+    <script>
+        // --- SWEETALERT2: PESAN GLOBAL (SESSION) ---
+        document.addEventListener("DOMContentLoaded", function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Transaksi Sukses!',
+                    text: '{{ session('success') }}',
+                    timer: 3500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    position: 'center'
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memproses!',
+                    text: '{{ session('error') }}',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#ef4444'
+                });
+            @endif
+        });
+
+        // --- SWEETALERT2: KONFIRMASI TINDAKAN KRUSIAL ---
+        function confirmAction(event, form, title, text, confirmText, confirmColor) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                didOpen: () => { if (typeof feather !== 'undefined') feather.replace(); }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Mencatat transaksi stok ke dalam sistem dan Buku Besar.',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    form.submit();
+                }
+            });
+        }
+
+        // --- LOGIKA MODAL (ANIMASI CSS SCALE) ---
+        function openDeliveryModal() {
+            const modal = document.getElementById('delModal');
+            const content = document.getElementById('delModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDeliveryModal() {
+            const modal = document.getElementById('delModal');
+            const content = document.getElementById('delModalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('receiveForm').reset();
+                // Reset action URL jika batal
+                document.getElementById('receiveForm').action = '#';
+            }, 150);
+        }
+
+        function openReturnModal(poId, customerName) {
+            document.getElementById('returnCustomerName').innerText = customerName;
+            document.getElementById('returnForm').action = '/purchases/' + poId + '/return';
+
+            const modal = document.getElementById('returnModal');
+            const content = document.getElementById('returnModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeReturnModal() {
+            const modal = document.getElementById('returnModal');
+            const content = document.getElementById('returnModalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('returnForm').reset();
+            }, 150);
+        }
+
+        function openDetailModal(id) {
+            const modal = document.getElementById(`detailModal_${id}`);
+            const content = document.getElementById(`detailModalContent_${id}`);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDetailModal(id) {
+            const modal = document.getElementById(`detailModal_${id}`);
+            const content = document.getElementById(`detailModalContent_${id}`);
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 150);
+        }
+    </script>
+@endsection --}}
+
+{{-- @extends('layouts.app')
+
+@section('content')
+    <div class="space-y-6 pb-10 relative">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                    <i data-feather="truck" class="text-emerald-600 dark:text-emerald-400 w-7 h-7"></i> Penerimaan Pembelian
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">Pilih Gudang Penyimpanan untuk PO yang datang dari Pemasok</p>
+            </div>
+
+            <!-- CEK HAK AKSES UPDATE (U) -->
+            @if (\App\Models\CompanySetting::canAction('U', 'Pembelian'))
+                <button onclick="openDeliveryModal()"
+                    class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 shadow-sm transition-colors">
+                    <i data-feather="check-square" class="w-4 h-4"></i> Proses Penerimaan
+                </button>
+            @endif
+        </div>
+
+        <!-- Tabel Riwayat -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[900px]">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-700 transition-colors">
+                        <tr>
+                            <th class="p-4 w-32 font-semibold text-slate-600 dark:text-slate-300 text-sm">Tanggal PO</th>
+                            <th class="p-4 w-48 font-semibold text-slate-600 dark:text-slate-300 text-sm">Supplier</th>
+                            <th class="p-4 font-semibold text-slate-600 dark:text-slate-300 text-sm">Catatan Gudang Penerima</th>
+                            <th class="p-4 w-32 text-center font-semibold text-slate-600 dark:text-slate-300 text-sm">Status</th>
+                            <th class="p-4 text-center font-semibold text-slate-600 dark:text-slate-300 text-sm">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($deliveries as $del)
+                            <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{{ \Carbon\Carbon::parse($del->date)->format('d/m/Y') }}</td>
+                                <td class="p-4 font-bold text-sm text-slate-800 dark:text-white">{{ $del->contact->name }}</td>
+                                <td class="p-4 text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{{ $del->notes ?: 'Tidak ada catatan' }}</td>
+                                <td class="p-4 text-center">
+                                    <span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-800/30">Diterima</span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <!-- Tombol Detail -->
+                                        <button onclick="openDetailModal({{ $del->id }})" class="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 shadow-sm" title="Lihat Detail Barang">
+                                            <i data-feather="eye" class="w-4 h-4"></i>
+                                        </button>
+
+                                        <!-- CEK HAK AKSES UPDATE (U) UNTUK TOMBOL RETUR -->
+                                        @if (\App\Models\CompanySetting::canAction('U', 'Pembelian'))
+                                            <button onclick="openReturnModal({{ $del->id }}, '{{ addslashes($del->contact->name) }}')"
+                                                class="text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-200 dark:hover:border-rose-800 shadow-sm"
+                                                title="Retur Barang Cacat (Kembalikan ke Supplier)">
+                                                <i data-feather="corner-up-right" class="w-4 h-4"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="p-10 text-center text-slate-500 dark:text-slate-400">Belum ada riwayat penerimaan barang.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PERULANGAN MODAL DETAIL SURAT JALAN (BERANIMASI) -->
+        @foreach ($deliveries as $del)
+            <div id="detailModal_{{ $del->id }}" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 backdrop-blur-sm transition-all">
+                <div id="detailModalContent_{{ $del->id }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] border-t-4 border-emerald-600 transform transition-transform scale-95 origin-center transition-colors">
+                    <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Rincian Penerimaan: {{ $del->reference_no ?: '#' . $del->id }}</h3>
+                        <button onclick="closeDetailModal({{ $del->id }})" class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"><i data-feather="x"></i></button>
+                    </div>
+                    <div class="p-6 overflow-y-auto custom-scrollbar">
+                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-600 rounded-lg">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300">
+                                    <tr>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold">Produk</th>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-center">Qty Diterima</th>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-right">Harga Beli</th>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($del->items as $item)
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-800 dark:text-slate-200">{{ $item->product->name ?? $item->product_sku }}</td>
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm text-center font-bold text-slate-700 dark:text-slate-300">{{ number_format($item->quantity, 0, ',', '.') }}</td>
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm text-right text-slate-600 dark:text-slate-400">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm text-right font-bold text-slate-800 dark:text-white">Rp {{ number_format($item->sub_total, 0, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                        <th colspan="3" class="p-3 text-right font-bold text-slate-600 dark:text-slate-400 uppercase">Grand Total Keseluruhan</th>
+                                        <th class="p-3 text-right font-black text-emerald-700 dark:text-emerald-400 text-lg">Rp {{ number_format($del->total, 0, ',', '.') }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+
+        <!-- Modal Form Penerimaan (Beranimasi & Swal) -->
+        <div id="delModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-all">
+            <div id="delModalContent" class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 border-emerald-600 shadow-2xl transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Terima Barang dari PO</h3>
+                    <button onclick="closeDeliveryModal()" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x"></i></button>
+                </div>
+
+                <form action="#" method="POST" id="receiveForm" class="p-6" onsubmit="confirmAction(event, this, 'Terima Barang?', 'Sistem akan menambahkan stok ke gudang secara otomatis dan mencatat Jurnal Hutang. Lanjutkan?', 'Ya, Simpan ke Gudang', '#10b981')">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Dokumen Pesanan (PO)</label>
+                        <select name="po_id" required
+                            onchange="document.getElementById('receiveForm').action = '/purchases/' + this.value + '/receive';"
+                            class="w-full border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-700 rounded-lg p-3 outline-none mb-4 font-semibold text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-emerald-500 transition-colors">
+                            <option value="" disabled selected>-- Pilih PO yang Diterima --</option>
+                            @foreach ($pendingOrders as $po)
+                                <option value="{{ $po->id }}">[{{ $po->reference_no ?: 'PO #' . $po->id }}] {{ $po->contact->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Bongkar Muat di Gudang</label>
+                        <select name="warehouse_id" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-indigo-700 dark:text-indigo-400 shadow-sm bg-slate-50 dark:bg-slate-700 transition-colors">
+                            <option value="" disabled selected>-- Pilih Lokasi Gudang --</option>
+                            @foreach ($warehouses as $wh)
+                                <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mt-5 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/30 rounded-lg text-sm text-orange-900 dark:text-orange-400 leading-relaxed shadow-sm transition-colors">
+                        <b class="dark:text-orange-300">Info Sistem Stok:</b><br />
+                        Menyimpan form ini akan otomatis <b>menambahkan stok ke Gudang terpilih</b>, merevisi angka HPP (*Moving Average*), dan membuat Jurnal Hutang Usaha.
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6 border-t border-slate-100 dark:border-slate-700 pt-4">
+                        <button type="button" onclick="closeDeliveryModal()" class="px-5 py-2.5 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Batal</button>
+                        <button type="submit" class="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 transition-colors flex items-center gap-2">
+                            <i data-feather="check-square" class="w-4 h-4"></i> Simpan ke Gudang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL FORM RETUR PEMBELIAN (Beranimasi & Swal) -->
+        <div id="returnModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[80] p-4 backdrop-blur-sm transition-all">
+            <div id="returnModalContent" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 border-rose-600 transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-rose-50 dark:bg-rose-900/20">
+                    <h3 class="text-lg font-bold text-rose-800 dark:text-rose-400 flex items-center gap-2">
+                        <i data-feather="corner-up-right" class="w-5 h-5"></i> Retur Pembelian (Debit Note)
+                    </h3>
+                    <button onclick="closeReturnModal()" class="text-slate-400 dark:text-slate-500 hover:text-rose-700 dark:hover:text-rose-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x"></i></button>
+                </div>
+
+                <form id="returnForm" method="POST" class="p-6 space-y-4" onsubmit="confirmAction(event, this, 'Proses Retur?', 'Stok fisik akan dikeluarkan dari gudang pilihan Anda dan jurnal pembalik akan otomatis dibuat. Tindakan ini tidak dapat dibatalkan.', 'Ya, Retur Barang', '#e11d48')">
+                    @csrf
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">Proses pengembalian barang cacat ke Supplier: <br/><b id="returnCustomerName" class="text-slate-800 dark:text-white text-base"></b></p>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Keluarkan dari Gudang Mana?</label>
+                        <select name="warehouse_id" required class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-rose-500 font-medium shadow-sm transition-colors">
+                            <option value="" disabled selected>-- Pilih Gudang Asal Retur --</option>
+                            @foreach (\App\Models\Warehouse::all() as $wh)
+                                <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Alasan Retur / Komplain</label>
+                        <textarea name="reason" required rows="2" placeholder="Cth: Barang cacat pabrik, kadaluwarsa, tidak sesuai PO..." class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-rose-500 resize-none shadow-sm transition-colors"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-lg text-xs text-rose-800 dark:text-rose-400 font-medium leading-relaxed shadow-sm transition-colors">
+                        <b class="dark:text-rose-300">Info Akuntansi Otomatis:</b><br />Menekan tombol simpan akan mengeluarkan stok fisik dari gudang, membatalkan status penerimaan, dan secara otomatis menerbitkan dokumen <i class="dark:text-rose-300">Debit Note</i> yang mendebit/mengurangi angka Hutang Usaha Anda di Buku Besar.
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" onclick="closeReturnModal()" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-bold transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Batal</button>
+                        <button type="submit" class="bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 text-white px-6 py-2.5 rounded-lg font-bold transition-colors shadow-md flex items-center gap-2">
+                            <i data-feather="corner-up-right" class="w-4 h-4"></i> Keluarkan & Retur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENGENDALI JAVASCRIPT & SWEETALERT2 -->
+    <script>
+        // --- SWEETALERT2: PESAN GLOBAL (SESSION) ---
+        document.addEventListener("DOMContentLoaded", function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Transaksi Sukses!',
+                    text: '{{ session('success') }}',
+                    timer: 3500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    position: 'center'
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memproses!',
+                    text: '{{ session('error') }}',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#ef4444'
+                });
+            @endif
+        });
+
+        // --- SWEETALERT2: KONFIRMASI TINDAKAN KRUSIAL ---
+        function confirmAction(event, form, title, text, confirmText, confirmColor) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                didOpen: () => { if (typeof feather !== 'undefined') feather.replace(); }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Mencatat transaksi stok ke dalam sistem dan Buku Besar.',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    form.submit();
+                }
+            });
+        }
+
+        // --- LOGIKA MODAL (ANIMASI CSS SCALE) ---
+        function openDeliveryModal() {
+            const modal = document.getElementById('delModal');
+            const content = document.getElementById('delModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDeliveryModal() {
+            const modal = document.getElementById('delModal');
+            const content = document.getElementById('delModalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('receiveForm').reset();
+                // Reset action URL jika batal
+                document.getElementById('receiveForm').action = '#';
+            }, 150);
+        }
+
+        function openReturnModal(poId, customerName) {
+            document.getElementById('returnCustomerName').innerText = customerName;
+            document.getElementById('returnForm').action = '/purchases/' + poId + '/return';
+
+            const modal = document.getElementById('returnModal');
+            const content = document.getElementById('returnModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeReturnModal() {
+            const modal = document.getElementById('returnModal');
+            const content = document.getElementById('returnModalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('returnForm').reset();
+            }, 150);
+        }
+
+        function openDetailModal(id) {
+            const modal = document.getElementById(`detailModal_${id}`);
+            const content = document.getElementById(`detailModalContent_${id}`);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDetailModal(id) {
+            const modal = document.getElementById(`detailModal_${id}`);
+            const content = document.getElementById(`detailModalContent_${id}`);
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 150);
+        }
+    </script>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+    <div class="space-y-6 pb-10 relative">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                    <i data-feather="truck" class="text-emerald-600 dark:text-emerald-400 w-7 h-7"></i> Penerimaan Pembelian
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">Pilih Gudang Penyimpanan untuk PO yang datang dari Pemasok</p>
+            </div>
+
+            <!-- CEK HAK AKSES UPDATE (U) -->
+            @if (\App\Models\CompanySetting::canAction('U', 'Pembelian'))
+                <button onclick="openDeliveryModal()"
+                    class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 shadow-sm transition-colors">
+                    <i data-feather="check-square" class="w-4 h-4"></i> Proses Penerimaan
+                </button>
+            @endif
+        </div>
+
+        <!-- Tabel Riwayat -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[900px]">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-700 transition-colors">
+                        <tr>
+                            <th class="p-4 w-32 font-semibold text-slate-600 dark:text-slate-300 text-sm">Tanggal PO</th>
+                            <th class="p-4 w-48 font-semibold text-slate-600 dark:text-slate-300 text-sm">Supplier</th>
+                            <th class="p-4 font-semibold text-slate-600 dark:text-slate-300 text-sm">Catatan Gudang Penerima</th>
+                            <th class="p-4 w-32 text-center font-semibold text-slate-600 dark:text-slate-300 text-sm">Status</th>
+                            <th class="p-4 text-center font-semibold text-slate-600 dark:text-slate-300 text-sm">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($deliveries as $del)
+                            <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">{{ \Carbon\Carbon::parse($del->date)->format('d/m/Y') }}</td>
+                                <td class="p-4 font-bold text-sm text-slate-800 dark:text-white">{{ $del->contact->name }}</td>
+                                <td class="p-4 text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{{ $del->notes ?: 'Tidak ada catatan' }}</td>
+                                <td class="p-4 text-center">
+                                    <span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-800/30">Diterima</span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <!-- Tombol Detail -->
+                                        <button onclick="openDetailModal({{ $del->id }})" class="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 shadow-sm" title="Lihat Detail Barang">
+                                            <i data-feather="eye" class="w-4 h-4"></i>
+                                        </button>
+
+                                        <!-- CEK HAK AKSES UPDATE (U) UNTUK TOMBOL RETUR -->
+                                        @if (\App\Models\CompanySetting::canAction('U', 'Pembelian'))
+                                            <button onclick="openReturnModal({{ $del->id }}, '{{ addslashes($del->contact->name) }}')"
+                                                class="text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-200 dark:hover:border-rose-800 shadow-sm"
+                                                title="Retur Barang Cacat (Kembalikan ke Supplier)">
+                                                <i data-feather="corner-up-right" class="w-4 h-4"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="p-10 text-center text-slate-500 dark:text-slate-400">Belum ada riwayat penerimaan barang.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PERULANGAN MODAL DETAIL SURAT JALAN (BERANIMASI) -->
+        @foreach ($deliveries as $del)
+            <div id="detailModal_{{ $del->id }}" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 backdrop-blur-sm transition-all">
+                <div id="detailModalContent_{{ $del->id }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] border-t-4 border-emerald-600 transform transition-transform scale-95 origin-center transition-colors">
+                    <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Rincian Penerimaan: {{ $del->reference_no ?: '#' . $del->id }}</h3>
+                        <button onclick="closeDetailModal({{ $del->id }})" class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"><i data-feather="x"></i></button>
+                    </div>
+                    <div class="p-6 overflow-y-auto custom-scrollbar">
+                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-600 rounded-lg">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300">
+                                    <tr>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold">Produk</th>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-center">Qty Diterima</th>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-right">Harga Beli</th>
+                                        <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($del->items as $item)
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-800 dark:text-slate-200">{{ $item->product->name ?? $item->product_sku }}</td>
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm text-center font-bold text-slate-700 dark:text-slate-300">{{ number_format($item->quantity, 0, ',', '.') }}</td>
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm text-right text-slate-600 dark:text-slate-400">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                                            <td class="p-3 border-b border-slate-100 dark:border-slate-700 text-sm text-right font-bold text-slate-800 dark:text-white">Rp {{ number_format($item->sub_total, 0, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                        <th colspan="3" class="p-3 text-right font-bold text-slate-600 dark:text-slate-400 uppercase">Grand Total Keseluruhan</th>
+                                        <th class="p-3 text-right font-black text-emerald-700 dark:text-emerald-400 text-lg">Rp {{ number_format($del->total, 0, ',', '.') }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+
+        <!-- Modal Form Penerimaan (Beranimasi & Swal) -->
+        <div id="delModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-all">
+            <div id="delModalContent" class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 border-emerald-600 shadow-2xl transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Terima Barang dari PO</h3>
+                    <button onclick="closeDeliveryModal()" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x"></i></button>
+                </div>
+
+                <form action="#" method="POST" id="receiveForm" class="p-6" onsubmit="confirmAction(event, this, 'Terima Barang?', 'Sistem akan menambahkan stok ke gudang secara otomatis dan mencatat Jurnal Hutang. Lanjutkan?', 'Ya, Simpan ke Gudang', '#10b981')">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Dokumen Pesanan (PO)</label>
+                        <select name="po_id" required
+                            onchange="document.getElementById('receiveForm').action = '/purchases/' + this.value + '/receive';"
+                            class="w-full border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-700 rounded-lg p-3 outline-none mb-4 font-semibold text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-emerald-500 transition-colors">
+                            <option value="" disabled selected>-- Pilih PO yang Diterima --</option>
+                            @foreach ($pendingOrders as $po)
+                                <option value="{{ $po->id }}">[{{ $po->reference_no ?: 'PO #' . $po->id }}] {{ $po->contact->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Bongkar Muat di Gudang</label>
+                        <select name="warehouse_id" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-indigo-700 dark:text-indigo-400 shadow-sm bg-slate-50 dark:bg-slate-700 transition-colors">
+                            <option value="" disabled selected>-- Pilih Lokasi Gudang --</option>
+                            @foreach ($warehouses as $wh)
+                                <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mt-5 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/30 rounded-lg text-sm text-orange-900 dark:text-orange-400 leading-relaxed shadow-sm transition-colors">
+                        <b class="dark:text-orange-300">Info Sistem Stok:</b><br />
+                        Menyimpan form ini akan otomatis <b>menambahkan stok ke Gudang terpilih</b>, merevisi angka HPP (*Moving Average*), dan membuat Jurnal Hutang Usaha.
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6 border-t border-slate-100 dark:border-slate-700 pt-4">
+                        <button type="button" onclick="closeDeliveryModal()" class="px-5 py-2.5 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Batal</button>
+                        <button type="submit" class="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 transition-colors flex items-center gap-2">
+                            <i data-feather="check-square" class="w-4 h-4"></i> Simpan ke Gudang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL FORM RETUR PEMBELIAN (Beranimasi & Swal) -->
+        <div id="returnModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[80] p-4 backdrop-blur-sm transition-all">
+            <div id="returnModalContent" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 border-rose-600 transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-rose-50 dark:bg-rose-900/20">
+                    <h3 class="text-lg font-bold text-rose-800 dark:text-rose-400 flex items-center gap-2">
+                        <i data-feather="corner-up-right" class="w-5 h-5"></i> Retur Pembelian (Debit Note)
+                    </h3>
+                    <button onclick="closeReturnModal()" class="text-slate-400 dark:text-slate-500 hover:text-rose-700 dark:hover:text-rose-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x"></i></button>
+                </div>
+
+                <form id="returnForm" method="POST" class="p-6 space-y-4" onsubmit="confirmAction(event, this, 'Proses Retur?', 'Stok fisik akan dikeluarkan dari gudang pilihan Anda dan jurnal pembalik akan otomatis dibuat. Tindakan ini tidak dapat dibatalkan.', 'Ya, Retur Barang', '#e11d48')">
+                    @csrf
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">Proses pengembalian barang cacat ke Supplier: <br/><b id="returnCustomerName" class="text-slate-800 dark:text-white text-base"></b></p>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Keluarkan dari Gudang Mana?</label>
+                        <select name="warehouse_id" required class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-rose-500 font-medium shadow-sm transition-colors">
+                            <option value="" disabled selected>-- Pilih Gudang Asal Retur --</option>
+                            @foreach (\App\Models\Warehouse::all() as $wh)
+                                <option value="{{ $wh->id }}">[{{ $wh->code }}] {{ $wh->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Alasan Retur / Komplain</label>
+                        <textarea name="reason" required rows="2" placeholder="Cth: Barang cacat pabrik, kadaluwarsa, tidak sesuai PO..." class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-rose-500 resize-none shadow-sm transition-colors"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-lg text-xs text-rose-800 dark:text-rose-400 font-medium leading-relaxed shadow-sm transition-colors">
+                        <b class="dark:text-rose-300">Info Akuntansi Otomatis:</b><br />Menekan tombol simpan akan mengeluarkan stok fisik dari gudang, membatalkan status penerimaan, dan secara otomatis menerbitkan dokumen <i class="dark:text-rose-300">Debit Note</i> yang mendebit/mengurangi angka Hutang Usaha Anda di Buku Besar.
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" onclick="closeReturnModal()" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-bold transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Batal</button>
+                        <button type="submit" class="bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 text-white px-6 py-2.5 rounded-lg font-bold transition-colors shadow-md flex items-center gap-2">
                             <i data-feather="corner-up-right" class="w-4 h-4"></i> Keluarkan & Retur
                         </button>
                     </div>
