@@ -4220,7 +4220,7 @@ $products = \App\Models\Product::all();
     </script>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
     @php
@@ -4238,6 +4238,656 @@ $products = \App\Models\Product::all();
         .dark .ts-control { color: #f8fafc !important; }
         .ts-control > input { color: inherit !important; }
         .ts-dropdown { background-color: #ffffff; border-color: #e2e8f0; border-radius: 0.5rem; overflow: hidden; font-size: 0.875rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: #f8fafc; }
+        .ts-dropdown .option { padding: 0.5rem 1rem; }
+        .dark .ts-dropdown .option:hover, .dark .ts-dropdown .active { background-color: #334155 !important; color: #ffffff !important; }
+        .ts-wrapper.single .ts-control:after { border-color: #94a3b8 transparent transparent transparent; right: 10px; }
+        .ts-wrapper.focus .ts-control { box-shadow: none !important; }
+    </style>
+
+    <div class="space-y-6 pb-10 relative">
+
+        <!-- HEADER -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                    <i data-feather="shopping-bag" class="text-indigo-600 dark:text-indigo-400 w-7 h-7"></i> Pesanan Penjualan (SO)
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">Buat dokumen pesanan barang dari Pelanggan (Customer)</p>
+            </div>
+
+            <!-- Tombol Aksi Kanan -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <a href="{{ route('sales.efaktur') }}" class="w-full sm:w-auto bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/30 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                    <i data-feather="download" class="w-4 h-4"></i> Ekspor e-Faktur DJP
+                </a>
+
+                <!-- CEK HAK AKSES CREATE (C) -->
+                @if(\App\Models\CompanySetting::canAction('C', 'Penjualan'))
+                <button onclick="openSoModal()"
+                    class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-feather="plus" class="w-4 h-4"></i> Buat SO Baru
+                </button>
+                @endif
+            </div>
+        </div>
+
+        <!-- Tabel SO -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[900px]">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 transition-colors">
+                        <tr>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Tanggal</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">No. Referensi</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Pelanggan</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Jatuh Tempo</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-right">Total Penjualan</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-center">Status</th>
+                            <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($sales as $so)
+                            <tr class="border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="p-4 text-sm text-slate-700 dark:text-slate-300">{{ \Carbon\Carbon::parse($so->date)->format('d/m/Y') }}</td>
+                                <td class="p-4 text-sm font-bold text-slate-800 dark:text-white">{{ $so->reference_no ?: '-' }}</td>
+                                <td class="p-4 text-sm font-medium text-indigo-700 dark:text-indigo-400">{{ $so->contact->name }}</td>
+                                <td class="p-4 text-sm">
+                                    @if($so->due_date)
+                                        <span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-600">
+                                            {{ \Carbon\Carbon::parse($so->due_date)->format('d/m/Y') }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400 dark:text-slate-500">-</span>
+                                    @endif
+                                </td>
+                                <td class="p-4 text-sm font-bold text-slate-800 dark:text-white text-right">Rp {{ number_format($so->total, 0, ',', '.') }}</td>
+
+                                <!-- Kolom Status Berwarna -->
+                                <td class="p-4 text-center">
+                                    @if($so->status == 'Penawaran')
+                                        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="file-text" class="w-3 h-3 inline mr-1"></i>Penawaran</span>
+                                    @elseif($so->status == 'Menunggu Persetujuan')
+                                        <span class="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="clock" class="w-3 h-3 inline mr-1"></i>Menunggu</span>
+                                    @elseif($so->status == 'Pesanan')
+                                        <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="check" class="w-3 h-3 inline mr-1"></i>Disetujui</span>
+                                    @elseif($so->status == 'Ditolak')
+                                        <span class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold line-through whitespace-nowrap">Ditolak</span>
+                                    @elseif($so->status == 'Diretur')
+                                        <span class="px-3 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-400 rounded-full text-xs font-bold whitespace-nowrap"><i data-feather="corner-down-left" class="w-3 h-3 inline mr-1"></i>Diretur (Kembali)</span>
+                                    @else
+                                        <span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold whitespace-nowrap">{{ $so->status }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- Kolom Aksi Dinamis (Dengan Swal) -->
+                                <td class="p-4 text-center">
+                                    <div class="flex justify-center items-center gap-2">
+                                        <!-- Tombol Detail -->
+                                        <button onclick="openDetailModal({{ $so->id }})" class="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800" title="Lihat Detail Barang">
+                                            <i data-feather="eye" class="w-4 h-4"></i>
+                                        </button>
+
+                                        <!-- TOMBOL KHUSUS STATUS PENAWARAN -->
+                                        @if($so->status == 'Penawaran')
+                                            <a href="{{ route('sales.printQuotation', $so->id) }}" target="_blank" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors border border-slate-200 dark:border-slate-600 shadow-sm" title="Cetak Surat Penawaran Harga (PDF)">
+                                                <i data-feather="printer" class="w-4 h-4"></i>
+                                            </a>
+
+                                            @if(\App\Models\CompanySetting::canAction('C', 'Penjualan') || \App\Models\CompanySetting::canAction('U', 'Penjualan'))
+                                            <form action="{{ route('sales.convertToSo', $so->id) }}" method="POST" onsubmit="confirmAction(event, this, 'Klien Deal?', 'Dokumen ini akan dikonversi menjadi Pesanan Penjualan (SO) resmi. Anda yakin?', 'Ya, Konversi ke SO', '#4f46e5')">
+                                                @csrf
+                                                <button type="submit" class="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800" title="Klien Setuju? Ubah ke Pesanan (SO)">
+                                                    <i data-feather="arrow-right-circle" class="w-4 h-4"></i>
+                                                </button>
+                                            </form>
+                                            @endif
+                                        @endif
+
+                                        <!-- Tombol Setuju/Tolak (Khusus Status Menunggu & Memiliki Hak UPDATE) -->
+                                        @if($so->status == 'Menunggu Persetujuan' && \App\Models\CompanySetting::canAction('U', 'Penjualan'))
+                                            <form action="{{ route('sales.approve', $so->id) }}" method="POST" onsubmit="confirmAction(event, this, 'Setujui SO ini?', 'Dokumen ini akan disahkan dan akan memotong stok secara otomatis saat dikirim.', 'Ya, Setujui', '#10b981')">
+                                                @csrf
+                                                <button type="submit" class="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800" title="Setujui SO">
+                                                    <i data-feather="check-circle" class="w-4 h-4"></i>
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('sales.reject', $so->id) }}" method="POST" onsubmit="confirmAction(event, this, 'Tolak SO ini?', 'Pesanan ini akan ditolak secara permanen dan tidak dapat diproses lebih lanjut.', 'Ya, Tolak', '#ef4444')">
+                                                @csrf
+                                                <button type="submit" class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-200 dark:hover:border-red-800" title="Tolak SO">
+                                                    <i data-feather="x-circle" class="w-4 h-4"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-10 text-center text-slate-500 dark:text-slate-400">Belum ada dokumen pesanan penjualan.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PERULANGAN MODAL DETAIL UNTUK TIAP SO (BERANIMASI) -->
+        @foreach($sales as $so)
+        <div id="detailModal_{{ $so->id }}" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 backdrop-blur-sm transition-all">
+            <div id="detailModalContent_{{ $so->id }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] border-t-4 border-indigo-600 transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Rincian Dokumen: {{ $so->reference_no ?: '#'.$so->id }}</h3>
+                    <button onclick="closeDetailModal({{ $so->id }})" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x"></i></button>
+                </div>
+                <div class="p-6 overflow-y-auto custom-scrollbar">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Pelanggan / Customer</p>
+                            <p class="font-bold text-slate-800 dark:text-white text-lg">{{ $so->contact->name }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Tanggal Pesanan</p>
+                            <p class="font-bold text-slate-800 dark:text-white text-lg">{{ \Carbon\Carbon::parse($so->date)->format('d F Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-600 rounded-lg">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300">
+                                <tr>
+                                    <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold">Produk</th>
+                                    <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-center">Qty</th>
+                                    <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-right">Harga Jual</th>
+                                    <th class="p-3 border-b dark:border-slate-600 text-sm font-semibold text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($so->items as $item)
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 border-b border-slate-100 dark:border-slate-700">
+                                    <td class="p-3 text-sm font-medium text-slate-800 dark:text-slate-200">{{ $item->product->name ?? $item->product_sku }}</td>
+                                    <td class="p-3 text-sm text-center font-bold text-slate-700 dark:text-slate-300">{{ number_format($item->quantity, 0, ',', '.') }}</td>
+                                    <td class="p-3 text-sm text-right text-slate-600 dark:text-slate-400">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                                    <td class="p-3 text-sm text-right font-bold text-slate-800 dark:text-white">Rp {{ number_format($item->sub_total, 0, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                    <th colspan="3" class="p-3 text-right font-bold text-slate-600 dark:text-slate-400 uppercase">Grand Total Penjualan</th>
+                                    <th class="p-3 text-right font-black text-indigo-700 dark:text-indigo-400 text-lg">Rp {{ number_format($so->total, 0, ',', '.') }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+
+        <!-- Modal Form SO Utama -->
+        <div id="soModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-all">
+            <div id="soModalContent" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[95vh] border-t-4 border-indigo-600 transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Buat Pesanan Penjualan Baru</h3>
+                    <button type="button" onclick="closeSoModal()" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x"></i></button>
+                </div>
+
+                <form id="soForm" action="{{ route('sales.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden" onsubmit="unformatRibuan(this)">
+                    @csrf
+                    <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div class="lg:col-span-2">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Pelanggan</label>
+                                    <button type="button" onclick="openContactModal()"
+                                        class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline flex items-center gap-1">
+                                        <i data-feather="plus" class="w-3 h-3"></i> Tambah Baru
+                                    </button>
+                                </div>
+                                <!-- Diterapkan TomSelect disini dengan dropdownParent body -->
+                                <select name="contact_id" id="contactDropdown" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                                    <option value="" disabled selected>-- Pilih Customer --</option>
+                                    @foreach($customers as $c)
+                                    <option value="{{ $c->id }}">{{ $c->name }}</option> @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal SO</label>
+                                <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 dark:color-scheme-dark">
+                                <style>.dark\:color-scheme-dark::-webkit-calendar-picker-indicator { filter: invert(1); }</style>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Jatuh Tempo</label>
+                                <input type="date" name="due_date" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 dark:color-scheme-dark">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">No. Referensi</label>
+                                <input type="text" value="{{ $nextDocNumber ?? '' }}" disabled class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-400 font-bold cursor-not-allowed text-center">
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Diisi otomatis oleh sistem.</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold text-slate-800 dark:text-white">Detail Pesanan Barang</h4>
+                                <button type="button" onclick="addRow()"
+                                    class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1 transition-colors">
+                                    <i data-feather="plus" class="w-3 h-3"></i> Tambah Baris
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse border border-slate-300 dark:border-slate-600 min-w-[700px]" id="itemTable">
+                                    <thead class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                                        <tr>
+                                            <th class="p-2 border dark:border-slate-600 text-sm font-semibold">Produk (Ketik untuk mencari...)</th>
+                                            <th class="p-2 border dark:border-slate-600 text-sm font-semibold w-24">Qty</th>
+                                            <th class="p-2 border dark:border-slate-600 text-sm font-semibold w-32">Harga Jual</th>
+                                            <th class="p-2 border dark:border-slate-600 text-sm font-semibold w-24 text-center">PPN</th>
+                                            <th class="p-2 border dark:border-slate-600 text-sm font-semibold w-32 text-right">Subtotal</th>
+                                            <th class="p-2 border dark:border-slate-600 w-12 text-center"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemBody"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-4 text-right text-lg font-bold text-indigo-700 dark:text-indigo-400 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-900/30 transition-colors">
+                                GRAND TOTAL: <span id="grandTotalText">Rp 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button type="button" onclick="closeSoModal()" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">Batal</button>
+                        <button type="submit" name="action" value="quotation" class="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 px-5 py-2.5 rounded-lg font-bold transition-colors shadow-sm">Simpan Draf Penawaran</button>
+                        <button type="submit" name="action" value="so" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-sm transition-colors flex items-center gap-2">
+                            <i data-feather="check" class="w-4 h-4"></i> Simpan Pesanan (SO)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Kontak Cepat (AJAX) -->
+        <div id="quickContactModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4 backdrop-blur-sm transition-all">
+            <div id="quickContactContent" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border-t-4 border-indigo-600 transform transition-transform scale-95 origin-center transition-colors">
+                <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Tambah Pelanggan Baru</h3>
+                    <button type="button" onclick="closeContactModal()" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors"><i data-feather="x" class="w-5 h-5"></i></button>
+                </div>
+                <form id="quickContactForm" onsubmit="submitQuickContact(event)" class="p-5 space-y-4">
+                    <input type="hidden" name="type" value="Customer">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Pelanggan (Customer)</label>
+                            <input type="text" name="name" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-slate-50 dark:bg-slate-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">No. Telepon / WA (Opsional)</label>
+                            <input type="text" name="phone" placeholder="08..." class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Email (Opsional)</label>
+                            <input type="email" name="email" placeholder="email@contoh.com" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 dark:text-white">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap</label>
+                            <textarea name="address" rows="3" placeholder="Alamat jalan, kota, provinsi..." class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-white dark:bg-slate-700 dark:text-white"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" onclick="closeContactModal()" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Batal</button>
+                        <button type="submit" id="btnSaveContact" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-md transition-colors flex items-center gap-2">
+                            <i data-feather="save" class="w-4 h-4"></i> Simpan Kontak
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENGENDALI JAVASCRIPT & SWEETALERT2 -->
+    <script>
+        // --- INISIALISASI TOM SELECT UNTUK CUSTOMER ---
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('contactDropdown')) {
+                new TomSelect('#contactDropdown', {
+                    create: false,
+                    dropdownParent: "body",
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+            }
+        });
+
+        // --- SWEETALERT2: PESAN GLOBAL (SESSION) ---
+        document.addEventListener("DOMContentLoaded", function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    timer: 3500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    position: 'center'
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Aksi Gagal!',
+                    text: '{{ session('error') }}',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#ef4444'
+                });
+            @endif
+        });
+
+        // --- SWEETALERT2: KONFIRMASI AKSI DINAMIS (Ubah SO, Setujui, Tolak) ---
+        function confirmAction(event, form, title, text, confirmText, confirmColor) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Mohon tunggu sebentar.',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    form.submit();
+                }
+            });
+        }
+
+        // --- SWEETALERT2: ANIMASI LOADING SAAT SUBMIT SO ---
+        document.getElementById('soForm').addEventListener('submit', function() {
+            Swal.fire({
+                title: 'Menyimpan Dokumen...',
+                text: 'Sistem sedang memproses data penjualan Anda.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        });
+
+        // --- HELPER JAVASCRIPT GLOBAL ---
+        function formatRibuan(inputElement) {
+            let value = inputElement.value.replace(/[^0-9]/g, '');
+            if (value !== '') { inputElement.value = parseInt(value, 10).toLocaleString('id-ID'); } else { inputElement.value = ''; }
+        }
+
+        function unformatRibuan(formElement) {
+            let formattedInputs = formElement.querySelectorAll('.format-ribuan');
+            formattedInputs.forEach(input => { input.value = input.value.replace(/\./g, ''); });
+        }
+
+        // --- LOGIKA TABEL DINAMIS (ITEM PENJUALAN) DENGAN TOM SELECT ---
+        const productsData = @json($products);
+        let rowIdx = 0;
+
+        function addRow() {
+            let tbody = document.getElementById('itemBody');
+            let tr = document.createElement('tr');
+            tr.className = "dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/30";
+            let selectOptions = `<option value="" disabled selected>Pilih Produk...</option>`;
+
+            productsData.forEach(p => {
+                let stokAman = p.total_stock || 0;
+                selectOptions += `<option value="${p.sku}" data-price="${p.sell_price}">[${p.sku}] ${p.name} (Sisa Stok: ${stokAman})</option>`;
+            });
+
+            tr.innerHTML = `
+                <td class="p-1 border dark:border-slate-600">
+                    <select name="items[${rowIdx}][product_sku]" id="product_select_${rowIdx}" required class="w-full p-1.5 text-sm outline-none bg-transparent font-medium dark:text-slate-200">
+                        ${selectOptions}
+                    </select>
+                </td>
+                <td class="p-1 border dark:border-slate-600">
+                    <input type="text" name="items[${rowIdx}][quantity]" id="qty_${rowIdx}" value="1" required oninput="formatRibuan(this); calcSub(${rowIdx})" class="format-ribuan w-full p-1.5 text-sm text-center outline-none bg-transparent font-bold dark:text-slate-200">
+                </td>
+                <td class="p-1 border dark:border-slate-600">
+                    <input type="text" name="items[${rowIdx}][price]" id="price_${rowIdx}" required oninput="formatRibuan(this); calcSub(${rowIdx})" class="format-ribuan w-full p-1.5 text-sm text-right outline-none bg-transparent font-medium dark:text-slate-200">
+                </td>
+                <td class="p-1 border dark:border-slate-600 text-center">
+                    <select name="items[${rowIdx}][tax_rate]" id="tax_${rowIdx}" onchange="calcSub(${rowIdx})" class="w-full p-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 outline-none bg-transparent text-center">
+                        <option value="0">0%</option>
+                        <option value="11">11%</option>
+                        <option value="12" selected>12%</option>
+                    </select>
+                </td>
+                <td class="p-2 border dark:border-slate-600 text-right text-sm font-bold bg-slate-50 dark:bg-slate-700/50 subtotal-text text-slate-800 dark:text-white" id="subtext_${rowIdx}">Rp 0</td>
+                <td class="p-1 border dark:border-slate-600 text-center bg-red-50 dark:bg-red-900/20">
+                    <button type="button" onclick="this.closest('tr').remove(); calcGrand();" class="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300" title="Hapus Baris"><i data-feather="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            // Inisialisasi TomSelect pada baris yang baru ditambahkan
+            let selectElement = document.getElementById(`product_select_${rowIdx}`);
+            let currentIndex = rowIdx; // Simpan index ke dalam scope
+
+            new TomSelect(selectElement, {
+                create: false,
+                dropdownParent: "body",
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                onChange: function(value) {
+                    updatePrice(selectElement, currentIndex);
+                }
+            });
+
+            if (typeof feather !== 'undefined') { feather.replace(); }
+            rowIdx++;
+        }
+
+        function updatePrice(sel, idx) {
+            let price = sel.options[sel.selectedIndex].getAttribute('data-price');
+            let priceInput = document.getElementById(`price_${idx}`);
+            priceInput.value = price;
+            formatRibuan(priceInput);
+            calcSub(idx);
+        }
+
+        function calcSub(idx) {
+            let rawQ = document.getElementById(`qty_${idx}`).value.replace(/\./g, '') || 0;
+            let rawP = document.getElementById(`price_${idx}`).value.replace(/\./g, '') || 0;
+            let taxRate = parseInt(document.getElementById(`tax_${idx}`).value) || 0;
+
+            let dpp = parseInt(rawQ, 10) * parseInt(rawP, 10);
+            let taxAmount = dpp * (taxRate / 100);
+            let sub = dpp + taxAmount;
+
+            document.getElementById(`subtext_${idx}`).innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(sub);
+            calcGrand();
+        }
+
+        function calcGrand() {
+            let total = 0;
+            document.querySelectorAll('[id^="qty_"]').forEach(el => {
+                let idx = el.id.split('_')[1];
+                let rawQ = document.getElementById(`qty_${idx}`).value.replace(/\./g, '') || 0;
+                let rawP = document.getElementById(`price_${idx}`).value.replace(/\./g, '') || 0;
+                let taxRate = parseInt(document.getElementById(`tax_${idx}`).value) || 0;
+
+                let dpp = parseInt(rawQ, 10) * parseInt(rawP, 10);
+                let taxAmount = dpp * (taxRate / 100);
+                total += (dpp + taxAmount);
+            });
+            document.getElementById('grandTotalText').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(total);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () { addRow(); });
+
+        // --- LOGIKA MODAL (ANIMASI CSS SCALE) ---
+        function openSoModal() {
+            const modal = document.getElementById('soModal');
+            const content = document.getElementById('soModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeSoModal() {
+            const modal = document.getElementById('soModal');
+            const content = document.getElementById('soModalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 150);
+        }
+
+        function openDetailModal(id) {
+            const modal = document.getElementById(`detailModal_${id}`);
+            const content = document.getElementById(`detailModalContent_${id}`);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDetailModal(id) {
+            const modal = document.getElementById(`detailModal_${id}`);
+            const content = document.getElementById(`detailModalContent_${id}`);
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 150);
+        }
+
+        // --- LOGIKA MODAL KONTAK CEPAT (AJAX) ---
+        function openContactModal() {
+            const modal = document.getElementById('quickContactModal');
+            const content = document.getElementById('quickContactContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeContactModal() {
+            const modal = document.getElementById('quickContactModal');
+            const content = document.getElementById('quickContactContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('quickContactForm').reset();
+            }, 150);
+        }
+
+        async function submitQuickContact(e) {
+            e.preventDefault();
+            const form = document.getElementById('quickContactForm');
+            const btn = document.getElementById('btnSaveContact');
+            const formData = new FormData(form);
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full inline-block mr-2"></i> Menyimpan...';
+
+            try {
+                const response = await fetch("{{ route('contacts.store') }}", {
+                    method: "POST",
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}", "Accept": "application/json" },
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Cek apakah Tom Select diinstansiasi di dropdown
+                    let dropdownEl = document.getElementById('contactDropdown');
+                    if (dropdownEl.tomselect) {
+                        dropdownEl.tomselect.addOption({
+                            value: result.contact.id,
+                            text: result.contact.name
+                        });
+                        dropdownEl.tomselect.setValue(result.contact.id);
+                    } else {
+                        const newOption = document.createElement("option");
+                        newOption.value = result.contact.id;
+                        newOption.text = result.contact.name;
+                        dropdownEl.add(newOption);
+                        dropdownEl.value = result.contact.id;
+                    }
+
+                    closeContactModal();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pelanggan Tersimpan!',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menyimpan!',
+                        text: result.message || 'Nama/Email mungkin sudah terdaftar.',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Jaringan',
+                    text: 'Tidak dapat menghubungi server. Periksa koneksi internet Anda.',
+                    confirmButtonColor: '#4f46e5'
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-feather="save" class="w-4 h-4"></i> Simpan Kontak';
+                feather.replace();
+            }
+        }
+    </script>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+    @php
+        $customers = \App\Models\Contact::where('type', 'Customer')->get();
+        // PERHATIAN: Tarik data produk sekaligus dengan jumlah (Sum) stok aktif dari tabel relasi
+        $products = \App\Models\Product::withSum('stocks as total_stock', 'quantity')->get();
+    @endphp
+
+    <!-- Tom Select (Vanilla JS Searchable Dropdown) -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        /* Penyesuaian Tom Select agar menyatu dengan Tailwind & Dark Mode */
+        .ts-control { background-color: transparent !important; border: none !important; padding: 0.25rem !important; color: inherit !important; box-shadow: none !important; min-height: 0 !important; }
+        .dark .ts-control { color: #f8fafc !important; }
+        .ts-control > input { color: inherit !important; }
+
+        /* PERBAIKAN Z-INDEX DI SINI AGAR DROPDOWN TIDAK TENGGELAM DI BELAKANG MODAL */
+        .ts-dropdown { background-color: #ffffff; border-color: #e2e8f0; border-radius: 0.5rem; overflow: hidden; font-size: 0.875rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 9999 !important; }
         .dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: #f8fafc; }
         .ts-dropdown .option { padding: 0.5rem 1rem; }
         .dark .ts-dropdown .option:hover, .dark .ts-dropdown .active { background-color: #334155 !important; color: #ffffff !important; }
