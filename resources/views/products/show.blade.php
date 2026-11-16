@@ -1,19 +1,8 @@
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
 <div class="space-y-6 pb-10">
     <!-- HEADER KEMBALI -->
-    {{-- <div class="flex items-center gap-4 border-b border-slate-200 pb-4">
-        <a href="{{ route('products.index') }}" class="text-slate-400 hover:text-blue-600 bg-white p-2 rounded-lg shadow-sm border border-slate-200 transition-colors">
-            <i data-feather="arrow-left" class="w-5 h-5"></i>
-        </a>
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
-                <i data-feather="box" class="text-blue-600 w-6 h-6"></i> Detail Kartu Stok: {{ $product->name }}
-            </h1>
-            <p class="text-slate-500 text-sm mt-0.5">SKU: <span class="font-mono font-bold">{{ $product->sku }}</span> | Kategori: {{ $product->category }}</p>
-        </div>
-    </div> --}}
 
     <!-- HEADER KARTU STOK & TOMBOL EKSPOR -->
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
@@ -189,4 +178,4 @@
         </div>
     </div>
 </div>
-@endsection
+@endsection --}}
