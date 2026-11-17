@@ -78,7 +78,7 @@ class SettingController extends Controller
         // Definisikan Role dan Menu yang ada di ERP Anda
         $roles = ['Admin', 'Gudang', 'Developer', 'Direktur'];
         $menus = [
-            'Dashboard', 'Penjualan', 'Pembelian', 'Biaya', 'Produk',
+            'Dashboard', 'Persetujuan', 'Penjualan', 'Pembelian', 'Biaya', 'Produk',
             'Inventori', 'Aset Tetap', 'Kas & Bank', 'Akun CoA',
             'Kontak', 'Laporan Keuangan', 'Pengaturan', 'Penggajian'
         ];

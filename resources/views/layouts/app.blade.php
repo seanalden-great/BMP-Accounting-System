@@ -3352,7 +3352,7 @@
                 </a>
             @endif
 
-            @if (in_array(Auth::user()->role ?? 'Staff', ['Admin', 'Direktur']))
+            @if ($hasAccess('Persetujuan'))
                 <a href="{{ route('approvals.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('approvals.index') ? 'bg-slate-800 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <i data-feather="check-square" class="w-5 h-5 shrink-0"></i>
