@@ -3680,7 +3680,7 @@
             </div>
         @endif
 
-        <!-- Header Dashboard -->
+        {{-- <!-- Header Dashboard -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h2 class="text-3xl font-bold text-slate-800 dark:text-white">Dashboard Keuangan</h2>
@@ -3981,6 +3981,305 @@
                 </div>
             </div>
 
+        </div> --}}
+        <!-- Header Dashboard -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-800 dark:text-white transition-colors">Dashboard Keuangan</h2>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">Ringkasan bisnis PT Berlian Mandiri Perkasa (Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }})</p>
+            </div>
+
+            <a href="/calendar/feed.ics" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2">
+                <i data-feather="calendar" class="w-4 h-4"></i> Dapatkan Tautan Kalender (ICS)
+            </a>
+        </div>
+
+        <!-- FITUR BARU: KPI PROGRESS BAR & PROFIT MARGIN -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 my-2">
+            <div class="lg:col-span-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 flex flex-col justify-center transition-colors">
+                <div class="flex justify-between items-end mb-3">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Target Penjualan (Bulan Ini)</p>
+                        <h4 class="text-lg font-black text-slate-800 dark:text-white mt-1">Rp {{ number_format($pendapatanBulanIni, 0, ',', '.') }} <span class="text-sm font-medium text-slate-400">/ Rp {{ number_format($targetPenjualan, 0, ',', '.') }}</span></h4>
+                    </div>
+                    <span class="text-xl font-black text-blue-600 dark:text-blue-400">{{ $persentaseTarget }}%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3.5 mb-1 overflow-hidden border border-slate-200 dark:border-slate-600">
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3.5 rounded-full transition-all duration-1000 ease-out relative" style="width: {{ $persentaseTarget }}%">
+                        <!-- Efek cahaya animasi -->
+                        <div class="absolute top-0 left-0 right-0 bottom-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-indigo-600 to-blue-700 dark:from-slate-700 dark:to-slate-800 rounded-xl shadow-sm border border-indigo-700 dark:border-slate-600 p-5 flex flex-col justify-center text-white relative overflow-hidden transition-colors">
+                <i data-feather="trending-up" class="absolute -right-4 -bottom-4 w-24 h-24 opacity-10"></i>
+                <p class="text-xs font-bold text-indigo-200 dark:text-slate-400 uppercase tracking-wider mb-1 relative z-10">Net Profit Margin</p>
+                <div class="flex items-end gap-2 relative z-10">
+                    <h3 class="text-4xl font-black">{{ $profitMargin }}<span class="text-2xl">%</span></h3>
+                </div>
+                <p class="text-[10px] text-indigo-100 dark:text-slate-500 mt-2 relative z-10 font-medium">Batas rasio sehat standar industri > 10%</p>
+            </div>
+        </div>
+
+        <!-- AKSES CEPAT (QUICK ACTIONS) -->
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-2 transition-colors">
+            <h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Jalan Pintas Operasional</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <a href="{{ route('sales.index') }}" class="bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-indigo-100 dark:border-indigo-900/30 shadow-sm hover:shadow">
+                    <i data-feather="shopping-bag" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Buat Penjualan (SO)</span>
+                </a>
+                <a href="{{ route('purchases.index') }}" class="bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40 text-orange-700 dark:text-orange-400 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-orange-100 dark:border-orange-900/30 shadow-sm hover:shadow">
+                    <i data-feather="shopping-cart" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Buat Pembelian (PO)</span>
+                </a>
+                <a href="{{ route('expenses.index') }}" class="bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow">
+                    <i data-feather="file-text" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Catat Biaya (KBD)</span>
+                </a>
+                <a href="{{ route('inventory.index') }}" class="bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-700 dark:text-teal-400 p-3 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors border border-teal-100 dark:border-teal-900/30 shadow-sm hover:shadow">
+                    <i data-feather="archive" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold text-center">Stok & Mutasi Gudang</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Kartu Ringkasan Atas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden transition-colors">
+                <div class="absolute -right-4 -top-4 opacity-5"><i data-feather="arrow-up-right" class="w-32 h-32 text-slate-800 dark:text-white"></i></div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-semibold mb-2 relative z-10">Total Pendapatan</p>
+                <h3 class="text-2xl font-bold text-green-600 dark:text-green-400 relative z-10">Rp {{ number_format($pendapatanBulanIni, 0, ',', '.') }}</h3>
+                <p class="text-xs text-slate-400 mt-2 flex items-center gap-1 relative z-10">Penjualan bulan ini</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden transition-colors">
+                <div class="absolute -right-4 -top-4 opacity-5"><i data-feather="arrow-down-right" class="w-32 h-32 text-slate-800 dark:text-white"></i></div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-semibold mb-2 relative z-10">Total Pengeluaran</p>
+                <h3 class="text-2xl font-bold text-red-600 dark:text-red-400 relative z-10">Rp {{ number_format($pengeluaranBulanIni, 0, ',', '.') }}</h3>
+                <p class="text-xs text-slate-400 mt-2 flex items-center gap-1 relative z-10">Pembelian & Biaya operasional</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-semibold mb-2">Laba Bersih Estimasi</p>
+                <h3 class="text-2xl font-bold {{ $labaBersih >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400' }}">
+                    Rp {{ number_format($labaBersih, 0, ',', '.') }}
+                </h3>
+                <p class="text-xs text-slate-400 mt-2">Periode berjalan</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-700 dark:to-slate-800 text-white relative overflow-hidden transition-colors">
+                <div class="absolute -right-6 -bottom-6 opacity-10"><i data-feather="shield" class="w-40 h-40"></i></div>
+                <p class="text-sm text-slate-300 font-semibold mb-2 flex items-center gap-2 relative z-10">
+                    <i data-feather="dollar-sign" class="w-4 h-4"></i> Saldo Kas & Bank
+                </p>
+                <h3 class="text-2xl font-bold relative z-10">Rp {{ number_format($totalKasBank, 0, ',', '.') }}</h3>
+                <p class="text-xs text-slate-400 mt-2 relative z-10">Total aset likuid aktif</p>
+            </div>
+        </div>
+
+        <!-- Bagian Tengah: Grafik & Rekening -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+
+            <!-- Area Grafik Arus Kas -->
+            <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col transition-colors">
+                <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-slate-800 dark:text-white">
+                    <i data-feather="activity" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i> Arus Kas (6 Bulan Terakhir)
+                </h3>
+                <div class="relative w-full h-72 flex-1">
+                    <canvas id="cashFlowChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Hutang Piutang & Bank (SISI KANAN) -->
+            <div class="space-y-6">
+
+                <!-- RINCIAN PIUTANG PELANGGAN -->
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[16rem] transition-colors">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-blue-50/50 dark:bg-blue-900/20">
+                        <span class="text-blue-800 dark:text-blue-400 font-bold text-sm flex items-center gap-2"><i data-feather="file-text" class="w-4 h-4"></i> Piutang Pelanggan</span>
+                        <span class="font-bold text-blue-700 dark:text-blue-400">Rp {{ number_format($totalPiutang, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar p-0 bg-white dark:bg-slate-800 flex-1">
+                        @forelse($piutangList as $piutang)
+                            <div class="p-3 border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex justify-between items-center px-4 transition-colors">
+                                <div class="overflow-hidden pr-2">
+                                    <p class="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate">{{ $piutang->contact->name }}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
+                                        {{ $piutang->reference_no }}
+                                        <span class="text-slate-300 dark:text-slate-600 mx-1">|</span>
+                                        <span class="text-red-500 font-semibold">Tempo: {{ \Carbon\Carbon::parse($piutang->due_date)->translatedFormat('d M') }}</span>
+                                    </p>
+                                </div>
+                                <p class="font-bold text-slate-800 dark:text-white text-xs shrink-0">Rp {{ number_format($piutang->total, 0, ',', '.') }}</p>
+                            </div>
+                        @empty
+                            <div class="p-4 text-center text-xs text-slate-400 font-medium">Bagus! Tidak ada piutang.</div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- RINCIAN HUTANG SUPPLIER -->
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[16rem] transition-colors">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-red-50/50 dark:bg-red-900/20">
+                        <span class="text-red-800 dark:text-red-400 font-bold text-sm flex items-center gap-2"><i data-feather="alert-circle" class="w-4 h-4"></i> Hutang Pemasok</span>
+                        <span class="font-bold text-red-600 dark:text-red-400">Rp {{ number_format($totalHutang, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar p-0 bg-white dark:bg-slate-800 flex-1">
+                        @forelse($hutangList as $hutang)
+                            <div class="p-3 border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex justify-between items-center px-4 transition-colors">
+                                <div class="overflow-hidden pr-2">
+                                    <p class="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate">{{ $hutang->contact->name }}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
+                                        {{ $hutang->reference_no }}
+                                        <span class="text-slate-300 dark:text-slate-600 mx-1">|</span>
+                                        <span class="text-red-500 font-semibold">Tempo: {{ \Carbon\Carbon::parse($hutang->due_date)->translatedFormat('d M') }}</span>
+                                    </p>
+                                </div>
+                                <p class="font-bold text-slate-800 dark:text-white text-xs shrink-0">Rp {{ number_format($hutang->total, 0, ',', '.') }}</p>
+                            </div>
+                        @empty
+                            <div class="p-4 text-center text-xs text-slate-400 font-medium">Bagus! Tidak ada hutang.</div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- FITUR BARU: PERINGATAN STOK MENIPIS -->
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[16rem] transition-colors">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-amber-50/50 dark:bg-amber-900/20">
+                        <span class="text-amber-800 dark:text-amber-400 font-bold text-sm flex items-center gap-2"><i data-feather="alert-triangle" class="w-4 h-4"></i> Peringatan Stok Menipis</span>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar p-0 bg-white dark:bg-slate-800 flex-1">
+                        @forelse($lowStocks as $ls)
+                            <div class="p-3 px-4 border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+                                <div class="overflow-hidden pr-2">
+                                    <p class="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate" title="{{ $ls->name }}">{{ $ls->name }}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{{ $ls->sku }}</p>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <p class="font-black text-rose-600 dark:text-rose-400 text-sm">{{ $ls->total_stock ?? 0 }}</p>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Tersisa</p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-4 text-center text-xs text-slate-400 font-medium">Aman. Stok gudang mencukupi.</div>
+                        @endforelse
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- BAGIAN BAWAH 2: AKTIVITAS & PRODUK TERLARIS    -->
+        <!-- ============================================== -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+
+            <!-- Top 5 Produk Terlaris -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col transition-colors">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                        <i data-feather="award" class="w-4 h-4 text-amber-500"></i> Produk Terlaris (Bulan Ini)
+                    </h3>
+                </div>
+                <div class="p-0 flex-1">
+                    @forelse($topProducts as $idx => $tp)
+                    <div class="p-3 px-4 border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors">
+                        <div class="w-6 h-6 rounded bg-gradient-to-br from-amber-200 to-amber-400 text-amber-900 flex items-center justify-center font-black text-xs shrink-0 shadow-sm">{{ $idx + 1 }}</div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate">{{ $tp->product->name ?? $tp->product_sku }}</p>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">SKU: {{ $tp->product_sku }}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="font-black text-slate-800 dark:text-white text-sm">{{ number_format($tp->total_qty, 0, ',', '.') }}</p>
+                            <p class="text-[9px] text-slate-400 uppercase font-bold">Terjual</p>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-8 flex flex-col items-center justify-center text-center">
+                        <i data-feather="package" class="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2"></i>
+                        <p class="text-xs text-slate-400 font-medium">Belum ada data penjualan<br>di bulan ini.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- FITUR BARU: Top 5 Klien (Top Spender) -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col transition-colors">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                        <i data-feather="star" class="w-4 h-4 text-yellow-500"></i> Klien Terbaik (Bulan Ini)
+                    </h3>
+                </div>
+                <div class="p-0 flex-1">
+                    @forelse($topCustomers as $idx => $tc)
+                    <div class="p-3 px-4 border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors">
+                        <div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">{{ substr($tc->contact->name ?? 'U', 0, 1) }}</div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="font-semibold text-slate-700 dark:text-slate-200 text-xs truncate">{{ $tc->contact->name ?? 'Pelanggan Umum' }}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="font-black text-slate-800 dark:text-white text-sm">Rp {{ number_format($tc->total_spent, 0, ',', '.') }}</p>
+                            <p class="text-[9px] text-slate-400 uppercase font-bold">Total Belanja</p>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-8 flex flex-col items-center justify-center text-center">
+                        <i data-feather="users" class="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2"></i>
+                        <p class="text-xs text-slate-400 font-medium">Belum ada transaksi pelanggan.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Aktivitas Transaksi Terakhir (Log / Live Feed) -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col transition-colors">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                        <i data-feather="list" class="w-4 h-4 text-slate-600 dark:text-slate-400"></i> Riwayat Jurnal
+                    </h3>
+                    <a href="{{ route('journals.index') }}" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors">Lihat Semua</a>
+                </div>
+                <div class="p-0 flex-1 relative custom-scrollbar overflow-y-auto max-h-[350px]">
+                    <div class="absolute left-[27px] top-0 bottom-0 w-0.5 bg-slate-100 dark:bg-slate-700 transition-colors"></div>
+
+                    @forelse($recentActivities as $act)
+                    <div class="p-3 px-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex gap-4 items-start relative z-10 transition-colors">
+                        <div class="mt-1 w-3 h-3 rounded-full bg-indigo-500 shrink-0 border-2 border-white dark:border-slate-800 shadow-sm ring-2 ring-indigo-100 dark:ring-slate-700"></div>
+                        <div class="flex-1 pb-2 {{ !$loop->last ? 'border-b border-slate-50 dark:border-slate-700' : '' }}">
+                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-snug">{{ $act->description }}</p>
+                            <div class="flex gap-3 mt-1 items-center">
+                                <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded text-[9px] font-bold font-mono">{{ $act->reference_no }}</span>
+                                <span class="text-[9px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1"><i data-feather="calendar" class="w-2.5 h-2.5"></i> {{ \Carbon\Carbon::parse($act->date)->translatedFormat('d M Y') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-6 text-center text-xs text-slate-400">Belum ada aktivitas jurnal tercatat.</div>
+                    @endforelse
+                </div>
+            </div>
+
+        </div>
+
+        <!-- DIAGRAM LINGKARAN KINI PINDAH KE BAWAH SEKALI -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <!-- Pie Chart: Struktur Pengeluaran -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col hover:shadow-md transition-all">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                    <i data-feather="pie-chart" class="w-5 h-5 text-rose-600 dark:text-rose-400"></i> Struktur Pengeluaran (Bulan Ini)
+                </h3>
+                <div class="relative w-full h-56 flex-1 flex justify-center">
+                    <canvas id="expensePieChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Pie Chart: Distribusi Saldo Bank -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col hover:shadow-md transition-all">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                    <i data-feather="pie-chart" class="w-5 h-5 text-teal-600 dark:text-teal-400"></i> Distribusi Likuiditas Bank
+                </h3>
+                <div class="relative w-full h-56 flex-1 flex justify-center">
+                    <canvas id="bankPieChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
