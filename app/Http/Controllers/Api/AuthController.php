@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,7 +20,7 @@ class AuthController extends Controller
         if (Auth::attempt([$loginField => $request->username, 'password' => $request->password])) {
             $user = Auth::user();
             // Terbitkan Token Sanctum untuk akses API Mobile
-            $token = User::createToken('bmp-mobile-app')->plainTextToken;
+            $token = $user->createToken('bmp-mobile-app')->plainTextToken;
 
             return response()->json([
                 'success' => true,
