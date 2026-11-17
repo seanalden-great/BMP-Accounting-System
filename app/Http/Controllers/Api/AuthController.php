@@ -17,9 +17,13 @@ class AuthController extends Controller
 
         $loginField = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        if (Auth::attempt([$loginField => $request->username, 'password' => $request->password])) {
-            $user = Auth::user();
-            // Terbitkan Token Sanctum untuk akses API Mobile
+        // CARA BARU: Cari user secara manual
+        $user = \App\Models\User::where($loginField, $request->username)->first();
+
+        // Gunakan pengecekan Hash murni tanpa Auth::attempt agar Vercel tidak mencoba menulis Session File
+        if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+
+            // Terbitkan Token Sanctum
             $token = $user->createToken('bmp-mobile-app')->plainTextToken;
 
             return response()->json([
