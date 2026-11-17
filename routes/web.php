@@ -99,6 +99,7 @@
 // });
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContactController;
@@ -291,4 +292,6 @@ Route::middleware('auth')->group(function () {
 
         return response($ical)->header('Content-Type', 'text/calendar; charset=utf-8');
     })->name('calendar.feed');
+
+    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
 });
