@@ -127,7 +127,7 @@
 </script>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
 <div class="space-y-6 pb-10 max-w-4xl mx-auto">
@@ -220,6 +220,141 @@
             <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
                 <button type="button" onclick="document.getElementById('faqModal').classList.add('hidden')" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-bold transition-colors">Batal</button>
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-md transition-colors">Publikasikan FAQ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleFaq(id) {
+        const answer = document.getElementById('answer-' + id);
+        const icon = document.getElementById('icon-' + id);
+        if (answer.classList.contains('hidden')) {
+            answer.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+        } else {
+            answer.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    }
+
+    function filterFAQ() {
+        let input = document.getElementById('searchInput').value.toLowerCase();
+        let items = document.getElementsByClassName('faq-item');
+        for (let i = 0; i < items.length; i++) {
+            let q = items[i].querySelector('.q-text').innerText.toLowerCase();
+            let a = items[i].querySelector('.a-text').innerText.toLowerCase();
+            let c = items[i].querySelector('.cat-label').innerText.toLowerCase();
+            if (q.includes(input) || a.includes(input) || c.includes(input)) {
+                items[i].style.display = "";
+            } else {
+                items[i].style.display = "none";
+            }
+        }
+    }
+</script>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6 pb-10 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                <i data-feather="help-circle" class="w-7 h-7 text-indigo-500 dark:text-indigo-400"></i> {{ __('Pusat Bantuan (FAQ)') }}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">{{ __('Cari jawaban cepat untuk kendala sistem dan operasional') }}</p>
+        </div>
+        <!-- Hanya Admin / Manajemen yang bisa tambah FAQ -->
+        @if(in_array(Auth::user()->role ?? 'Staff', ['Admin', 'Direktur']))
+        <button onclick="document.getElementById('faqModal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+            <i data-feather="plus" class="w-4 h-4"></i> {{ __('Tambah FAQ') }}
+        </button>
+        @endif
+    </div>
+
+    <!-- Konten FAQ -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 transition-colors">
+            <div class="relative w-full">
+                <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"></i>
+                <input type="text" id="searchInput" onkeyup="filterFAQ()" placeholder="{{ __('Ketik kata kunci pertanyaan atau jawaban...') }}" class="w-full pl-9 pr-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+            </div>
+        </div>
+
+        <div class="p-6">
+            @if($faqs->isEmpty())
+                <div class="text-center text-slate-500 dark:text-slate-400 py-10">{{ __('Tidak ada FAQ yang tersedia.') }}</div>
+            @else
+                <div class="space-y-3" id="faqList">
+                    @foreach($faqs as $faq)
+                    <div class="faq-item border border-slate-200 dark:border-slate-700 rounded-lg transition-colors overflow-hidden bg-white dark:bg-slate-800">
+                        <button onclick="toggleFaq({{ $faq->id }})" class="w-full flex items-center justify-between p-4 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <div>
+                                <!-- $faq->category tidak perlu dibungkus __() karena sudah diterjemahkan di Controller -->
+                                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 px-2 py-0.5 rounded mr-3 cat-label transition-colors">{{ $faq->category }}</span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 q-text transition-colors">{{ $faq->question }}</span>
+                            </div>
+                            <i data-feather="chevron-down" id="icon-{{ $faq->id }}" class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform"></i>
+                        </button>
+
+                        <div id="answer-{{ $faq->id }}" class="hidden p-4 pt-0 text-slate-600 dark:text-slate-300 text-sm border-t border-indigo-100 dark:border-slate-700 mt-2 relative transition-colors">
+                            <div class="pt-3 whitespace-pre-wrap pr-10 a-text">{{ $faq->answer }}</div>
+
+                            @if(in_array(Auth::user()->role ?? 'Staff', ['Admin', 'Direktur']))
+                            <form action="{{ route('faqs.destroy', $faq->id) }}" method="POST" onsubmit="return confirm('{{ __('Hapus pertanyaan ini dari pusat bantuan?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="absolute right-4 top-4 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 p-1 transition-colors" title="{{ __('Hapus FAQ') }}">
+                                    <i data-feather="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah FAQ -->
+<div id="faqModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-all">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col border-t-4 border-indigo-600 dark:border-indigo-500 transition-colors">
+        <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 transition-colors">
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white">{{ __('Buat FAQ Baru') }}</h3>
+            <button onclick="document.getElementById('faqModal').classList.add('hidden')" class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                <i data-feather="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{{ route('faqs.store') }}" method="POST" class="p-6 space-y-5">
+            @csrf
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('Kategori') }}</label>
+                <select name="category" required class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
+                    <!-- Nilai value tetap utuh (Indonesia) untuk disimpan ke DB, yang diterjemahkan hanya tampilannya -->
+                    <option value="Umum">{{ __('Umum') }}</option>
+                    <option value="Akuntansi">{{ __('Akuntansi & Keuangan') }}</option>
+                    <option value="Inventori">{{ __('Inventori Gudang') }}</option>
+                    <option value="Teknis Sistem">{{ __('Teknis Sistem') }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('Pertanyaan') }}</label>
+                <input type="text" name="question" required placeholder="{{ __('Cth: Bagaimana cara mencatat barang retur?') }}" class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition-colors">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('Jawaban Lengkap') }}</label>
+                <textarea name="answer" required rows="5" placeholder="{{ __('Tuliskan solusi atau langkah-langkah secara detail...') }}" class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-sm leading-relaxed transition-colors"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+                <button type="button" onclick="document.getElementById('faqModal').classList.add('hidden')" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg font-bold transition-colors">{{ __('Batal') }}</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-md transition-colors">{{ __('Publikasikan FAQ') }}</button>
             </div>
         </form>
     </div>

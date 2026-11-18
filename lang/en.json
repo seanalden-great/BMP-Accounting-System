@@ -132,7 +132,26 @@
     " Belum ada data transaksi": " No transaction data",
     "Belum ada saldo": "No balance",
     " Belum ada data": " No data",
-    
+
     "Terima Pembayaran Piutang": "Receive Accounts Receivable Payment",
-    "Bayar Hutang Pemasok": "Pay Supplier Accounts Payable"
+    "Bayar Hutang Pemasok": "Pay Supplier Accounts Payable",
+
+    "Pusat Bantuan (FAQ)": "Help Center (FAQ)",
+    "Cari jawaban cepat untuk kendala sistem dan operasional": "Find quick answers to system and operational issues",
+    "Tambah FAQ": "Add FAQ",
+    "Ketik kata kunci pertanyaan atau jawaban...": "Type keyword for question or answer...",
+    "Tidak ada FAQ yang tersedia.": "No FAQs available.",
+    "Hapus pertanyaan ini dari pusat bantuan?": "Delete this question from the help center?",
+    "Hapus FAQ": "Delete FAQ",
+    "Buat FAQ Baru": "Create New FAQ",
+    "Kategori": "Category",
+    "Umum": "General",
+    "Akuntansi & Keuangan": "Accounting & Finance",
+    "Inventori Gudang": "Warehouse Inventory",
+    "Teknis Sistem": "System Technical",
+    "Pertanyaan": "Question",
+    "Cth: Bagaimana cara mencatat barang retur?": "Ex: How to record returned goods?",
+    "Jawaban Lengkap": "Complete Answer",
+    "Tuliskan solusi atau langkah-langkah secara detail...": "Write the solution or steps in detail...",
+    "Publikasikan FAQ": "Publish FAQ"
 }
