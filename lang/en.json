@@ -1,21 +1,60 @@
 {
     "Beranda": "Dashboard",
     "Penjualan": "Sales",
+    "Overview Analitik": "Analytics Overview",
+    "Pesanan Penjualan": "Sales Orders",
+    "Pengiriman Penjualan": "Sales Deliveries",
+    "Tagihan Penjualan": "Sales Invoices",
+    "Umur Piutang (AR)": "AR Aging",
+
     "Pembelian": "Purchases",
+    "Pesanan Pembelian": "Purchase Orders",
+    "Penerimaan Pembelian": "Purchase Receipts",
+    "Tagihan Pembelian": "Purchase Bills",
+    "Umur Hutang (AP)": "AP Aging",
+
     "Biaya": "Expenses",
     "Produk": "Products",
+
     "Inventori": "Inventory",
+    "Data Gudang": "Warehouse Data",
+    "Stok & Penyesuaian": "Stock & Adjustments",
+
     "Aset Tetap": "Fixed Assets",
+
     "Kas & Bank": "Cash & Bank",
+    "Buku Jurnal Umum": "General Journal",
+    "Buku Besar (Ledger)": "General Ledger",
+    "Rekonsiliasi Bank": "Bank Reconciliation",
+
     "Akun CoA": "Chart of Accounts",
     "Kontak": "Contacts",
+
     "Laporan Keuangan": "Financial Reports",
+    "Laba Rugi": "Profit & Loss",
+    "Neraca": "Balance Sheet",
+    "Arus Kas (Cash Flow)": "Cash Flow",
+
     "Pengaturan": "Settings",
     "Pusat Persetujuan": "Approval Center",
     "Bantuan / FAQ": "Help / FAQ",
 
-    "Pesanan Penjualan": "Sales Orders",
-    "Pengiriman Penjualan": "Sales Deliveries",
-    "Tagihan Penjualan": "Sales Invoices",
-    "Pesanan Pembelian": "Purchase Orders"
+    "Pusat Notifikasi Keuangan": "Financial Notification Center",
+    "Lewat Tempo (Menunggak)": "Overdue (Arrears)",
+    "Tagihan Pembelian (Hutang)": "Purchase Bill (Payable)",
+    "Tagihan Penjualan (Piutang)": "Sales Invoice (Receivable)",
+    "Tempo: ": "Due: ",
+    "Jatuh Tempo Hari Ini": "Due Today",
+    "Mendekati H-7": "Approaching D-7",
+    "Jatuh Tempo: ": "Due Date: ",
+    "Selamat! Tidak ada tagihan mendesak.": "Congratulations! No urgent bills.",
+
+    "Proses Pelunasan Cepat": "Quick Pay Process",
+    "Total Tagihan": "Total Bill",
+    "Pilih Rekening Transaksi": "Select Transaction Account",
+    "-- Pilih Kas atau Bank --": "-- Select Cash or Bank --",
+    "Tanggal Pelunasan": "Payment Date",
+    "Transaksi ini akan memotong saldo tagihan dan langsung dicatat ke Jurnal Buku Besar Bank terpilih.": "This transaction will deduct the bill balance and instantly record it to the selected Bank Ledger.",
+    "Batal": "Cancel",
+    "Lunasi": "Pay Off"
 }
