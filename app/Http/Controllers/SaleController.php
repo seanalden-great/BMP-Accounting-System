@@ -2828,7 +2828,7 @@ class SaleController extends Controller
         $sale = Sale::findOrFail($id);
 
         $userRole = auth()->user()->role;
-        if (!in_array($userRole, ['Direktur', 'Admin'])) {
+        if (!in_array($userRole, ['Direktur', 'Admin', 'Developer'])) {
             return redirect()->back()->with('error', 'Akses Ditolak! Hanya Direktur atau Admin yang berhak menyetujui dokumen ini.');
         }
 
