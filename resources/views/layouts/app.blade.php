@@ -4830,8 +4830,29 @@
         }
 
         // --- FUNGSI BUKA MODAL QUICK PAY (BERANIMASI) ---
+        // function openQuickPay(type, id, ref, amount, isSales) {
+        //     let title = isSales ? 'Terima Pembayaran Piutang' : 'Bayar Hutang Pemasok';
+        //     let actionUrl = isSales ? `/sales/${id}/invoice` : `/purchases/${id}/bill`;
+
+        //     document.getElementById('qpTitleGlobal').innerText = title;
+        //     document.getElementById('qpRefGlobal').innerText = ref;
+        //     document.getElementById('qpAmountGlobal').innerText = 'Rp ' + parseInt(amount, 10).toLocaleString('id-ID');
+        //     document.getElementById('quickPayFormGlobal').action = actionUrl;
+
+        //     const modal = document.getElementById('quickPayModalGlobal');
+        //     const content = document.getElementById('quickPayContentGlobal');
+
+        //     modal.classList.remove('hidden');
+        //     setTimeout(() => {
+        //         content.classList.remove('scale-95');
+        //         content.classList.add('scale-100');
+        //     }, 10);
+        // }
+
+        // --- FUNGSI BUKA MODAL QUICK PAY (BERANIMASI) ---
         function openQuickPay(type, id, ref, amount, isSales) {
-            let title = isSales ? 'Terima Pembayaran Piutang' : 'Bayar Hutang Pemasok';
+            // INJEKSI TRANSLASI LARAVEL LANGSUNG KE JAVASCRIPT
+            let title = isSales ? '{{ __("Terima Pembayaran Piutang") }}' : '{{ __("Bayar Hutang Pemasok") }}';
             let actionUrl = isSales ? `/sales/${id}/invoice` : `/purchases/${id}/bill`;
 
             document.getElementById('qpTitleGlobal').innerText = title;
