@@ -18,4 +18,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Modul Dashboard Eksekutif
     Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+    // Modul Pusat Persetujuan Eksekutif
+    Route::get('/approvals', [\App\Http\Controllers\Api\ApprovalController::class, 'index']);
 });
