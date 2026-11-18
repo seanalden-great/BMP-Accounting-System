@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\InventoryController;
-use App\Http\Controllers\ApprovalController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Api\ApprovalController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ProfileController;
 
 // Rute Publik (Otentikasi)
 Route::post('/login', [AuthController::class, 'login']);
