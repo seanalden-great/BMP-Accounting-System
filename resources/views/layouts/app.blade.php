@@ -4127,23 +4127,58 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
 
-        #main-sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
-        #main-sidebar.collapsed { width: 72px; }
-        .sidebar-text, .sidebar-chevron, .user-info { transition: opacity 0.2s; white-space: nowrap; }
-        .sidebar-text-wrap { transition: opacity 0.2s; }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+
+        #main-sidebar {
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+        }
+
+        #main-sidebar.collapsed {
+            width: 72px;
+        }
+
+        .sidebar-text,
+        .sidebar-chevron,
+        .user-info {
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .sidebar-text-wrap {
+            transition: opacity 0.2s;
+        }
 
         #main-sidebar.collapsed .sidebar-text,
         #main-sidebar.collapsed .sidebar-text-wrap,
         #main-sidebar.collapsed .sidebar-chevron,
-        #main-sidebar.collapsed .user-info { opacity: 0; display: none; }
+        #main-sidebar.collapsed .user-info {
+            opacity: 0;
+            display: none;
+        }
+
         #main-sidebar.collapsed .header-container,
         #main-sidebar.collapsed .menu-item,
-        #main-sidebar.collapsed .footer-container { justify-content: center; padding-left: 0; padding-right: 0; }
-        #main-sidebar.collapsed .sub-menu-container { display: none; }
+        #main-sidebar.collapsed .footer-container {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        #main-sidebar.collapsed .sub-menu-container {
+            display: none;
+        }
     </style>
 </head>
 
@@ -4156,7 +4191,8 @@
 
         <!-- HEADER SIDEBAR -->
         <div class="header-container h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
-            <h1 class="sidebar-text-wrap text-[13px] font-bold text-orange-400 leading-snug w-full whitespace-normal pr-2">
+            <h1
+                class="sidebar-text-wrap text-[13px] font-bold text-orange-400 leading-snug w-full whitespace-normal pr-2">
                 PT Berlian Mandiri Perkasa</h1>
             <button onclick="toggleSidebar()"
                 class="text-slate-400 hover:text-white p-1.5 rounded-md hover:bg-slate-800 transition-colors shrink-0 focus:outline-none">
@@ -4192,12 +4228,22 @@
                         </div>
                         <i data-feather="chevron-down" class="w-4 h-4 shrink-0 sidebar-chevron text-slate-400"></i>
                     </button>
-                    <div id="sub-sales" class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
-                        <a href="{{ route('sales.overview') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400 whitespace-nowrap"><i data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i> {{ __('Overview Analitik') }}</a>
-                        <a href="{{ route('sales.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Pesanan Penjualan') }}</a>
-                        <a href="{{ route('sales.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Pengiriman Penjualan') }}</a>
-                        <a href="{{ route('sales.invoices') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Tagihan Penjualan') }}</a>
-                        <a href="{{ route('sales.aging') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-rose-400 mt-1 border-t border-slate-700/50 pt-2 whitespace-nowrap"><i data-feather="pie-chart" class="w-3 h-3 inline mr-1"></i> {{ __('Umur Piutang (AR)') }}</a>
+                    <div id="sub-sales"
+                        class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                        <a href="{{ route('sales.overview') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400 whitespace-nowrap"><i
+                                data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i>
+                            {{ __('Overview Analitik') }}</a>
+                        <a href="{{ route('sales.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Pesanan Penjualan') }}</a>
+                        <a href="{{ route('sales.deliveries') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Pengiriman Penjualan') }}</a>
+                        <a href="{{ route('sales.invoices') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Tagihan Penjualan') }}</a>
+                        <a href="{{ route('sales.aging') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-rose-400 mt-1 border-t border-slate-700/50 pt-2 whitespace-nowrap"><i
+                                data-feather="pie-chart" class="w-3 h-3 inline mr-1"></i>
+                            {{ __('Umur Piutang (AR)') }}</a>
                     </div>
                 </div>
             @endif
@@ -4212,12 +4258,22 @@
                         </div>
                         <i data-feather="chevron-down" class="w-4 h-4 shrink-0 sidebar-chevron text-slate-400"></i>
                     </button>
-                    <div id="sub-purchases" class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
-                        <a href="{{ route('purchases.overview') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400 whitespace-nowrap"><i data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i> {{ __('Overview Analitik') }}</a>
-                        <a href="{{ route('purchases.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Pesanan Pembelian') }}</a>
-                        <a href="{{ route('purchases.deliveries') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Penerimaan Pembelian') }}</a>
-                        <a href="{{ route('purchases.bills') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Tagihan Pembelian') }}</a>
-                        <a href="{{ route('purchases.aging') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-orange-400 mt-1 border-t border-slate-700/50 pt-2 whitespace-nowrap"><i data-feather="pie-chart" class="w-3 h-3 inline mr-1"></i> {{ __('Umur Hutang (AP)') }}</a>
+                    <div id="sub-purchases"
+                        class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                        <a href="{{ route('purchases.overview') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400 whitespace-nowrap"><i
+                                data-feather="bar-chart-2" class="w-3 h-3 inline mr-1"></i>
+                            {{ __('Overview Analitik') }}</a>
+                        <a href="{{ route('purchases.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Pesanan Pembelian') }}</a>
+                        <a href="{{ route('purchases.deliveries') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Penerimaan Pembelian') }}</a>
+                        <a href="{{ route('purchases.bills') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Tagihan Pembelian') }}</a>
+                        <a href="{{ route('purchases.aging') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-orange-400 mt-1 border-t border-slate-700/50 pt-2 whitespace-nowrap"><i
+                                data-feather="pie-chart" class="w-3 h-3 inline mr-1"></i>
+                            {{ __('Umur Hutang (AP)') }}</a>
                     </div>
                 </div>
             @endif
@@ -4225,14 +4281,16 @@
             @if ($hasAccess('Biaya'))
                 <a href="{{ route('expenses.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="file-text" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Biaya') }}</span>
+                    <i data-feather="file-text" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm">{{ __('Biaya') }}</span>
                 </a>
             @endif
 
             @if ($hasAccess('Produk'))
                 <a href="{{ route('products.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="package" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Produk') }}</span>
+                    <i data-feather="package" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm">{{ __('Produk') }}</span>
                 </a>
             @endif
 
@@ -4246,9 +4304,12 @@
                         </div>
                         <i data-feather="chevron-down" class="w-4 h-4 shrink-0 sidebar-chevron text-slate-400"></i>
                     </button>
-                    <div id="sub-inventory" class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
-                        <a href="{{ route('warehouses.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Data Gudang') }}</a>
-                        <a href="{{ route('inventory.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Stok & Penyesuaian') }}</a>
+                    <div id="sub-inventory"
+                        class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                        <a href="{{ route('warehouses.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Data Gudang') }}</a>
+                        <a href="{{ route('inventory.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Stok & Penyesuaian') }}</a>
                     </div>
                 </div>
             @endif
@@ -4256,7 +4317,8 @@
             @if ($hasAccess('Aset Tetap'))
                 <a href="{{ route('fixed-assets.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="briefcase" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Aset Tetap') }}</span>
+                    <i data-feather="briefcase" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm">{{ __('Aset Tetap') }}</span>
                 </a>
             @endif
 
@@ -4270,10 +4332,18 @@
                         </div>
                         <i data-feather="chevron-down" class="w-4 h-4 shrink-0 sidebar-chevron text-slate-400"></i>
                     </button>
-                    <div id="sub-banks" class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
-                        <a href="{{ route('journals.index') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Buku Jurnal Umum') }}</a>
-                        <a href="{{ route('journals.ledger') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400 whitespace-nowrap"><i data-feather="book-open" class="w-3 h-3 inline mr-1"></i> {{ __('Buku Besar (Ledger)') }}</a>
-                        <a href="{{ route('journals.reconciliation') }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-teal-400 mt-1 border-t border-slate-700/50 pt-2 whitespace-nowrap"><i data-feather="check-square" class="w-3 h-3 inline mr-1"></i> {{ __('Rekonsiliasi Bank') }}</a>
+                    <div id="sub-banks"
+                        class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                        <a href="{{ route('journals.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Buku Jurnal Umum') }}</a>
+                        <a href="{{ route('journals.ledger') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-indigo-400 whitespace-nowrap"><i
+                                data-feather="book-open" class="w-3 h-3 inline mr-1"></i>
+                            {{ __('Buku Besar (Ledger)') }}</a>
+                        <a href="{{ route('journals.reconciliation') }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-teal-400 mt-1 border-t border-slate-700/50 pt-2 whitespace-nowrap"><i
+                                data-feather="check-square" class="w-3 h-3 inline mr-1"></i>
+                            {{ __('Rekonsiliasi Bank') }}</a>
                     </div>
                 </div>
             @endif
@@ -4281,21 +4351,24 @@
             @if ($hasAccess('Akun CoA'))
                 <a href="{{ route('accounts.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="book" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Akun CoA') }}</span>
+                    <i data-feather="book" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm">{{ __('Akun CoA') }}</span>
                 </a>
             @endif
 
             @if ($hasAccess('Kontak'))
                 <a href="{{ route('contacts.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="users" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Kontak') }}</span>
+                    <i data-feather="users" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm">{{ __('Kontak') }}</span>
                 </a>
             @endif
 
             @if ($hasAccess('Penggajian'))
                 <a href="{{ route('payroll.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="credit-card" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm font-semibold">Payroll</span>
+                    <i data-feather="credit-card" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm font-semibold">Payroll</span>
                 </a>
             @endif
 
@@ -4309,10 +4382,14 @@
                         </div>
                         <i data-feather="chevron-down" class="w-4 h-4 shrink-0 sidebar-chevron text-slate-400"></i>
                     </button>
-                    <div id="sub-reports" class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
-                        <a href="{{ route('reports.index', ['type' => 'profit-loss']) }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Laba Rugi') }}</a>
-                        <a href="{{ route('reports.index', ['type' => 'balance-sheet']) }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Neraca') }}</a>
-                        <a href="{{ route('reports.index', ['type' => 'cash-flow']) }}" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Arus Kas (Cash Flow)') }}</a>
+                    <div id="sub-reports"
+                        class="sub-menu-container hidden ml-4 pl-4 border-l border-slate-700 space-y-1 mb-2">
+                        <a href="{{ route('reports.index', ['type' => 'profit-loss']) }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Laba Rugi') }}</a>
+                        <a href="{{ route('reports.index', ['type' => 'balance-sheet']) }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Neraca') }}</a>
+                        <a href="{{ route('reports.index', ['type' => 'cash-flow']) }}"
+                            class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white whitespace-nowrap">{{ __('Arus Kas (Cash Flow)') }}</a>
                     </div>
                 </div>
             @endif
@@ -4320,13 +4397,15 @@
             @if ($hasAccess('Pengaturan'))
                 <a href="{{ route('settings.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <i data-feather="settings" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Pengaturan') }}</span>
+                    <i data-feather="settings" class="w-5 h-5 shrink-0"></i> <span
+                        class="sidebar-text text-sm">{{ __('Pengaturan') }}</span>
                 </a>
             @endif
 
             <a href="{{ route('faqs.index') }}"
                 class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white">
-                <i data-feather="help-circle" class="w-5 h-5 shrink-0"></i> <span class="sidebar-text text-sm">{{ __('Bantuan / FAQ') }}</span>
+                <i data-feather="help-circle" class="w-5 h-5 shrink-0"></i> <span
+                    class="sidebar-text text-sm">{{ __('Bantuan / FAQ') }}</span>
             </a>
 
         </nav>
@@ -4345,7 +4424,8 @@
                 </div>
                 <div class="overflow-hidden">
                     <p class="text-sm font-bold text-white truncate">{{ $displayName }}</p>
-                    <p class="text-[10px] text-slate-400 font-medium truncate px-1.5 py-0.5 bg-slate-800 rounded mt-0.5 inline-block">
+                    <p
+                        class="text-[10px] text-slate-400 font-medium truncate px-1.5 py-0.5 bg-slate-800 rounded mt-0.5 inline-block">
                         {{ __('Role: ') }} {{ Auth::user()->role ?? 'Admin' }}</p>
                 </div>
             </div>
@@ -4409,7 +4489,8 @@
                         </button>
 
                         <!-- Isi Dropdown Lonceng -->
-                        <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                        <div
+                            class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                             <div class="bg-slate-800 border-b border-slate-700 p-3">
                                 <h4 class="font-bold text-white text-sm">{{ __('Pusat Notifikasi Keuangan') }}</h4>
                             </div>
@@ -4418,7 +4499,8 @@
 
                                     <!-- OVERDUE LIST -->
                                     @if ($poOverdueG->count() > 0 || $soOverdueG->count() > 0)
-                                        <div class="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 text-xs font-black px-4 py-2 uppercase border-b border-red-100 dark:border-red-900/30">
+                                        <div
+                                            class="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 text-xs font-black px-4 py-2 uppercase border-b border-red-100 dark:border-red-900/30">
                                             {{ __('Lewat Tempo (Menunggak)') }}
                                         </div>
                                         @foreach ($poOverdueG as $po)
@@ -4428,8 +4510,11 @@
                                                 <p class="text-xs font-bold text-red-600 dark:text-red-400 mb-1">
                                                     {{ __('Tagihan Pembelian (Hutang)') }}</p>
                                                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                    {{ $po->reference_no ?: 'PO #' . $po->id }} - {{ $po->contact->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i data-feather="clock" class="w-3 h-3 inline"></i> {{ __('Tempo: ') }}
+                                                    {{ $po->reference_no ?: 'PO #' . $po->id }} -
+                                                    {{ $po->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i
+                                                        data-feather="clock" class="w-3 h-3 inline"></i>
+                                                    {{ __('Tempo: ') }}
                                                     {{ \Carbon\Carbon::parse($po->due_date)->translatedFormat('d M Y') }}
                                                 </p>
                                             </button>
@@ -4441,8 +4526,11 @@
                                                 <p class="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">
                                                     {{ __('Tagihan Penjualan (Piutang)') }}</p>
                                                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                    {{ $so->reference_no ?: 'SO #' . $so->id }} - {{ $so->contact->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i data-feather="clock" class="w-3 h-3 inline"></i> {{ __('Tempo: ') }}
+                                                    {{ $so->reference_no ?: 'SO #' . $so->id }} -
+                                                    {{ $so->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i
+                                                        data-feather="clock" class="w-3 h-3 inline"></i>
+                                                    {{ __('Tempo: ') }}
                                                     {{ \Carbon\Carbon::parse($so->due_date)->translatedFormat('d M Y') }}
                                                 </p>
                                             </button>
@@ -4451,7 +4539,8 @@
 
                                     <!-- TODAY LIST -->
                                     @if ($poTodayG->count() > 0 || $soTodayG->count() > 0)
-                                        <div class="bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-400 text-xs font-black px-4 py-2 uppercase border-b border-orange-100 dark:border-orange-900/30 border-t">
+                                        <div
+                                            class="bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-400 text-xs font-black px-4 py-2 uppercase border-b border-orange-100 dark:border-orange-900/30 border-t">
                                             {{ __('Jatuh Tempo Hari Ini') }}
                                         </div>
                                         @foreach ($poTodayG as $po)
@@ -4461,8 +4550,11 @@
                                                 <p class="text-xs font-bold text-red-600 dark:text-red-400 mb-1">
                                                     {{ __('Tagihan Pembelian (Hutang)') }}</p>
                                                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                    {{ $po->reference_no ?: 'PO #' . $po->id }} - {{ $po->contact->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i data-feather="clock" class="w-3 h-3 inline"></i> {{ __('Tempo: ') }}
+                                                    {{ $po->reference_no ?: 'PO #' . $po->id }} -
+                                                    {{ $po->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i
+                                                        data-feather="clock" class="w-3 h-3 inline"></i>
+                                                    {{ __('Tempo: ') }}
                                                     {{ \Carbon\Carbon::parse($po->due_date)->translatedFormat('d M Y') }}
                                                 </p>
                                             </button>
@@ -4474,8 +4566,11 @@
                                                 <p class="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">
                                                     {{ __('Tagihan Penjualan (Piutang)') }}</p>
                                                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                    {{ $so->reference_no ?: 'SO #' . $so->id }} - {{ $so->contact->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i data-feather="clock" class="w-3 h-3 inline"></i> {{ __('Tempo: ') }}
+                                                    {{ $so->reference_no ?: 'SO #' . $so->id }} -
+                                                    {{ $so->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i
+                                                        data-feather="clock" class="w-3 h-3 inline"></i>
+                                                    {{ __('Tempo: ') }}
                                                     {{ \Carbon\Carbon::parse($so->due_date)->translatedFormat('d M Y') }}
                                                 </p>
                                             </button>
@@ -4484,7 +4579,8 @@
 
                                     <!-- UPCOMING LIST -->
                                     @if ($poUpcomingG->count() > 0 || $soUpcomingG->count() > 0)
-                                        <div class="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 text-xs font-black px-4 py-2 uppercase border-b border-yellow-100 dark:border-yellow-900/30 border-t">
+                                        <div
+                                            class="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 text-xs font-black px-4 py-2 uppercase border-b border-yellow-100 dark:border-yellow-900/30 border-t">
                                             {{ __('Mendekati H-7') }}
                                         </div>
                                         @foreach ($poUpcomingG as $po)
@@ -4494,8 +4590,12 @@
                                                 <p class="text-xs font-bold text-red-600 dark:text-red-400 mb-1">
                                                     {{ __('Tagihan Pembelian (Hutang)') }}</p>
                                                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                    {{ $po->reference_no ?: 'PO #' . $po->id }} - {{ $po->contact->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i data-feather="clock" class="w-3 h-3 inline text-yellow-500"></i> {{ __('Jatuh Tempo: ') }}
+                                                    {{ $po->reference_no ?: 'PO #' . $po->id }} -
+                                                    {{ $po->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i
+                                                        data-feather="clock"
+                                                        class="w-3 h-3 inline text-yellow-500"></i>
+                                                    {{ __('Jatuh Tempo: ') }}
                                                     {{ \Carbon\Carbon::parse($po->due_date)->translatedFormat('d M Y') }}
                                                 </p>
                                             </button>
@@ -4507,15 +4607,20 @@
                                                 <p class="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">
                                                     {{ __('Tagihan Penjualan (Piutang)') }}</p>
                                                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                    {{ $so->reference_no ?: 'SO #' . $so->id }} - {{ $so->contact->name }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i data-feather="clock" class="w-3 h-3 inline text-yellow-500"></i> {{ __('Jatuh Tempo: ') }}
+                                                    {{ $so->reference_no ?: 'SO #' . $so->id }} -
+                                                    {{ $so->contact->name }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1"><i
+                                                        data-feather="clock"
+                                                        class="w-3 h-3 inline text-yellow-500"></i>
+                                                    {{ __('Jatuh Tempo: ') }}
                                                     {{ \Carbon\Carbon::parse($so->due_date)->translatedFormat('d M Y') }}
                                                 </p>
                                             </button>
                                         @endforeach
                                     @endif
                                 @else
-                                    <div class="p-8 text-center text-slate-500 dark:text-slate-400 text-sm font-medium flex flex-col items-center">
+                                    <div
+                                        class="p-8 text-center text-slate-500 dark:text-slate-400 text-sm font-medium flex flex-col items-center">
                                         <i data-feather="check-circle" class="w-8 h-8 text-emerald-400 mb-2"></i>
                                         {{ __('Selamat! Tidak ada tagihan mendesak.') }}
                                     </div>
@@ -4535,12 +4640,14 @@
 
         <main class="flex-1 p-6 overflow-y-auto">
             @if (session('success'))
-                <div class="mb-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded relative font-medium shadow-sm flex items-center gap-2">
+                <div
+                    class="mb-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded relative font-medium shadow-sm flex items-center gap-2">
                     <i data-feather="check-circle" class="w-5 h-5"></i> {{ session('success') }}
                 </div>
             @endif
             @if (session('error'))
-                <div class="mb-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative font-medium shadow-sm flex items-center gap-2">
+                <div
+                    class="mb-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative font-medium shadow-sm flex items-center gap-2">
                     <i data-feather="alert-circle" class="w-5 h-5"></i> {{ session('error') }}
                 </div>
             @endif
@@ -4552,49 +4659,70 @@
     <!-- ============================================== -->
     <!-- MODAL GLOBAL: QUICK PAY (PELUNASAN CEPAT)      -->
     <!-- ============================================== -->
-    <div id="quickPayModalGlobal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-all">
-        <div id="quickPayContentGlobal" class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md overflow-hidden flex flex-col border-t-4 border-blue-600 shadow-2xl transform transition-transform scale-95 origin-center transition-colors">
+    <div id="quickPayModalGlobal"
+        class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-all">
+        <div id="quickPayContentGlobal"
+            class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md overflow-hidden flex flex-col border-t-4 border-blue-600 shadow-2xl transform transition-transform scale-95 origin-center transition-colors">
 
-            <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                <h3 id="qpTitleGlobal" class="text-lg font-bold text-slate-800 dark:text-white">{{ __('Proses Pelunasan Cepat') }}</h3>
-                <button type="button" onclick="closeQuickPayModalGlobal()" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors">
+            <div
+                class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <h3 id="qpTitleGlobal" class="text-lg font-bold text-slate-800 dark:text-white">
+                    {{ __('Proses Pelunasan Cepat') }}</h3>
+                <button type="button" onclick="closeQuickPayModalGlobal()"
+                    class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 bg-white dark:bg-slate-700 rounded-full p-1 shadow-sm transition-colors">
                     <i data-feather="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <form action="#" method="POST" id="quickPayFormGlobal" class="p-6 space-y-4" onsubmit="submitQuickPayGlobal(event, this)">
+            <form action="#" method="POST" id="quickPayFormGlobal" class="p-6 space-y-4"
+                onsubmit="submitQuickPayGlobal(event, this)">
                 @csrf
-                <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-4 rounded-lg text-center">
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{{ __('Total Tagihan') }}</p>
+                <div
+                    class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-4 rounded-lg text-center">
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        {{ __('Total Tagihan') }}</p>
                     <p id="qpAmountGlobal" class="text-2xl font-black text-slate-800 dark:text-white"></p>
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-1">Ref: <b id="qpRefGlobal" class="text-blue-700 dark:text-blue-400"></b></p>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-1">Ref: <b id="qpRefGlobal"
+                            class="text-blue-700 dark:text-blue-400"></b></p>
                 </div>
 
                 <div class="space-y-4 pt-2">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Pilih Rekening Transaksi') }}</label>
-                        <select name="payment_account" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 dark:text-slate-200 shadow-sm bg-white dark:bg-slate-700">
+                        <label
+                            class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Pilih Rekening Transaksi') }}</label>
+                        <select name="payment_account" required
+                            class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 dark:text-slate-200 shadow-sm bg-white dark:bg-slate-700">
                             <option value="" disabled selected>{{ __('-- Pilih Kas atau Bank --') }}</option>
                             @foreach ($bankAccountsGlobal as $bank)
-                                <option value="{{ $bank->code }}">[{{ $bank->code }}] {{ $bank->name }}</option>
+                                <option value="{{ $bank->code }}">[{{ $bank->code }}] {{ $bank->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Tanggal Pelunasan') }}</label>
-                        <input type="date" name="due_date" required value="{{ date('Y-m-d') }}" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium shadow-sm bg-white dark:bg-slate-700 dark:text-slate-200 dark:color-scheme-dark">
-                        <style>.dark\:color-scheme-dark::-webkit-calendar-picker-indicator { filter: invert(1); }</style>
+                        <label
+                            class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Tanggal Pelunasan') }}</label>
+                        <input type="date" name="due_date" required value="{{ date('Y-m-d') }}"
+                            class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium shadow-sm bg-white dark:bg-slate-700 dark:text-slate-200 dark:color-scheme-dark">
+                        <style>
+                            .dark\:color-scheme-dark::-webkit-calendar-picker-indicator {
+                                filter: invert(1);
+                            }
+                        </style>
                     </div>
                 </div>
 
-                <div class="mt-5 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-lg text-xs text-blue-800 dark:text-blue-300 font-medium leading-relaxed">
+                <div
+                    class="mt-5 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-lg text-xs text-blue-800 dark:text-blue-300 font-medium leading-relaxed">
                     {{ __('Transaksi ini akan memotong saldo tagihan dan langsung dicatat ke Jurnal Buku Besar Bank terpilih.') }}
                 </div>
 
                 <div class="flex justify-end gap-3 mt-6 border-t border-slate-100 dark:border-slate-700 pt-4">
-                    <button type="button" onclick="closeQuickPayModalGlobal()" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">{{ __('Batal') }}</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-md transition-colors flex items-center gap-2">
+                    <button type="button" onclick="closeQuickPayModalGlobal()"
+                        class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">{{ __('Batal') }}</button>
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-md transition-colors flex items-center gap-2">
                         <i data-feather="check-circle" class="w-4 h-4"></i> {{ __('Lunasi') }}
                     </button>
                 </div>
@@ -4604,8 +4732,163 @@
 
     <!-- LOGIKA JAVASCRIPT GLOBAL -->
     <script>
-        feather.replace();
         // ... (seluruh sisa script js Anda tetap tidak berubah) ...
+        feather.replace();
+
+        // --- FUNGSI TOGGLE TEMA GELAP / TERANG (DARK MODE) ---
+        var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        // Mengubah ikon berdasarkan status saat ini
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia(
+                '(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        var themeToggleBtn = document.getElementById('theme-toggle');
+
+        themeToggleBtn.addEventListener('click', function() {
+            // Toggle ikon di dalam tombol
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+
+            // Cek jika sebelumnya sudah ada pengaturan di localStorage
+            if (localStorage.getItem('color-theme')) {
+                if (localStorage.getItem('color-theme') === 'light') {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+            } else {
+                // Jika belum ada, paksa simpan mode gelap
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            }
+        });
+
+        // --- FUNGSI TOGGLE SIDEBAR (COLLAPSE / EXPAND) ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            sidebar.classList.toggle('collapsed');
+
+            // Jika sidebar dalam keadaan kecil (collapsed), sembunyikan semua sub-menu agar rapi
+            if (sidebar.classList.contains('collapsed')) {
+                document.querySelectorAll('.sub-menu-container').forEach(el => {
+                    el.classList.add('hidden');
+                });
+            }
+        }
+
+        // --- FUNGSI KLIK MENU KHUSUS DENGAN SUB-MENU ---
+        function handleMenuClick(submenuId) {
+            const sidebar = document.getElementById('main-sidebar');
+            const submenu = document.getElementById(submenuId);
+
+            // KONDISI 1: Jika sidebar sedang KECIL (Collapsed)
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                submenu.classList.remove('hidden');
+            }
+            // KONDISI 2: Jika sidebar sudah BESAR (Normal Default)
+            else {
+                submenu.classList.toggle('hidden');
+            }
+        }
+
+        // --- KONFIRMASI LOGOUT DENGAN SWAL ---
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Akhiri Sesi?',
+                text: "Sesi kerja Anda saat ini akan diakhiri dan Anda akan keluar dari sistem.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i data-feather="log-out" class="w-4 h-4 inline mr-1"></i> Ya, Logout!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                didOpen: () => {
+                    feather.replace();
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Keluar...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
+
+        // --- FUNGSI BUKA MODAL QUICK PAY (BERANIMASI) ---
+        function openQuickPay(type, id, ref, amount, isSales) {
+            let title = isSales ? 'Terima Pembayaran Piutang' : 'Bayar Hutang Pemasok';
+            let actionUrl = isSales ? `/sales/${id}/invoice` : `/purchases/${id}/bill`;
+
+            document.getElementById('qpTitleGlobal').innerText = title;
+            document.getElementById('qpRefGlobal').innerText = ref;
+            document.getElementById('qpAmountGlobal').innerText = 'Rp ' + parseInt(amount, 10).toLocaleString('id-ID');
+            document.getElementById('quickPayFormGlobal').action = actionUrl;
+
+            const modal = document.getElementById('quickPayModalGlobal');
+            const content = document.getElementById('quickPayContentGlobal');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        // --- FUNGSI TUTUP MODAL QUICK PAY ---
+        function closeQuickPayModalGlobal() {
+            const modal = document.getElementById('quickPayModalGlobal');
+            const content = document.getElementById('quickPayContentGlobal');
+
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+
+        // --- FUNGSI SUBMIT QUICK PAY DENGAN SWAL ---
+        function submitQuickPayGlobal(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Proses Pembayaran Cepat',
+                text: 'Dana akan langsung dicatat ke Jurnal Bank. Lanjutkan?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb', // Blue-600
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Proses!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Mencatat Jurnal...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    form.submit();
+                }
+            });
+        }
     </script>
 </body>
+
 </html>
