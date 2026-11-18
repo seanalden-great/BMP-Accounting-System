@@ -4745,6 +4745,175 @@
 
     <!-- Skrip Inisialisasi Chart.js Dinamis -->
     <script>
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     // Gunakan warna grid yang adaptif baik untuk mode gelap maupun terang
+        //     const gridColor = 'rgba(148, 163, 184, 0.1)';
+
+        //     // ==========================================
+        //     // 1. GRAFIK BATANG: ARUS KAS (CASH FLOW)
+        //     // ==========================================
+        //     const ctxFlow = document.getElementById('cashFlowChart').getContext('2d');
+        //     const labels = @json($chartLabels);
+        //     const dataInflows = @json($chartInflows);
+        //     const dataOutflows = @json($chartOutflows);
+
+        //     new Chart(ctxFlow, {
+        //         type: 'bar',
+        //         data: {
+        //             labels: labels,
+        //             datasets: [{
+        //                     label: '{{ __("Uang Masuk (Kas)") }}',
+        //                     data: dataInflows,
+        //                     backgroundColor: '#22c55e',
+        //                     borderRadius: 4,
+        //                     maxBarSize: 35
+        //                 },
+        //                 {
+        //                     label: '{{ __("Uang Keluar (Kas)") }}',
+        //                     data: dataOutflows,
+        //                     backgroundColor: '#ef4444',
+        //                     borderRadius: 4,
+        //                     maxBarSize: 35
+        //                 }
+        //             ]
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             maintainAspectRatio: false,
+        //             plugins: {
+        //                 legend: {
+        //                     position: 'top',
+        //                     labels: {
+        //                         boxWidth: 12,
+        //                         font: { family: 'sans-serif', size: 12 }
+        //                     }
+        //                 },
+        //                 tooltip: {
+        //                     callbacks: {
+        //                         label: function(context) {
+        //                             let value = context.raw || 0;
+        //                             return context.dataset.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        //                         }
+        //                     }
+        //                 }
+        //             },
+        //             scales: {
+        //                 x: {
+        //                     grid: { display: false }
+        //                 },
+        //                 y: {
+        //                     grid: { color: gridColor },
+        //                     ticks: {
+        //                         callback: function(value) {
+        //                             if (value >= 1000000) return 'Rp ' + (value / 1000000) + 'M';
+        //                             return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     });
+
+        //     // ==========================================
+        //     // 2. GRAFIK DOUGHNUT: STRUKTUR PENGELUARAN
+        //     // ==========================================
+        //     const pmbBulanIni = {{ $pembelianBulanIni ?? 0 }};
+        //     const byaBulanIni = {{ $biayaBulanIni ?? 0 }};
+
+        //     let expData = [pmbBulanIni, byaBulanIni];
+        //     let expColors = ['#f97316', '#e11d48']; // Orange, Merah
+        //     let expLabels = ['{{ __("Pembelian Brg (PO)") }}', '{{ __("Biaya Operasional (KBD)") }}'];
+
+        //     if (pmbBulanIni === 0 && byaBulanIni === 0) {
+        //         expData = [1];
+        //         expColors = ['rgba(148, 163, 184, 0.2)'];
+        //         expLabels = ['{{ __("Belum ada pengeluaran bulan ini") }}'];
+        //     }
+
+        //     const ctxExpense = document.getElementById('expensePieChart').getContext('2d');
+        //     new Chart(ctxExpense, {
+        //         type: 'doughnut',
+        //         data: {
+        //             labels: expLabels,
+        //             datasets: [{
+        //                 data: expData,
+        //                 backgroundColor: expColors,
+        //                 borderWidth: 0,
+        //                 hoverOffset: 6
+        //             }]
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             maintainAspectRatio: false,
+        //             cutout: '65%',
+        //             plugins: {
+        //                 legend: {
+        //                     position: 'bottom',
+        //                     labels: {
+        //                         padding: 20,
+        //                         font: { family: 'sans-serif', size: 11 }
+        //                     }
+        //                 },
+        //                 tooltip: {
+        //                     callbacks: {
+        //                         label: function(context) {
+        //                             if (pmbBulanIni === 0 && byaBulanIni === 0) return '{{ __(" Belum ada data transaksi") }}';
+        //                             let value = context.raw || 0;
+        //                             return ' ' + context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     });
+
+        //     // ==========================================
+        //     // 3. GRAFIK DOUGHNUT: DISTRIBUSI SALDO BANK
+        //     // ==========================================
+        //     const bankDetails = @json($rekeningDetails);
+        //     const bankLabels = bankDetails.map(b => b.name);
+        //     const bankData = bankDetails.map(b => b.balance);
+
+        //     const bankColors = ['#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#64748b'];
+
+        //     const ctxBank = document.getElementById('bankPieChart').getContext('2d');
+        //     new Chart(ctxBank, {
+        //         type: 'doughnut',
+        //         data: {
+        //             labels: bankLabels.length > 0 ? bankLabels : ['{{ __("Belum ada saldo") }}'],
+        //             datasets: [{
+        //                 data: bankData.length > 0 ? bankData : [1],
+        //                 backgroundColor: bankData.length > 0 ? bankColors : ['rgba(148, 163, 184, 0.2)'],
+        //                 borderWidth: 0,
+        //                 hoverOffset: 6
+        //             }]
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             maintainAspectRatio: false,
+        //             cutout: '65%',
+        //             plugins: {
+        //                 legend: {
+        //                     position: 'bottom',
+        //                     labels: {
+        //                         padding: 20,
+        //                         font: { family: 'sans-serif', size: 11 }
+        //                     }
+        //                 },
+        //                 tooltip: {
+        //                     callbacks: {
+        //                         label: function(context) {
+        //                             if (bankData.length === 0) return '{{ __(" Belum ada data") }}';
+        //                             let value = context.raw || 0;
+        //                             return ' ' + context.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(value);
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     });
+        // });
+
         document.addEventListener("DOMContentLoaded", function() {
             // Gunakan warna grid yang adaptif baik untuk mode gelap maupun terang
             const gridColor = 'rgba(148, 163, 184, 0.1)';
@@ -4912,6 +5081,36 @@
                     }
                 }
             });
+        });
+
+        // --- LOGIKA BUKA/TUTUP MODAL DASHBOARD BERANIMASI ---
+        function closeModalDash(modalId, contentId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(contentId);
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 150);
+        }
+
+        const alertTriggers = [
+            { alertBox: document.querySelector('.bg-red-50.cursor-pointer'), modalId: 'modalOverdue', contentId: 'contentOverdue' },
+            { alertBox: document.querySelector('.bg-orange-50.cursor-pointer'), modalId: 'modalToday', contentId: 'contentToday' },
+            { alertBox: document.querySelector('.bg-blue-50.cursor-pointer'), modalId: 'modalUpcoming', contentId: 'contentUpcoming' }
+        ];
+
+        alertTriggers.forEach(trigger => {
+            if(trigger.alertBox) {
+                // Overwrite the inline onclick
+                trigger.alertBox.onclick = function() {
+                    const modal = document.getElementById(trigger.modalId);
+                    const content = document.getElementById(trigger.contentId);
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        content.classList.remove('scale-95');
+                        content.classList.add('scale-100');
+                    }, 10);
+                };
+            }
         });
     </script>
 
