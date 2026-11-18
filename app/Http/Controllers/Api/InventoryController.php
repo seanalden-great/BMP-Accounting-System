@@ -118,4 +118,72 @@ class InventoryController extends Controller
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem.', 'error' => $e->getMessage()], 500);
         }
     }
+
+    // --- TAMBAHKAN FUNGSI INI DI DALAM Api/InventoryController.php ---
+    public function transferStock(Request $request)
+    {
+        $validated = $request->validate([
+            'date'              => 'required|date',
+            'from_warehouse_id' => 'required|exists:warehouses,id',
+            'to_warehouse_id'   => 'required|exists:warehouses,id|different:from_warehouse_id',
+            'product_sku'       => 'required|exists:products,sku',
+            'quantity'          => 'required|integer|min:1',
+            'notes'             => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $product = Product::where('sku', $validated['product_sku'])->lockForUpdate()->first();
+
+            // 1. Cek & Potong Stok Gudang Asal
+            $sourceStock = ProductStock::firstOrCreate(
+                ['warehouse_id' => $validated['from_warehouse_id'], 'product_sku' => $validated['product_sku']],
+                ['quantity' => 0]
+            );
+            if ($sourceStock->quantity < $validated['quantity']) {
+                return response()->json(['success' => false, 'message' => 'Gagal: Stok di Gudang Asal tidak mencukupi.'], 400);
+            }
+            $sourceStock->quantity -= $validated['quantity'];
+            $sourceStock->save();
+
+            // 2. Tambah Stok Gudang Tujuan
+            $destStock = ProductStock::firstOrCreate(
+                ['warehouse_id' => $validated['to_warehouse_id'], 'product_sku' => $validated['product_sku']],
+                ['quantity' => 0]
+            );
+            $destStock->quantity += $validated['quantity'];
+            $destStock->save();
+
+            // 3. Catat Riwayat Mutasi Fisik (Tanpa Jurnal / Nilai 0)
+            $sjCode = "TRF-" . Carbon::now()->format('His');
+            $reasonOut = "[MUTASI KELUAR] Ke Gudang ID: {$validated['to_warehouse_id']} (SJ: {$sjCode}) - " . ($validated['notes'] ?? '');
+            $reasonIn  = "[MUTASI MASUK] Dari Gudang ID: {$validated['from_warehouse_id']} (SJ: {$sjCode}) - " . ($validated['notes'] ?? '');
+
+            StockAdjustment::create([
+                'date'         => $validated['date'],
+                'warehouse_id' => $validated['from_warehouse_id'],
+                'product_sku'  => $validated['product_sku'],
+                'type'         => 'Pengurangan',
+                'quantity'     => $validated['quantity'],
+                'reason'       => '[MOBILE] ' . $reasonOut,
+                'total_value'  => 0,
+            ]);
+
+            StockAdjustment::create([
+                'date'         => $validated['date'],
+                'warehouse_id' => $validated['to_warehouse_id'],
+                'product_sku'  => $validated['product_sku'],
+                'type'         => 'Penambahan',
+                'quantity'     => $validated['quantity'],
+                'reason'       => '[MOBILE] ' . $reasonIn,
+                'total_value'  => 0,
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Mutasi antar gudang berhasil dicatat!'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal memproses mutasi.', 'error' => $e->getMessage()], 500);
+        }
+    }
 }

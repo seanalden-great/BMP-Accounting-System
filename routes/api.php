@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inventory/master-data', [InventoryController::class, 'getMasterData']);
     Route::get('/inventory/history', [InventoryController::class, 'getHistory']);
     Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock']);
+    Route::post('/inventory/transfer', [InventoryController::class, 'transferStock']); // <--- Tambahkan Ini
 
     // Modul Dashboard Eksekutif
     Route::get('/dashboard', [DashboardController::class, 'index']);
