@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         //
+        // Daftarkan middleware SetLocale di grup web
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+        
         // --- TAMBAHKAN BARIS INI ---
         // Matikan satpam CSRF khusus untuk semua endpoint API (Mobile)
         $middleware->validateCsrfTokens(except: [

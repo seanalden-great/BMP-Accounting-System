@@ -295,3 +295,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
 });
+
+// Route untuk mengganti bahasa (i18n)
+Route::get('/lang/{locale}', function ($locale) {
+    // Batasi hanya untuk bahasa Indonesia (id) dan Inggris (en)
+    if (in_array($locale, ['id', 'en'])) {
+        session()->put('locale', $locale);
+    }
+    return redirect()->back();
+})->name('lang.switch');

@@ -1,0 +1,21 @@
+{
+    "Beranda": "Dashboard",
+    "Penjualan": "Sales",
+    "Pembelian": "Purchases",
+    "Biaya": "Expenses",
+    "Produk": "Products",
+    "Inventori": "Inventory",
+    "Aset Tetap": "Fixed Assets",
+    "Kas & Bank": "Cash & Bank",
+    "Akun CoA": "Chart of Accounts",
+    "Kontak": "Contacts",
+    "Laporan Keuangan": "Financial Reports",
+    "Pengaturan": "Settings",
+    "Pusat Persetujuan": "Approval Center",
+    "Bantuan / FAQ": "Help / FAQ",
+
+    "Pesanan Penjualan": "Sales Orders",
+    "Pengiriman Penjualan": "Sales Deliveries",
+    "Tagihan Penjualan": "Sales Invoices",
+    "Pesanan Pembelian": "Purchase Orders"
+}

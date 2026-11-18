@@ -3348,7 +3348,7 @@
                 <a href="{{ route('dashboard') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('dashboard') ? 'bg-slate-800 text-blue-400 font-medium' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <i data-feather="home" class="w-5 h-5 shrink-0"></i>
-                    <span class="sidebar-text text-sm">Beranda</span>
+                    <span class="sidebar-text text-sm">{{ __('Beranda') }}</span>
                 </a>
             @endif
 
@@ -3356,7 +3356,7 @@
                 <a href="{{ route('approvals.index') }}"
                     class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('approvals.index') ? 'bg-slate-800 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <i data-feather="check-square" class="w-5 h-5 shrink-0"></i>
-                    <span class="sidebar-text text-sm">Pusat Persetujuan</span>
+                    <span class="sidebar-text text-sm">{{ __('Pusat Persetujuan') }}</span>
                 </a>
             @endif
 
@@ -3604,6 +3604,26 @@
                         <i id="theme-toggle-dark-icon" data-feather="moon" class="hidden w-5 h-5"></i>
                         <i id="theme-toggle-light-icon" data-feather="sun" class="hidden w-5 h-5"></i>
                     </button>
+
+                    <!-- TOMBOL GANTI BAHASA -->
+                    <div class="relative group">
+                        <button
+                            class="hover:text-blue-600 dark:hover:text-amber-400 relative p-1.5 transition-colors font-bold text-xs flex items-center gap-1">
+                            <i data-feather="globe" class="w-4 h-4"></i>
+                            {{ strtoupper(app()->getLocale()) }}
+                        </button>
+                        <div
+                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                            <a href="{{ route('lang.switch', 'id') }}"
+                                class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 {{ app()->getLocale() == 'id' ? 'font-bold text-blue-600 dark:text-blue-400' : '' }}">
+                                🇮🇩 Indonesia
+                            </a>
+                            <a href="{{ route('lang.switch', 'en') }}"
+                                class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 {{ app()->getLocale() == 'en' ? 'font-bold text-blue-600 dark:text-blue-400' : '' }}">
+                                🇬🇧 English
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- DROPDOWN LONCENG NOTIFIKASI -->
                     <div class="relative group">
