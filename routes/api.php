@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProfileController;
 
 // Rute Publik (Otentikasi)
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
 // Rute Terlindungi (Wajib Bawa Token Sanctum di Header Authorization: Bearer <token>)
 Route::middleware('auth:sanctum')->group(function () {
