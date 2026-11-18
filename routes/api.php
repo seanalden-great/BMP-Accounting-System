@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 
 // Rute Publik (Otentikasi)
 Route::post('/login', [AuthController::class, 'login']);
@@ -17,7 +20,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock']);
 
     // Modul Dashboard Eksekutif
-    Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+    Route::get('/dashboard', [DashboardController::class, 'index']);
     // Modul Pusat Persetujuan Eksekutif
-    Route::get('/approvals', [\App\Http\Controllers\Api\ApprovalController::class, 'index']);
+    Route::get('/approvals', [ApprovalController::class, 'index']);
+
+    // Modul Profil
+    Route::get('/profile', [ProfileController::class, 'index']);
+    Route::put('/profile/update', [ProfileController::class, 'update']);
 });
