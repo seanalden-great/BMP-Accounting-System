@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RolePermissionController;
 
 // Rute Publik (Otentikasi)
 Route::post('/login', [AuthController::class, 'login']);
@@ -37,4 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // Modul Pengaturan Hak Akses (RBAC)
+    Route::get('/settings/roles', [RolePermissionController::class, 'index']);
+    Route::put('/settings/roles', [RolePermissionController::class, 'update']);
 });
