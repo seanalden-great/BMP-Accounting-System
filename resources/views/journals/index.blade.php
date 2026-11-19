@@ -1699,16 +1699,6 @@
             const debit = parseFloat(debitRaw) || 0;
             const credit = parseFloat(creditRaw) || 0;
 
-            // if (!date || !desc || !targetAcc || (debit === 0 && credit === 0)) {
-            //     alert(@json(__('Harap lengkapi Tanggal, Uraian, No. Akun lawan, dan nominal (Debit atau Kredit)!')));
-            //     return;
-            // }
-
-            // if (debit > 0 && credit > 0) {
-            //     alert(@json(__('Isi salah satu nominal saja: Debit ATAU Kredit.')));
-            //     return;
-            // }
-
             if (!date || !desc || !targetAcc || (debit === 0 && credit === 0)) {
                 alert({!! json_encode(__('Harap lengkapi Tanggal, Uraian, No. Akun lawan, dan nominal (Debit atau Kredit)!')) !!});
                 return;
