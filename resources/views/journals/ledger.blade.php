@@ -237,7 +237,7 @@
 </script>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
 <div class="space-y-6 pb-10 relative">
@@ -465,6 +465,241 @@
             Swal.fire({
                 title: 'Mengkalkulasi Saldo...',
                 text: 'Sistem sedang membaca seluruh mutasi di Buku Besar (Ledger).',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        }
+    });
+</script>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6 pb-10 relative">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                <i data-feather="book-open" class="w-7 h-7 text-indigo-600 dark:text-indigo-400"></i> {{ __('Buku Besar (General Ledger)') }}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">{{ __('Lacak mutasi detail, saldo awal, dan saldo akhir per Akun (CoA)') }}</p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <button type="button" onclick="validateAndExport()" class="w-full sm:w-auto bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+                <i data-feather="printer" class="w-4 h-4"></i> {{ __('Ekspor Buku Besar (PDF)') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTER PENCARIAN -->
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+        <form action="{{ route('journals.ledger') }}" method="GET" id="filterForm" class="flex flex-col sm:flex-row items-end gap-4">
+
+            <!-- Pilih Akun -->
+            <div class="flex-1 w-full">
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Pilih Akun (CoA)') }}</label>
+                <select name="account_code" id="accountDropdown" required class="w-full border border-indigo-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 font-semibold shadow-sm transition-colors">
+                    <option value="" disabled {{ empty($selectedAccountCode) ? 'selected' : '' }}>{{ __('-- Cari & Pilih Akun --') }}</option>
+                    @foreach($accounts as $acc)
+                        <option value="{{ $acc->code }}" {{ $selectedAccountCode == $acc->code ? 'selected' : '' }}>
+                            [{{ $acc->code }}] {{ $acc->name }} (Normal: {{ $acc->normal_balance }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Periode Awal -->
+            <div class="w-full sm:w-40">
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Dari Tanggal') }}</label>
+                <input type="date" name="start_date" id="startDate" required value="{{ $startDate }}" class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-colors dark:color-scheme-dark">
+                <style>.dark\:color-scheme-dark::-webkit-calendar-picker-indicator { filter: invert(1); }</style>
+            </div>
+
+            <!-- Periode Akhir -->
+            <div class="w-full sm:w-40">
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Sampai Tanggal') }}</label>
+                <input type="date" name="end_date" id="endDate" required value="{{ $endDate }}" class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-colors dark:color-scheme-dark">
+            </div>
+
+            <!-- Tombol Filter -->
+            <div class="w-full sm:w-auto">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-feather="search" class="w-4 h-4"></i> {{ __('Tampilkan') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- TABEL BUKU BESAR -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-300 dark:border-slate-700 overflow-hidden transition-colors">
+
+        <!-- Header Identitas Halaman -->
+        @if($selectedAccount)
+        <div class="p-5 border-b border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center transition-colors">
+            <div>
+                <h2 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">
+                    [{{ $selectedAccount->code }}] {{ $selectedAccount->name }}
+                </h2>
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                    {{ __('Periode:') }} {{ \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}
+                </p>
+            </div>
+            <div class="text-right hidden sm:block">
+                <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400 rounded-full text-xs font-bold border border-indigo-200 dark:border-indigo-800/30">
+                    {{ __('Pos Saldo Normal:') }} {{ $selectedAccount->normal_balance == 'D' ? __('DEBET') : __('KREDIT') }}
+                </span>
+            </div>
+        </div>
+        @endif
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse min-w-[900px]">
+                <thead class="bg-slate-200 dark:bg-slate-700 border-b border-slate-300 dark:border-slate-600 transition-colors">
+                    <tr>
+                        <th class="p-3 text-center w-28 font-bold text-slate-700 dark:text-slate-200 border-r border-slate-300 dark:border-slate-600">{{ __('Tanggal') }}</th>
+                        <th class="p-3 text-left w-36 font-bold text-slate-700 dark:text-slate-200 border-r border-slate-300 dark:border-slate-600">{{ __('No. Referensi') }}</th>
+                        <th class="p-3 text-left font-bold text-slate-700 dark:text-slate-200 border-r border-slate-300 dark:border-slate-600">{{ __('Keterangan / Uraian') }}</th>
+                        <th class="p-3 text-right w-36 font-bold text-slate-700 dark:text-slate-200 border-r border-slate-300 dark:border-slate-600">{{ __('Debit (Rp)') }}</th>
+                        <th class="p-3 text-right w-36 font-bold text-slate-700 dark:text-slate-200 border-r border-slate-300 dark:border-slate-600">{{ __('Kredit (Rp)') }}</th>
+                        <th class="p-3 text-right w-40 font-black text-indigo-900 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30">{{ __('Saldo Berjalan (Rp)') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if($selectedAccount)
+
+                        @php
+                            $runningBalance = $beginningBalance;
+                            $totalDebitMutasi = 0;
+                            $totalKreditMutasi = 0;
+                        @endphp
+
+                        <!-- BARIS SALDO AWAL -->
+                        <tr class="bg-amber-50/50 dark:bg-amber-900/10 border-b border-slate-200 dark:border-slate-700 transition-colors">
+                            <td class="p-3 text-center font-medium text-slate-500 dark:text-slate-400">{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}</td>
+                            <td class="p-3 font-semibold text-slate-400 dark:text-slate-500 italic">-</td>
+                            <td class="p-3 font-bold text-slate-700 dark:text-slate-200 uppercase">{{ __('Saldo Awal Sebelum Periode') }}</td>
+                            <td class="p-3 text-right text-slate-400 dark:text-slate-500">-</td>
+                            <td class="p-3 text-right text-slate-400 dark:text-slate-500">-</td>
+                            <td class="p-3 text-right font-black text-slate-800 dark:text-white bg-indigo-50/30 dark:bg-indigo-900/20">
+                                {{ number_format($beginningBalance, 0, ',', '.') }}
+                            </td>
+                        </tr>
+
+                        <!-- LOOPING TRANSAKSI -->
+                        @forelse($entries as $entry)
+                            @php
+                                $totalDebitMutasi += $entry->debit;
+                                $totalKreditMutasi += $entry->credit;
+
+                                if ($selectedAccount->normal_balance == 'K') {
+                                    $runningBalance += ($entry->credit - $entry->debit);
+                                } else {
+                                    $runningBalance += ($entry->debit - $entry->credit);
+                                }
+                            @endphp
+                            <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="p-3 text-center font-medium text-slate-600 dark:text-slate-300">
+                                    {{ \Carbon\Carbon::parse($entry->journal->date)->format('d/m/Y') }}
+                                </td>
+                                <td class="p-3 font-bold text-indigo-600 dark:text-indigo-400 text-xs">
+                                    {{ $entry->journal->reference_no ?: 'JRN-'.$entry->journal_id }}
+                                </td>
+                                <td class="p-3 font-medium text-slate-800 dark:text-slate-200">
+                                    {{ $entry->journal->description }}
+                                </td>
+                                <td class="p-3 text-right font-semibold text-slate-700 dark:text-slate-200">
+                                    {{ $entry->debit > 0 ? number_format($entry->debit, 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="p-3 text-right font-semibold text-slate-700 dark:text-slate-200">
+                                    {{ $entry->credit > 0 ? number_format($entry->credit, 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="p-3 text-right font-bold text-slate-800 dark:text-white bg-indigo-50/30 dark:bg-indigo-900/20">
+                                    {{ $runningBalance < 0 ? '(' . number_format(abs($runningBalance), 0, ',', '.') . ')' : number_format($runningBalance, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="p-8 text-center text-slate-500 dark:text-slate-400 font-medium">{{ __('Tidak ada mutasi transaksi pada rentang tanggal ini.') }}</td>
+                            </tr>
+                        @endforelse
+
+                        <!-- BARIS FOOTER SALDO AKHIR -->
+                        <tr class="bg-slate-800 dark:bg-slate-900 text-white transition-colors">
+                            <td colspan="3" class="p-4 text-right font-black uppercase tracking-wider border-r border-slate-700">
+                                {{ __('Mutasi Berjalan & Saldo Akhir') }}
+                            </td>
+                            <td class="p-4 text-right font-bold text-emerald-400 border-r border-slate-700">
+                                Rp {{ number_format($totalDebitMutasi, 0, ',', '.') }}
+                            </td>
+                            <td class="p-4 text-right font-bold text-emerald-400 border-r border-slate-700">
+                                Rp {{ number_format($totalKreditMutasi, 0, ',', '.') }}
+                            </td>
+                            <td class="p-4 text-right font-black text-amber-400 text-lg">
+                                Rp {{ number_format($runningBalance, 0, ',', '.') }}
+                            </td>
+                        </tr>
+
+                    @else
+                        <tr>
+                            <td colspan="6" class="p-16 text-center">
+                                <i data-feather="search" class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4"></i>
+                                <p class="text-slate-500 dark:text-slate-200 font-bold text-lg">{{ __('Silakan pilih Akun (CoA) dari filter di atas.') }}</p>
+                                <p class="text-slate-400 dark:text-slate-400 text-sm mt-1">{{ __('Sistem akan mengkalkulasi saldo awal dan seluruh mutasi jurnal yang terkait.') }}</p>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validateAndExport() {
+        const accCode = document.getElementById('accountDropdown').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!accCode) {
+            Swal.fire({
+                icon: 'warning',
+                title: @json(__('Akun Belum Dipilih!')),
+                text: @json(__('Anda harus memilih salah satu Akun (CoA) terlebih dahulu untuk bisa diekspor.')),
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: @json(__('Mengerti'))
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: @json(__('Mempersiapkan Dokumen...')),
+            text: @json(__('Sedang mengekstrak mutasi Buku Besar ke format PDF.')),
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        setTimeout(() => {
+            Swal.close();
+        }, 2000);
+
+        Swal.fire(
+            @json(__('Fitur Ekspor PDF')),
+            @json(__('Endpoint cetak PDF bisa disambungkan oleh developer selanjutnya di sini.')),
+            'info'
+        );
+    }
+
+    document.getElementById('filterForm').addEventListener('submit', function() {
+        const accCode = document.getElementById('accountDropdown').value;
+        if (accCode) {
+            Swal.fire({
+                title: @json(__('Mengkalkulasi Saldo...')),
+                text: @json(__('Sistem sedang membaca seluruh mutasi di Buku Besar (Ledger).')),
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 didOpen: () => { Swal.showLoading(); }

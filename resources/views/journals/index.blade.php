@@ -1037,7 +1037,7 @@
     </script>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
     <div class="space-y-6 pb-10">
@@ -1383,6 +1383,346 @@
             <input type="hidden" name="entries[0][credit]" value="${bankCredit}">
 
             <!-- Entry 2: Akun Lawan -->
+            <input type="hidden" name="entries[1][account_code]" value="${targetAcc}">
+            <input type="hidden" name="entries[1][debit]" value="${targetDebit}">
+            <input type="hidden" name="entries[1][credit]" value="${targetCredit}">
+        `;
+
+            document.getElementById('journalForm').submit();
+        }
+    </script>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+    <div class="space-y-6 pb-10">
+        <h1 class="text-3xl font-bold mb-6 text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+            <i data-feather="dollar-sign" class="w-7 h-7 text-green-600 dark:text-green-400"></i> {{ __('Mutasi Rekening Bank') }}
+        </h1>
+
+        <div class="space-y-6">
+            <!-- Header Dropdown Pemilihan Bank & Filter Tanggal -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                <form action="{{ route('journals.index') }}" method="GET"
+                    class="flex flex-col sm:flex-row flex-wrap items-end sm:items-center gap-4 w-full" id="bankForm">
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg shrink-0 transition-colors"><i data-feather="briefcase"
+                                class="w-5 h-5"></i></div>
+                        <select name="account_code" onchange="document.getElementById('bankForm').submit()"
+                            class="w-full sm:w-auto border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-bold">
+                            <option value="" disabled {{ !$accountCode ? 'selected' : '' }}>{{ __('-- Pilih Rekening --') }}
+                            </option>
+                            @foreach ($banks as $bank)
+                                <option value="{{ $bank->code }}" {{ $accountCode == $bank->code ? 'selected' : '' }}>
+                                    {{ $bank->name }} ({{ $bank->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="h-8 w-px bg-slate-200 dark:bg-slate-600 hidden sm:block transition-colors"></div>
+
+                    <!-- FILTER TANGGAL KALENDER -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <label class="font-semibold text-slate-500 dark:text-slate-400 text-sm">{{ __('Periode:') }}</label>
+                        <input type="date" name="start_date" value="{{ $startDate ?? '' }}"
+                            class="border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium transition-colors dark:color-scheme-dark">
+                        <span class="text-slate-400 dark:text-slate-500 font-bold">-</span>
+                        <input type="date" name="end_date" value="{{ $endDate ?? '' }}"
+                            class="border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium transition-colors dark:color-scheme-dark">
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
+                            <i data-feather="filter" class="w-4 h-4"></i> {{ __('Filter Tanggal') }}
+                        </button>
+
+                        <!-- Tombol Reset / Clear akan muncul jika ada filter aktif -->
+                        @if ($startDate || $endDate)
+                            <a href="{{ route('journals.index', ['account_code' => $accountCode]) }}"
+                                class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors"
+                                title="{{ __('Hapus Filter') }}">
+                                <i data-feather="x" class="w-4 h-4"></i>
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
+            @if ($accountCode)
+                @php
+                    $selectedBank = $banks->firstWhere('code', $accountCode);
+                @endphp
+
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-300 dark:border-slate-700 overflow-x-auto transition-colors">
+
+                    <div
+                        class="mb-4 border-b border-slate-200 dark:border-slate-700 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors">
+                        <div>
+                            <h2 class="text-xl font-bold font-sans uppercase text-slate-800 dark:text-white">{{ $selectedBank->name }}</h2>
+                            <p class="text-sm font-semibold mt-1 text-slate-600 dark:text-slate-400">{{ __('Buku Besar Akun:') }} {{ $selectedBank->code }}
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-3 w-full md:w-auto">
+                            <!-- Dropdown Laporan Internal & Pajak -->
+                            <div class="relative group">
+                                <button
+                                    class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-colors flex items-center gap-2">
+                                    <i data-feather="printer" class="w-4 h-4"></i> {{ __('Ekspor Laporan Mutasi') }}
+                                </button>
+                                <div
+                                    class="absolute right-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                                    <div class="px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border-b dark:border-slate-700 font-bold text-xs text-slate-400 dark:text-slate-300 uppercase">
+                                        {{ __('Lap. Internal (Asli)') }}</div>
+                                    <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'internal', 'format' => 'csv']) }}"
+                                        class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 font-semibold text-slate-700 dark:text-slate-200 transition-colors">{{ __('Unduh Excel (CSV)') }}</a>
+                                    <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'internal', 'format' => 'pdf']) }}"
+                                        target="_blank"
+                                        class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 font-semibold text-slate-700 dark:text-slate-200 border-b dark:border-slate-700 transition-colors">{{ __('Cetak PDF / Layar') }}</a>
+
+                                    <div
+                                        class="px-3 py-2 bg-purple-50 dark:bg-purple-900/20 border-b dark:border-slate-700 font-bold text-xs text-purple-500 dark:text-purple-400 uppercase transition-colors">
+                                        {{ __('Lap. Pajak (Tax)') }}</div>
+                                    <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'pajak', 'format' => 'csv']) }}"
+                                        class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 font-semibold text-slate-700 dark:text-slate-200 transition-colors">{{ __('Unduh Excel (CSV)') }}</a>
+                                    <a href="{{ route('journals.export', ['account_code' => $accountCode, 'start_date' => $startDate, 'end_date' => $endDate, 'type' => 'pajak', 'format' => 'pdf']) }}"
+                                        target="_blank"
+                                        class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 font-semibold text-slate-700 dark:text-slate-200 transition-colors">{{ __('Cetak PDF / Layar') }}</a>
+                                </div>
+                            </div>
+
+                            <button onclick="window.location.reload()"
+                                class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 p-2.5 rounded-lg font-bold shadow-sm transition-colors"
+                                title="{{ __('Segarkan Data Halaman') }}">
+                                <i data-feather="refresh-cw" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Riwayat Mutasi -->
+                    <table class="w-full text-sm border-collapse border border-slate-400 dark:border-slate-600 min-w-[900px] mb-8 transition-colors">
+                        <thead class="bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 transition-colors">
+                            <tr>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-12">{{ __('No.') }}</th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-32">{{ __('Tanggal') }}</th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center">{{ __('Uraian / Keterangan') }}</th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-24">{{ __('No. AKUN') }}</th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-32">{{ __('DEBET') }}</th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-32">{{ __('KREDIT') }}</th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-36">{{ __('SISA SALDO') }}</th>
+                                <th class="border-y border-slate-400 dark:border-slate-600 p-2 w-4 bg-white dark:bg-transparent"></th>
+                                <th class="border border-slate-400 dark:border-slate-600 p-2 text-center w-48">{{ __('KETERANGAN / LAWAN') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @php
+                                $runningBalance = $saldoAwal ?? 0;
+                                $rowNumber = 1;
+                                $sortedJournals = $journals;
+                            @endphp
+
+                            <!-- Baris Saldo Awal -->
+                            @if (isset($startDate) && $startDate)
+                                <tr class="bg-blue-50/60 dark:bg-blue-900/20 transition-colors">
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2 text-center text-slate-400 dark:text-slate-500">-</td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2 text-center text-slate-600 dark:text-slate-400 font-medium">
+                                        {{ \Carbon\Carbon::parse($startDate)->format('d-M-Y') }}</td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2 font-bold text-blue-800 dark:text-blue-400">{{ __('SALDO AWAL (Pindahan)') }}
+                                    </td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2"></td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2"></td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2"></td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2 text-right font-bold text-blue-700 dark:text-blue-400 text-[15px]">
+                                        @if ($runningBalance < 0)
+                                            <span class="text-red-600 dark:text-red-400">(Rp
+                                                {{ number_format(abs($runningBalance), 0, ',', '.') }})</span>
+                                        @else
+                                            Rp {{ number_format($runningBalance, 0, ',', '.') }}
+                                        @endif
+                                    </td>
+                                    <td class="border-y border-slate-400 dark:border-slate-600 p-2 bg-white dark:bg-transparent"></td>
+                                    <td class="border border-slate-400 dark:border-slate-600 p-2 text-center text-slate-500 dark:text-slate-400 text-xs italic">
+                                        {{ __('Akumulasi historis') }}</td>
+                                </tr>
+                            @endif
+
+                            @forelse($sortedJournals as $journal)
+                                @foreach ($journal->entries as $entry)
+                                    @php
+                                        $isBankRow = $entry->account_code == $accountCode;
+                                        if ($isBankRow) {
+                                            $runningBalance += $entry->debit - $entry->credit;
+                                        }
+                                    @endphp
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-slate-800 dark:text-slate-300">
+                                        <td class="border border-slate-400 dark:border-slate-600 p-2 text-center">{{ $rowNumber++ }}</td>
+                                        <td class="border border-slate-400 dark:border-slate-600 p-2 text-center">
+                                            {{ \Carbon\Carbon::parse($journal->date)->format('d-M-Y') }}</td>
+                                        <td class="border border-slate-400 dark:border-slate-600 p-2">
+                                            {{ $journal->description }}
+                                            @if ($journal->reference_no && strpos($journal->description, $journal->reference_no) === false)
+- {{ $journal->reference_no }}
+                                            @endif
+                                        </td>
+                                        <td class="border border-slate-400 dark:border-slate-600 p-2 text-center font-semibold">
+                                            {{ $entry->account_code }}</td>
+                                        <td class="border border-slate-400 dark:border-slate-600 p-2 text-right font-medium">
+                                            {{ $entry->debit > 0 ? 'Rp ' . number_format($entry->debit, 0, ',', '.') : '' }}
+                                        </td>
+                                        <td class="border border-slate-400 dark:border-slate-600 p-2 text-right font-medium">
+                                            {{ $entry->credit > 0 ? 'Rp ' . number_format($entry->credit, 0, ',', '.') : '' }}
+                                        </td>
+                                        <td
+                                            class="border border-slate-400 dark:border-slate-600 p-2 text-right {{ $isBankRow ? 'font-bold text-blue-600 dark:text-blue-400 text-[15px]' : '' }}">
+                                            @if ($isBankRow)
+                                                @if ($runningBalance < 0)
+                                                    <span class="text-red-600 dark:text-red-400">(Rp
+                                                        {{ number_format(abs($runningBalance), 0, ',', '.') }})</span>
+                                                @else
+                                                    Rp {{ number_format($runningBalance, 0, ',', '.') }}
+                                                @endif
+                                            @endif
+                                        </td>
+                                        <td class="border-y border-slate-400 dark:border-slate-600 p-2 bg-white dark:bg-transparent"></td>
+                                        <td
+                                            class="border border-slate-400 dark:border-slate-600 p-2 text-slate-600 dark:text-slate-400 font-medium text-center text-xs">
+                                            {{ $entry->account->name ?? __('Tanpa Keterangan') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="9"
+                                        class="border border-slate-400 dark:border-slate-600 p-4 text-center text-slate-500 dark:text-slate-400 font-medium">{{ __('Belum ada riwayat transaksi pada rentang waktu ini.') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                    <!-- Form Mutasi Manual Terpisah -->
+                    <div class="mt-8 bg-blue-50/40 dark:bg-blue-900/10 p-5 rounded-lg border border-blue-100 dark:border-blue-900/30 transition-colors">
+                        <h3 class="font-bold text-blue-800 dark:text-blue-400 mb-4 flex items-center gap-2"><i data-feather="edit-3"
+                                class="w-4 h-4"></i> {{ __('Catat Jurnal Mutasi Manual') }}</h3>
+
+                        <form action="{{ route('journals.store') }}" method="POST" id="journalForm">
+                            @csrf
+                            <input type="hidden" name="reference_no" value="">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Tanggal') }}</label>
+                                    <input type="date" name="date" required value="{{ date('Y-m-d') }}"
+                                        class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 transition-colors dark:color-scheme-dark">
+                                </div>
+                                <div class="lg:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Uraian / Keterangan') }}</label>
+                                    <input type="text" name="description" required
+                                        placeholder="{{ __('Ketik uraian mutasi...') }}"
+                                        class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('No. Akun Lawan') }}</label>
+                                    <input type="text" id="targetAccount" required placeholder="{{ __('Misal: 509') }}"
+                                        class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-center transition-colors">
+                                </div>
+                            </div>
+
+                            <div
+                                class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white dark:bg-slate-800/50 p-4 rounded border border-slate-200 dark:border-slate-700 transition-colors">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Nominal DEBET (Uang Masuk ke Bank)') }}</label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 dark:text-slate-400 text-xs">Rp</span>
+                                        <input type="text" id="inpDebit" placeholder="0"
+                                            oninput="formatRibuan(this); document.getElementById('inpCredit').value = '';"
+                                            class="format-ribuan w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded text-right text-sm font-bold outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 dark:text-white transition-colors">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ __('Nominal KREDIT (Uang Keluar dari Bank)') }}</label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 dark:text-slate-400 text-xs">Rp</span>
+                                        <input type="text" id="inpCredit" placeholder="0"
+                                            oninput="formatRibuan(this); document.getElementById('inpDebit').value = '';"
+                                            class="format-ribuan w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 rounded text-right text-sm font-bold outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 dark:text-white transition-colors">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="hiddenEntries"></div>
+
+                            <div class="flex justify-end mt-4">
+                                <button type="button" onclick="submitJournal()"
+                                    class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-2 rounded font-bold shadow transition-colors flex items-center gap-2">
+                                    <i data-feather="save" class="w-4 h-4"></i> {{ __('Simpan Mutasi') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <div class="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-sm border border-slate-300 dark:border-slate-700 text-center transition-colors">
+                    <i data-feather="book-open" class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3"></i>
+                    <h3 class="text-lg font-bold text-slate-700 dark:text-slate-200">{{ __('Pilih Rekening Bank') }}</h3>
+                    <p class="text-slate-500 dark:text-slate-400">{{ __('Silakan pilih rekening pada dropdown di atas untuk melihat riwayat mutasinya.') }}
+                    </p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <script>
+        function formatRibuan(inputElement) {
+            let value = inputElement.value.replace(/[^0-9]/g, '');
+            if (value !== '') {
+                inputElement.value = parseInt(value, 10).toLocaleString('id-ID');
+            } else {
+                inputElement.value = '';
+            }
+        }
+
+        function submitJournal() {
+            const date = document.querySelector('input[name="date"]').value;
+            const desc = document.querySelector('input[name="description"]').value;
+            const targetAcc = document.getElementById('targetAccount').value;
+
+            const debitRaw = document.getElementById('inpDebit').value.replace(/\./g, '');
+            const creditRaw = document.getElementById('inpCredit').value.replace(/\./g, '');
+
+            const debit = parseFloat(debitRaw) || 0;
+            const credit = parseFloat(creditRaw) || 0;
+
+            if (!date || !desc || !targetAcc || (debit === 0 && credit === 0)) {
+                alert(@json(__('Harap lengkapi Tanggal, Uraian, No. Akun lawan, dan nominal (Debit atau Kredit)!')));
+                return;
+            }
+
+            if (debit > 0 && credit > 0) {
+                alert(@json(__('Isi salah satu nominal saja: Debit ATAU Kredit.')));
+                return;
+            }
+
+            let bankDebit = debit > 0 ? debit : 0;
+            let bankCredit = credit > 0 ? credit : 0;
+
+            let targetDebit = credit > 0 ? credit : 0;
+            let targetCredit = debit > 0 ? debit : 0;
+
+            const bankCode = "{{ $accountCode ?? '' }}";
+
+            const hiddenDiv = document.getElementById('hiddenEntries');
+            hiddenDiv.innerHTML = `
+            <input type="hidden" name="entries[0][account_code]" value="${bankCode}">
+            <input type="hidden" name="entries[0][debit]" value="${bankDebit}">
+            <input type="hidden" name="entries[0][credit]" value="${bankCredit}">
+
             <input type="hidden" name="entries[1][account_code]" value="${targetAcc}">
             <input type="hidden" name="entries[1][debit]" value="${targetDebit}">
             <input type="hidden" name="entries[1][credit]" value="${targetCredit}">
