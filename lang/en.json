@@ -515,5 +515,35 @@
     "Akun Pemasukan (Pendapatan)": "Income Accounts",
     "Keterangan Mutasi": "Mutation Description",
     "Cth: Biaya Admin Bank BCA Bulan Ini": "E.g.: Monthly BCA Bank Admin Fee",
-    "Simpan Penyesuaian": "Save Adjustment"
+    "Simpan Penyesuaian": "Save Adjustment",
+
+    "Kelola master data akun keuangan": "Manage financial account master data",
+    "Ekspor Laporan CoA": "Export CoA Report",
+    "Tambah Akun": "Add Account",
+    "Nama Account": "Account Name",
+    "Pos": "Pos",
+    "Saldo": "Balance",
+    "Edit Akun": "Edit Account",
+    "Hapus Akun": "Delete Account",
+    "Belum ada data akun. Silakan tambah data.": "No account data yet. Please add data.",
+    "TOTAL NERACA SALDO (MUTASI DETAIL)": "TRIAL BALANCE TOTAL (DETAILED MUTATION)",
+    "SEIMBANG (BALANCE)": "BALANCED",
+    "Selisih:": "Difference:",
+    "TIDAK SEIMBANG": "UNBALANCED",
+
+    "Tambah Akun Baru": "Add New Account",
+    "Edit Data Akun": "Edit Account Data",
+    "Kode Akun (CoA)": "Account Code (CoA)",
+    "Misal: 115": "E.g.: 115",
+    "Misal: Bank BNI": "E.g.: Bank BNI",
+    "Jadikan Sebagai Akun Induk (Header)": "Set as Parent Account (Header)",
+
+    "Hapus Akun CoA?": "Delete CoA Account?",
+    "Anda akan menghapus Akun :account secara permanen.": "You are about to permanently delete Account :account.",
+    "Perhatian: Pastikan belum ada satupun transaksi Buku Besar yang menggunakan akun ini! Jika ada, penghapusan akan dicekal oleh sistem.": "Attention: Make sure no General Ledger transactions use this account! Otherwise, deletion will be blocked by the system.",
+    "Ya, Hapus Akun": "Yes, Delete Account",
+    "Mengecek & Menghapus...": "Checking & Deleting...",
+    "Sistem sedang memverifikasi relasi transaksi.": "The system is verifying transaction relations.",
+    "Menyimpan Akun...": "Saving Account...",
+    "Mendaftarkan pengaturan Chart of Accounts Anda ke database.": "Registering your Chart of Accounts settings to the database."
 }
