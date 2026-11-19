@@ -545,5 +545,35 @@
     "Mengecek & Menghapus...": "Checking & Deleting...",
     "Sistem sedang memverifikasi relasi transaksi.": "The system is verifying transaction relations.",
     "Menyimpan Akun...": "Saving Account...",
-    "Mendaftarkan pengaturan Chart of Accounts Anda ke database.": "Registering your Chart of Accounts settings to the database."
+    "Mendaftarkan pengaturan Chart of Accounts Anda ke database.": "Registering your Chart of Accounts settings to the database.",
+
+    "Buku Kontak": "Contact Book",
+    "Kelola data Pelanggan (Customer) dan Pemasok (Supplier)": "Manage Customer and Supplier data",
+    "Tambah Kontak": "Add Contact",
+    "Semua Tipe": "All Types",
+    "Nama Kontak": "Contact Name",
+    "Tipe": "Type",
+    "No. Telepon": "Phone No.",
+    "Alamat": "Address",
+    "Edit": "Edit",
+    "Kontak tidak ditemukan.": "No contacts found.",
+
+    "Tambah Kontak Baru": "Add New Contact",
+    "Edit Kontak": "Edit Contact",
+    "Nama Perusahaan / Perorangan": "Company / Individual Name",
+    "Tipe Kontak": "Contact Type",
+    "Customer (Pelanggan)": "Customer",
+    "Supplier (Pemasok)": "Supplier",
+    "No. Telepon / WA (Opsional)": "Phone / WA No. (Optional)",
+    "Email (Opsional)": "Email (Optional)",
+    "email@contoh.com": "email@example.com",
+    "Alamat Lengkap": "Full Address",
+    "Alamat jalan, kota, provinsi...": "Street address, city, province...",
+    "Simpan Kontak": "Save Contact",
+
+    "Hapus Kontak?": "Delete Contact?",
+    "Yakin ingin menghapus :name dari Buku Kontak?": "Are you sure you want to delete :name from the Contact Book?",
+    "Jangan khawatir, transaksi lampau (SO/PO) atas nama kontak ini tidak akan ikut terhapus.": "Don't worry, past transactions (SO/PO) under this contact will not be deleted.",
+    "Ya, Hapus": "Yes, Delete",
+    "Sistem sedang menyimpan data kontak.": "The system is saving contact data."
 }
