@@ -125,7 +125,7 @@
 </script>
 @endsection --}}
 
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
 <div class="space-y-6 pb-10 max-w-5xl mx-auto md:mx-0">
@@ -237,6 +237,133 @@
             <div class="pt-2 flex justify-end gap-2">
                 <button type="button" onclick="document.getElementById('roleModal').classList.add('hidden')" class="px-4 py-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">Batal</button>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition-colors">Terapkan Jabatan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRoleModal(user) {
+        document.getElementById('modalUserName').innerText = user.name;
+        document.getElementById('modalUserRole').value = user.role || 'Staff';
+        document.getElementById('roleForm').action = `/settings/users/${user.id}`;
+        document.getElementById('roleModal').classList.remove('hidden');
+    }
+</script>
+@endsection --}}
+
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6 pb-10 max-w-5xl mx-auto md:mx-0">
+
+    <div class="flex items-center gap-4">
+        <a href="{{ route('settings.index') }}" class="text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <i data-feather="arrow-left" class="w-6 h-6"></i>
+        </a>
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3 transition-colors">
+                <i data-feather="users" class="text-blue-600 dark:text-blue-400 w-7 h-7"></i> {{ __('Daftar Pengguna') }}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1 transition-colors">{{ __('Kelola akun staf yang terdaftar dan tentukan otoritas jabatannya.') }}</p>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 p-4 rounded-lg font-bold border border-emerald-200 dark:border-emerald-800/30 flex items-center gap-2 transition-colors">
+            <i data-feather="check-circle" class="w-5 h-5"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 p-4 rounded-lg font-bold border border-rose-200 dark:border-rose-800/30 flex items-center gap-2 transition-colors">
+            <i data-feather="alert-circle" class="w-5 h-5"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 transition-colors">
+                    <tr>
+                        <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">{{ __('Nama Pengguna') }}</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">{{ __('Alamat Email (Login)') }}</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-center">{{ __('Jabatan / Role Aktif') }}</th>
+                        <th class="p-4 text-sm font-semibold text-slate-600 dark:text-slate-300 text-center w-28">{{ __('Aksi') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($users as $user)
+                    <tr class="border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="p-4 text-sm font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-xs transition-colors">
+                                {{ strtoupper(substr($user->name, 0, 2)) }}
+                            </div>
+                            {{ $user->name }}
+                            @if(auth()->id() === $user->id)
+                                <span class="ml-2 px-2 py-0.5 bg-slate-800 dark:bg-slate-600 text-white dark:text-slate-200 text-[10px] rounded-full font-bold transition-colors">{{ __('ANDA') }}</span>
+                            @endif
+                        </td>
+                        <td class="p-4 text-sm text-slate-600 dark:text-slate-400 font-medium">{{ $user->email }}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold transition-colors
+                                {{ $user->role === 'Admin' || $user->role === 'Direktur' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                                <i data-feather="shield" class="w-3 h-3 inline mr-1"></i> {{ $user->role ?? 'Staff' }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openRoleModal({{ json_encode($user) }})" class="text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 p-2 rounded-lg transition-colors" title="{{ __('Ubah Jabatan (Role)') }}">
+                                    <i data-feather="edit" class="w-4 h-4"></i>
+                                </button>
+
+                                @if(auth()->id() !== $user->id)
+                                <form action="{{ route('settings.deleteUser', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('{{ addslashes(__('PERINGATAN: Yakin ingin menghapus permanen akun :name?', ['name' => $user->name])) }}');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors" title="{{ __('Hapus Akun') }}">
+                                        <i data-feather="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                                @else
+                                <button type="button" class="text-slate-300 dark:text-slate-600 p-2 cursor-not-allowed transition-colors" title="{{ __('Anda tidak dapat menghapus diri sendiri') }}">
+                                    <i data-feather="trash-2" class="w-4 h-4"></i>
+                                </button>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ubah Role Pengguna -->
+<div id="roleModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 transition-all">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col border-t-4 border-blue-600 dark:border-blue-500 transition-colors">
+        <div class="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 transition-colors">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white">{{ __('Ubah Jabatan (Role)') }}</h3>
+            <button onclick="document.getElementById('roleModal').classList.add('hidden')" class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"><i data-feather="x"></i></button>
+        </div>
+        <form id="roleForm" method="POST" class="p-5 space-y-4">
+            @csrf
+            @method('PUT')
+
+            <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 transition-colors">{{ __('Pilih jabatan baru untuk') }} <b id="modalUserName" class="text-slate-800 dark:text-white"></b>:</p>
+
+            <div>
+                <select name="role" id="modalUserRole" required class="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-colors">
+                    @foreach($roles as $r)
+                        <option value="{{ $r }}">{{ $r }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('roleModal').classList.add('hidden')" class="px-4 py-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">{{ __('Batal') }}</button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition-colors">{{ __('Terapkan Jabatan') }}</button>
             </div>
         </form>
     </div>
