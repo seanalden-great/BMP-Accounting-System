@@ -28,6 +28,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Modul Pusat Persetujuan Eksekutif
     Route::get('/approvals', [ApprovalController::class, 'index']);
 
+    // Aksi Persetujuan (Approve & Reject) Sales & Purchases
+    Route::post('/sales/{id}/approve', [ApprovalController::class, 'approveSale']);
+    Route::post('/sales/{id}/reject', [ApprovalController::class, 'rejectSale']);
+    Route::post('/purchases/{id}/approve', [ApprovalController::class, 'approvePurchase']);
+    Route::post('/purchases/{id}/reject', [ApprovalController::class, 'rejectPurchase']);
+
     // Modul Profil
     Route::get('/profile', [ProfileController::class, 'index']);
     Route::put('/profile/update', [ProfileController::class, 'update']);

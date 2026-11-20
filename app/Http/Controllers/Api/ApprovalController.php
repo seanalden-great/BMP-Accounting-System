@@ -51,4 +51,48 @@ class ApprovalController extends Controller
             'data'    => $pendingDocuments
         ], 200);
     }
+
+    public function approveSale($id)
+    {
+        $sale = \App\Models\Sale::findOrFail($id);
+        $sale->update(['status' => 'Approved']); // Sesuaikan dengan enum/status di web Anda
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sales Order berhasil disetujui.'
+        ], 200);
+    }
+
+    public function rejectSale($id)
+    {
+        $sale = \App\Models\Sale::findOrFail($id);
+        $sale->update(['status' => 'Rejected']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sales Order berhasil ditolak.'
+        ], 200);
+    }
+
+    public function approvePurchase($id)
+    {
+        $purchase = \App\Models\Purchase::findOrFail($id);
+        $purchase->update(['status' => 'Approved']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Purchase Order berhasil disetujui.'
+        ], 200);
+    }
+
+    public function rejectPurchase($id)
+    {
+        $purchase = \App\Models\Purchase::findOrFail($id);
+        $purchase->update(['status' => 'Rejected']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Purchase Order berhasil ditolak.'
+        ], 200);
+    }
 }
