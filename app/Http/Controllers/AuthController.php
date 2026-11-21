@@ -132,13 +132,21 @@ class AuthController extends Controller
     // Memproses Registrasi Akun (Mengisi kolom bawaan Laravel & kolom eksisting)
     public function register(Request $request)
     {
+        // $validated = $request->validate([
+        //     'full_name' => 'required|string|max:100',
+        //     'username' => 'required|string|max:50|unique:users,username',
+        //     'email' => 'nullable|email|max:255|unique:users,email',
+        //     'password' => 'required|string|min:6',
+        //     // 'role'      => 'required|in:Admin,Manager,Staff',
+        //     'role' => 'required|in:Admin,Gudang,Developer,Direktur',
+        // ]);
+
         $validated = $request->validate([
             'full_name' => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:users,username',
-            'email' => 'nullable|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6',
-            // 'role'      => 'required|in:Admin,Manager,Staff',
-            'role' => 'required|in:Admin,Gudang,Developer,Direktur',
+            'username'  => 'required|string|max:50|unique:users,username',
+            'email'     => 'nullable|email|max:255|unique:users,email',
+            'password'  => 'required|string|min:6',
+            'role'      => 'required|in:Admin,Gudang,Developer,Direktur,HEAD/SPV,Purchasing',
         ]);
 
         try {

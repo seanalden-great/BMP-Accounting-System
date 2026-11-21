@@ -43,12 +43,20 @@ class AuthController extends Controller
     // --- TAMBAHAN BARU: METODE REGISTRASI API ---
     public function register(Request $request)
     {
+        // $validated = $request->validate([
+        //     'full_name' => 'required|string|max:100',
+        //     'username'  => 'required|string|max:50|unique:users,username',
+        //     'email'     => 'nullable|email|max:255|unique:users,email',
+        //     'password'  => 'required|string|min:6',
+        //     'role'      => 'required|in:Admin,Gudang,Developer,Direktur',
+        // ]);
+
         $validated = $request->validate([
             'full_name' => 'required|string|max:100',
             'username'  => 'required|string|max:50|unique:users,username',
             'email'     => 'nullable|email|max:255|unique:users,email',
             'password'  => 'required|string|min:6',
-            'role'      => 'required|in:Admin,Gudang,Developer,Direktur',
+            'role'      => 'required|in:Admin,Gudang,Developer,Direktur,HEAD/SPV,Purchasing',
         ]);
 
         try {

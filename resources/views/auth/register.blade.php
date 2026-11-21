@@ -244,7 +244,7 @@
                             <option value="Manager" {{ old('role') == 'Manager' ? 'selected' : '' }}>Manager (Persetujuan Data)</option>
                             <option value="Admin" {{ old('role') == 'Admin' ? 'selected' : '' }}>Admin (Akses Penuh)</option>
                         </select> --}}
-                        <select
+                        {{-- <select
                             name="role"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none"
                         >
@@ -252,6 +252,18 @@
                             <option value="Gudang" {{ old('role') == 'Gudang' ? 'selected' : '' }}>Gudang (Pengelola Stok & Inventori)</option>
                             <option value="Developer" {{ old('role') == 'Developer' ? 'selected' : '' }}>Developer (Pengelola Sistem IT)</option>
                             <option value="Direktur" {{ old('role') == 'Direktur' ? 'selected' : '' }}>Direktur (Pemantau & Laporan Penuh)</option>
+                        </select> --}}
+
+                        <select
+                            name="role"
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none"
+                        >
+                            <option value="Admin" {{ old('role') == 'Admin' ? 'selected' : '' }}>Admin (Pengelola Transaksi & Keuangan)</option>
+                            <option value="Direktur" {{ old('role') == 'Direktur' ? 'selected' : '' }}>Direktur (Pemantau & Laporan Penuh)</option>
+                            <option value="HEAD/SPV" {{ old('role') == 'HEAD/SPV' ? 'selected' : '' }}>HEAD/SPV (Supervisor & Pengawas Operasional)</option>
+                            <option value="Purchasing" {{ old('role') == 'Purchasing' ? 'selected' : '' }}>Purchasing (Pengelola Pembelian & Supplier)</option>
+                            <option value="Gudang" {{ old('role') == 'Gudang' ? 'selected' : '' }}>Gudang (Pengelola Stok & Inventori)</option>
+                            <option value="Developer" {{ old('role') == 'Developer' ? 'selected' : '' }}>Developer (Pengelola Sistem IT)</option>
                         </select>
                     </div>
                 </div>

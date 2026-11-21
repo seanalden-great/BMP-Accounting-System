@@ -76,7 +76,8 @@ class SettingController extends Controller
         $permissions = $setting->role_permissions ? json_decode($setting->role_permissions, true) : [];
 
         // Definisikan Role dan Menu yang ada di ERP Anda
-        $roles = ['Admin', 'Gudang', 'Developer', 'Direktur'];
+        // $roles = ['Admin', 'Gudang', 'Developer', 'Direktur'];
+        $roles = ['Admin', 'Direktur', 'HEAD/SPV', 'Purchasing', 'Gudang', 'Developer'];
         $menus = [
             'Dashboard', 'Persetujuan', 'Penjualan', 'Pembelian', 'Biaya', 'Produk',
             'Inventori', 'Aset Tetap', 'Kas & Bank', 'Akun CoA',
@@ -105,7 +106,8 @@ class SettingController extends Controller
         // Ambil semua data user, urutkan berdasarkan nama
         $users = \App\Models\User::orderBy('name', 'asc')->get();
         // Daftar jabatan standar di perusahaan
-        $roles = ['Admin', 'Direktur', 'Gudang', 'Developer', 'Staff'];
+        // $roles = ['Admin', 'Direktur', 'Gudang', 'Developer', 'Staff'];
+        $roles = ['Admin', 'Direktur', 'HEAD/SPV', 'Purchasing', 'Gudang', 'Developer'];
 
         return view('settings.users', compact('users', 'roles'));
     }
